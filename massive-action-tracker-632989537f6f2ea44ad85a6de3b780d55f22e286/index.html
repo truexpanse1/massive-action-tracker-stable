@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Massive Action Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+      .confetti {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        z-index: 1000;
+      }
+      .confetti-piece {
+        position: absolute;
+        width: 8px; /* will be overridden by inline style */
+        height: 16px; /* will be overridden by inline style */
+        background: #f00;
+        top: 0;
+        opacity: 0;
+        animation: makeItRain 3s ease-out forwards;
+      }
+      @keyframes makeItRain {
+        0% {
+          transform: translateY(0) rotateZ(0deg);
+          opacity: 1;
+        }
+        15% {
+          transform: translateY(-15vh) rotateZ(180deg);
+        }
+        100% {
+          transform: translateY(110vh) rotateZ(720deg);
+          opacity: 0;
+        }
+      }
+      input[type="date"]::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
+      }
+      /* Added for Login Modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(13, 17, 23, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              'brand-ink': '#0D1117',
+              'brand-navy': '#161B22',
+              'brand-gray': '#4b5563',
+              'brand-light-gray': '#6b7280',
+              'brand-blue': '#2F81F7',
+              'brand-lime': '#34D399',
+              'brand-red': '#E53E3E',
+              'brand-light-bg': '#f3f4f6',
+              'brand-light-card': '#ffffff',
+              'brand-light-text': '#1f2937',
+              'brand-light-border': '#d1d5db',
+            }
+          }
+        }
+      }
+    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.81.1",
+    "vite": "https://aistudiocdn.com/vite@^7.2.2",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "@google/generative-ai": "https://aistudiocdn.com/@google/generative-ai@^0.24.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-brand-light-bg dark:bg-brand-ink transition-colors duration-300">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
