@@ -378,6 +378,7 @@ const DayView: React.FC<DayViewProps> = ({
               handleGoalChange('massiveGoals', goal, isCompletion)
             }
             highlight
+            iconType="target"
           />
           <NewLeadsBlock
             leads={leadsAddedToday}

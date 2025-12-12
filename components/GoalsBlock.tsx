@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Goal } from '../types';
 
 interface GoalsBlockProps {
@@ -6,44 +6,35 @@ interface GoalsBlockProps {
   goals: Goal[];
   onGoalChange: (goal: Goal, isCompletion: boolean) => void;
   highlight?: boolean;
+  iconType?: 'checkbox' | 'target';
 }
 
-const GoalsBlock: React.FC<GoalsBlockProps> = ({
-  title,
-  goals,
-  onGoalChange,
-  highlight,
+const GoalsBlock: React.FC<GoalsBlockProps> = ({ 
+  title, 
+  goals, 
+  onGoalChange, 
+  highlight = false,
+  iconType = 'checkbox'
 }) => {
-  // Local copy so UI updates instantly
   const [localGoals, setLocalGoals] = useState<Goal[]>(goals);
 
-  // Keep local state in sync when parent data changes (new day, data load, etc.)
   useEffect(() => {
     setLocalGoals(goals);
   }, [goals]);
 
   const handleCompletionToggle = (goal: Goal) => {
-    const isCompleting = !goal.completed;
-    const updatedGoal = { ...goal, completed: isCompleting };
-
-    // Update local UI
+    const updatedGoal = { ...goal, completed: !goal.completed };
     setLocalGoals((prev) =>
-      prev.map((g) => (g.id === goal.id ? updatedGoal : g)),
+      prev.map((g) => (g.id === goal.id ? updatedGoal : g))
     );
-
-    // Tell parent so it can save and trigger wins/confetti
-    onGoalChange(updatedGoal, isCompleting);
+    onGoalChange(updatedGoal, true);
   };
 
-  const handleTextChange = (goal: Goal, text: string) => {
-    const updatedGoal = { ...goal, text };
-
-    // Update local UI
+  const handleTextChange = (goal: Goal, newText: string) => {
+    const updatedGoal = { ...goal, text: newText };
     setLocalGoals((prev) =>
-      prev.map((g) => (g.id === goal.id ? updatedGoal : g)),
+      prev.map((g) => (g.id === goal.id ? updatedGoal : g))
     );
-
-    // Let parent know, but not a "completion" change
     onGoalChange(updatedGoal, false);
   };
 
@@ -60,32 +51,44 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({
         {localGoals.map((goal) => (
           <div key={goal.id} className="flex items-center space-x-3">
             <div className="relative flex items-center">
-              <input
-                type="checkbox"
-                checked={goal.completed}
-                onChange={() => handleCompletionToggle(goal)}
-                className="peer"
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  cursor: 'pointer',
-                  accentColor: '#2563eb', // blue
-                }}
-              />
+              {iconType === 'checkbox' ? (
+                <>
+                  <input
+                    type="checkbox"
+                    checked={goal.completed}
+                    onChange={() => handleCompletionToggle(goal)}
+                    className="peer"
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      cursor: 'pointer',
+                      accentColor: '#2563eb', // blue
+                    }}
+                  />
 
-              {/* Custom checkmark SVG that appears when checked */}
-              <svg
-                className="absolute w-5 h-5 pointer-events-none hidden peer-checked:block text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+                  {/* Custom checkmark SVG that appears when checked */}
+                  <svg
+                    className="absolute w-5 h-5 pointer-events-none hidden peer-checked:block text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </>
+              ) : (
+                <div 
+                  onClick={() => handleCompletionToggle(goal)}
+                  className="w-5 h-5 flex items-center justify-center cursor-pointer text-xl"
+                  style={{ fontSize: '20px' }}
+                >
+                  🎯
+                </div>
+              )}
             </div>
 
             <input
