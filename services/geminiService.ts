@@ -108,7 +108,7 @@ export const generateImage = async (prompt: string, aspectRatio: string): Promis
     
     try {
         const response = await ai.models.generateImages({
-            model: 'imagen-3.0-generate-002', 
+            model: 'imagen-3.0-generate-001', 
             prompt,
             config: { 
                 numberOfImages: 1, 
@@ -134,7 +134,7 @@ export const editImage = async (base64ImageData: string, mimeType: string, promp
         const base64DataOnly = base64ImageData.split(',')[1];
 
         const response = await ai.models.generateImages({
-            model: 'imagen-3.0-generate-002', 
+            model: 'imagen-3.0-generate-001', 
             prompt: prompt,
             config: {
                 numberOfImages: 1,
