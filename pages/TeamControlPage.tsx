@@ -27,19 +27,19 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
     }
 
     try {
-      // Delete from users table
-      const { error: dbError } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', userId);
+      // Call Netlify function to delete user (uses Service Role Key)
+      const response = await fetch('/.netlify/functions/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
 
-      if (dbError) throw dbError;
+      const result = await response.json();
 
-      // Delete from auth (requires admin privileges or service role key)
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-
-      if (authError) {
-        console.warn('Could not delete from auth:', authError.message);
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete user');
       }
 
       alert(`${userName} has been deleted successfully.`);
