@@ -22,7 +22,7 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
   const handleAddUser = () => setIsModalOpen(true);
 
   const handleDeleteUser = async (userId: string, userName: string, userEmail: string) => {
-    if (!confirm(\`Are you sure you want to delete \${userName} (\${userEmail})?\n\nThis action cannot be undone.\`)) {
+    if (!confirm(`Are you sure you want to delete \${userName} (\${userEmail})?\n\nThis action cannot be undone.`)) {
       return;
     }
 
@@ -42,7 +42,7 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
         console.warn('Could not delete from auth:', authError.message);
       }
 
-      alert(\`\${userName} has been deleted successfully.\`);
+      alert(`\${userName} has been deleted successfully.`);
       
       // Call parent callback if provided
       if (onDeleteUser) {
@@ -96,7 +96,7 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
       }
 
       alert(
-        \`Success!\n\n\${name} has been invited.\n\n\` +
+        `Success!\n\n\${name} has been invited.\n\n` +
         (password
           ? 'They can log in immediately.'
           : 'They will receive an email to set their password.')
@@ -145,11 +145,11 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
                     <td className="px-6 py-4">{user.role}</td>
                     <td className="px-6 py-4 text-center">
                       <span
-                        className={\`inline-flex px-3 py-1 text-xs font-semibold rounded-full \${
+                        className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full \${
                           user.status === 'Active'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-gray-100 text-gray-600'
-                        }\`}
+                        }`}
                       >
                         {user.status}
                       </span>
