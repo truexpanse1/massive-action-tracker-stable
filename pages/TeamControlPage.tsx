@@ -22,7 +22,7 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
   const handleAddUser = () => setIsModalOpen(true);
 
   const handleDeleteUser = async (userId: string, userName: string, userEmail: string) => {
-    if (!confirm(`Are you sure you want to delete \${userName} (\${userEmail})?\n\nThis action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete ${userName} (${userEmail})?\n\nThis action cannot be undone.`)) {
       return;
     }
 
@@ -42,7 +42,7 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
         console.warn('Could not delete from auth:', authError.message);
       }
 
-      alert(`\${userName} has been deleted successfully.`);
+      alert(`${userName} has been deleted successfully.`);
       
       // Call parent callback if provided
       if (onDeleteUser) {
