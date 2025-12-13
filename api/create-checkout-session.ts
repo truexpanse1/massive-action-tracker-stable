@@ -52,7 +52,7 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    const { priceId, email } = body || {};
+    const { priceId, email, userData } = body || {};
 
     if (!priceId || !email) {
       console.error('DEBUG missing fields. Received body:', body);
@@ -82,10 +82,14 @@ export default async function handler(req: any, res: any) {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
-      // Optional: add trial here if you want:
-      // subscription_data: {
-      //   trial_period_days: 14,
-      // },
+      metadata: userData ? {
+        fullName: userData.fullName,
+        company: userData.company,
+        phone: userData.phone,
+        password: userData.password,
+        planName: userData.planName,
+        email: email,
+      } : { email },
       success_url: `${origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/billing/cancelled`,
     });

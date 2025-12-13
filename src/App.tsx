@@ -679,6 +679,67 @@ const App: React.FC = () => {
     return <FullPageError message={fetchError} onRetry={retryConnection} />;
   }
 
+  // Check if we're on a billing page
+  const urlParams = new URLSearchParams(window.location.search);
+  const isBillingSuccess = window.location.pathname.includes('/billing/success');
+  const isBillingCancelled = window.location.pathname.includes('/billing/cancelled');
+  
+  if (isBillingSuccess || isBillingCancelled) {
+    // Show billing result page without requiring authentication
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+          {isBillingSuccess ? (
+            <>
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
+              <p className="text-gray-600 mb-6">
+                Your account has been created successfully. Please check your email to verify your account.
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800"><strong>Next Steps:</strong></p>
+                <ol className="text-sm text-blue-700 text-left mt-2 space-y-1">
+                  <li>1. Check your email inbox</li>
+                  <li>2. Click the verification link</li>
+                  <li>3. Return to this page</li>
+                  <li>4. Sign in with your credentials</li>
+                </ol>
+              </div>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
+              >
+                Go to Login
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Cancelled</h1>
+              <p className="text-gray-600 mb-6">
+                Your payment was cancelled. No charges have been made to your account.
+              </p>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
+              >
+                Return to Home
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (!session || !user) {
     return <LandingPage />;
   }

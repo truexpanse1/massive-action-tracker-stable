@@ -11,7 +11,14 @@ export interface CheckoutSessionResponse {
  */
 export async function startStripeCheckout(
   priceId: string,
-  email: string
+  email: string,
+  userData?: {
+    fullName: string;
+    company: string;
+    phone: string;
+    password: string;
+    planName: string;
+  }
 ): Promise<void> {
   try {
     const response = await fetch('/api/create-checkout-session', {
@@ -19,7 +26,7 @@ export async function startStripeCheckout(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ priceId, email }),
+      body: JSON.stringify({ priceId, email, userData }),
     });
 
     if (!response.ok) {

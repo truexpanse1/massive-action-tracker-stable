@@ -44,6 +44,7 @@ interface PurchaseFormData {
   fullName: string;
   company: string;
   phone: string;
+  password: string;
 }
 
 export default function LandingPage() {
@@ -56,6 +57,7 @@ export default function LandingPage() {
     fullName: '',
     company: '',
     phone: '',
+    password: '',
   });
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -113,36 +115,29 @@ export default function LandingPage() {
     setPurchaseError('');
 
     try {
-      // 1. Create a temporary password for the new user
-      const tempPassword = Math.random().toString(36).slice(-8);
-
-      // 2. Sign up the user in Supabase
-      // NOTE: Supabase will send a confirmation email. The user will need to use the "Forgot Password" flow after confirming.
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      // Store user data in localStorage for webhook to retrieve after payment
+      const pendingUserData = {
         email: purchaseData.email,
-        password: tempPassword,
-        options: {
-          data: {
-            full_name: purchaseData.fullName,
-            company_name: purchaseData.company,
-            phone: purchaseData.phone,
-            // Multi-Tenancy Logic: The company name is used as a unique identifier for the company_id logic
-            // NOTE: This assumes your backend logic will create a 'company' record and link the user.
-            // This is a placeholder for a more robust multi-tenancy setup.
-            company_identifier: purchaseData.company.toLowerCase().replace(/\s/g, '-'),
-          },
-        },
+        password: purchaseData.password,
+        fullName: purchaseData.fullName,
+        company: purchaseData.company,
+        phone: purchaseData.phone,
+        planName: selectedPlan.name,
+        priceId: selectedPlan.priceId,
+        timestamp: Date.now(),
+      };
+      
+      localStorage.setItem('pendingUserData', JSON.stringify(pendingUserData));
+
+      // Redirect to Stripe Checkout
+      // After successful payment, webhook will create the account
+      await startStripeCheckout(selectedPlan.priceId, purchaseData.email, {
+        fullName: purchaseData.fullName,
+        company: purchaseData.company,
+        phone: purchaseData.phone,
+        password: purchaseData.password,
+        planName: selectedPlan.name,
       });
-
-      if (signUpError) {
-        setPurchaseError(signUpError.message);
-        setIsProcessingPurchase(false);
-        return;
-      }
-
-      // 3. Redirect to Stripe Checkout
-      // NOTE: The user is NOT logged in at this point, which prevents the app from loading and allows the redirect.
-      await startStripeCheckout(selectedPlan.priceId, purchaseData.email);
 
       // The function above redirects the browser, so the code below is unreachable.
     } catch (error) {
@@ -258,6 +253,16 @@ export default function LandingPage() {
                   onChange={handlePurchaseChange}
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 transition"
                 />
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password *"
+                  value={purchaseData.password}
+                  onChange={handlePurchaseChange}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 transition"
+                />
               </div>
 
               {purchaseError && (
@@ -281,7 +286,7 @@ export default function LandingPage() {
                     isProcessingPurchase ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 >
-                  {isProcessingPurchase ? 'Processing...' : 'Complete Order'}
+                  {isProcessingPurchase ? 'Processing...' : 'Complete Payment'}
                 </button>
               </div>
               <p className="text-xs text-center text-gray-500 mt-3">
