@@ -67,6 +67,56 @@ const DayView: React.FC<DayViewProps> = ({
   // Single source of truth for the day
   const currentData: DayData = allData[currentDateKey] || getInitialDayData();
 
+  // ---------- Automatic Rollover Logic ----------
+  useEffect(() => {
+    const performRollover = async () => {
+      // Get yesterday's date
+      const yesterday = new Date(selectedDate);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayKey = getDateKey(yesterday);
+      const yesterdayData = allData[yesterdayKey];
+
+      // Only rollover if:
+      // 1. Yesterday's data exists
+      // 2. Today's data doesn't already have rolled items (prevent duplicate rollovers)
+      if (!yesterdayData) return;
+
+      const todayTopTargets = currentData.topTargets || [];
+      const todayMassiveGoals = currentData.massiveGoals || [];
+
+      // Check if we've already rolled over (any item has rolledOver flag)
+      const alreadyRolledOver = 
+        todayTopTargets.some(g => g.rolledOver) || 
+        todayMassiveGoals.some(g => g.rolledOver);
+
+      if (alreadyRolledOver) return;
+
+      // Find uncompleted targets from yesterday
+      const uncompletedTargets = (yesterdayData.topTargets || [])
+        .filter(g => !g.completed)
+        .map(g => ({ ...g, rolledOver: true, id: `${g.id}-rolled` })); // New ID to avoid conflicts
+
+      // Find uncompleted massive goals from yesterday
+      const uncompletedGoals = (yesterdayData.massiveGoals || [])
+        .filter(g => !g.completed)
+        .map(g => ({ ...g, id: `${g.id}-rolled` })); // New ID, but no rolledOver flag for goals
+
+      // If there are items to roll over
+      if (uncompletedTargets.length > 0 || uncompletedGoals.length > 0) {
+        // Merge: rolled items at TOP, then today's items
+        const newTopTargets = [...uncompletedTargets, ...todayTopTargets];
+        const newMassiveGoals = [...uncompletedGoals, ...todayMassiveGoals];
+
+        await saveDayData({
+          topTargets: newTopTargets,
+          massiveGoals: newMassiveGoals,
+        });
+      }
+    };
+
+    performRollover();
+  }, [currentDateKey]); // Run when date changes
+
   // ---------- Helper: persist full DayData snapshot ----------
   const saveDayData = async (partial: Partial<DayData>) => {
     const merged: DayData = {

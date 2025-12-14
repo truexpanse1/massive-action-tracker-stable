@@ -95,8 +95,12 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({
               type="text"
               value={goal.text}
               onChange={(e) => handleTextChange(goal, e.target.value)}
-              className={`w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white text-sm p-1 focus:outline-none focus:border-brand-blue focus:border-solid ${
-                goal.completed ? 'line-through text-gray-500' : ''
+              className={`w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-sm p-1 focus:outline-none focus:border-brand-blue focus:border-solid ${
+                goal.completed 
+                  ? 'line-through text-gray-500' 
+                  : goal.rolledOver 
+                  ? 'text-red-600 dark:text-red-500 font-semibold' 
+                  : 'text-brand-light-text dark:text-white'
               }`}
             />
           </div>

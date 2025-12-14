@@ -67,6 +67,7 @@ export interface Goal {
   id: string;
   text: string;
   completed: boolean;
+  rolledOver?: boolean; // Indicates if this goal was rolled over from a previous day
 }
 
 export type ProspectingCode = 'SW' | 'NA' | 'LM' | 'ST' | 'EP' | 'SA';
