@@ -104,8 +104,9 @@ const DayView: React.FC<DayViewProps> = ({
       // If there are items to roll over
       if (uncompletedTargets.length > 0 || uncompletedGoals.length > 0) {
         // Merge: rolled items at TOP, then today's items
-        const newTopTargets = [...uncompletedTargets, ...todayTopTargets];
-        const newMassiveGoals = [...uncompletedGoals, ...todayMassiveGoals];
+        // Limit to 6 items maximum for each section
+        const newTopTargets = [...uncompletedTargets, ...todayTopTargets].slice(0, 6);
+        const newMassiveGoals = [...uncompletedGoals, ...todayMassiveGoals].slice(0, 6);
 
         await saveDayData({
           topTargets: newTopTargets,
