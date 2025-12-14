@@ -171,14 +171,90 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
     
      const LineChart: React.FC<{data: {date: string, revenue: number}[]}> = ({data}) => {
         if (data.length === 0) return <p className="text-center text-sm text-gray-500 py-8">No data for this period.</p>;
-        const width = 500, height = 200, padding = 40;
-        const maxRevenue = Math.max(...data.map(d => d.revenue), 0);
+        
+        // Smart grouping based on data length
+        const groupData = () => {
+            const numDays = data.length;
+            
+            // 1-7 days: Show each day
+            if (numDays <= 7) {
+                return data.map(d => ({
+                    label: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
+                    revenue: d.revenue
+                }));
+            }
+            
+            // 8-30 days: Group by week
+            if (numDays <= 30) {
+                const weeks: {label: string, revenue: number}[] = [];
+                let weekNum = 1;
+                let weekRevenue = 0;
+                let weekCount = 0;
+                
+                data.forEach((d, i) => {
+                    weekRevenue += d.revenue;
+                    weekCount++;
+                    
+                    if (weekCount === 7 || i === data.length - 1) {
+                        weeks.push({ label: `Week ${weekNum}`, revenue: weekRevenue });
+                        weekNum++;
+                        weekRevenue = 0;
+                        weekCount = 0;
+                    }
+                });
+                return weeks;
+            }
+            
+            // 31-90 days: Group by week with dates
+            if (numDays <= 90) {
+                const weeks: {label: string, revenue: number}[] = [];
+                let weekRevenue = 0;
+                let weekCount = 0;
+                let weekStartDate = '';
+                
+                data.forEach((d, i) => {
+                    if (weekCount === 0) weekStartDate = d.date;
+                    weekRevenue += d.revenue;
+                    weekCount++;
+                    
+                    if (weekCount === 7 || i === data.length - 1) {
+                        const label = new Date(weekStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        weeks.push({ label, revenue: weekRevenue });
+                        weekRevenue = 0;
+                        weekCount = 0;
+                    }
+                });
+                return weeks;
+            }
+            
+            // 91-365 days: Group by month
+            if (numDays <= 365) {
+                const months: Record<string, number> = {};
+                data.forEach(d => {
+                    const monthKey = new Date(d.date).toLocaleDateString('en-US', { month: 'short' });
+                    months[monthKey] = (months[monthKey] || 0) + d.revenue;
+                });
+                return Object.entries(months).map(([label, revenue]) => ({ label, revenue }));
+            }
+            
+            // 366+ days: Group by year
+            const years: Record<string, number> = {};
+            data.forEach(d => {
+                const year = new Date(d.date).getFullYear().toString();
+                years[year] = (years[year] || 0) + d.revenue;
+            });
+            return Object.entries(years).map(([label, revenue]) => ({ label, revenue }));
+        };
+        
+        const groupedData = groupData();
+        const width = 500, height = 220, padding = 40;
+        const maxRevenue = Math.max(...groupedData.map(d => d.revenue), 0);
         const yMax = maxRevenue === 0 ? 1000 : Math.ceil(maxRevenue * 1.1);
         
-        // Dynamic bar width calculation - always fills the space nicely
+        // Dynamic bar width calculation
         const availableWidth = width - padding * 2;
-        const spacing = availableWidth / data.length;
-        const barWidth = spacing * 0.75; // 75% of space for bar, 25% for gap
+        const spacing = availableWidth / groupedData.length;
+        const barWidth = spacing * 0.75;
         
         return ( 
             <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
@@ -191,7 +267,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                 <text x="5" y={height-padding+3} className="text-[10px] fill-gray-400">{formatCurrency(0)}</text>
                 
                 {/* Bars */}
-                {data.map((d, i) => {
+                {groupedData.map((d, i) => {
                     const barHeight = (d.revenue / yMax) * (height - padding * 2);
                     const x = padding + i * spacing + (spacing - barWidth) / 2;
                     const y = height - padding - barHeight;
@@ -206,14 +282,25 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                                 fill="#34D399" 
                                 className="hover:opacity-80 transition-opacity"
                             />
-                            {/* Date label */}
+                            {/* Value label on top of bar */}
+                            {d.revenue > 0 && (
+                                <text 
+                                    x={x + barWidth / 2} 
+                                    y={y - 5} 
+                                    className="text-[9px] fill-gray-600 dark:fill-gray-300 font-semibold" 
+                                    textAnchor="middle"
+                                >
+                                    {formatCurrency(d.revenue)}
+                                </text>
+                            )}
+                            {/* X-axis label */}
                             <text 
                                 x={x + barWidth / 2} 
                                 y={height - padding + 15} 
-                                className="text-[8px] fill-gray-400" 
+                                className="text-[10px] fill-gray-500 dark:fill-gray-400 font-medium" 
                                 textAnchor="middle"
                             >
-                                {new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                {d.label}
                             </text>
                         </g>
                     );
