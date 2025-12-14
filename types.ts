@@ -112,6 +112,9 @@ export interface NewClient {
     phone: string;
     email: string;
     address: string;
+    city?: string;
+    state?: string;
+    zip?: string;
     salesProcessLength: string;
     monthlyContractValue: number;
     initialAmountCollected: number;

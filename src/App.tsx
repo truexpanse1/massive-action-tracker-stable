@@ -824,6 +824,7 @@ const App: React.FC = () => {
             onDateChange={setSelectedDate}
             loggedInUser={user}
             users={users}
+            transactions={transactions}
           />
         );
       case 'revenue':

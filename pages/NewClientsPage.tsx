@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { NewClient, User, formatCurrency } from '../types';
+import { NewClient, User, Transaction, formatCurrency } from '../types';
 import Calendar from '../components/Calendar';
 import NewClientKPIs from '../components/NewClientKPIs';
 import AddClientModal from '../components/AddClientModal';
@@ -12,6 +12,7 @@ interface NewClientsPageProps {
   onDateChange: (date: Date) => void;
   loggedInUser: User;
   users: User[];
+  transactions?: Transaction[];
 }
 
 interface ClientCardProps {
@@ -67,6 +68,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
   onDateChange,
   loggedInUser,
   users,
+  transactions = [],
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<NewClient | null>(null);
@@ -182,6 +184,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveClient}
         client={editingClient}
+        transactions={transactions}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
