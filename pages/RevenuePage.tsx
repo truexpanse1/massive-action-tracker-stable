@@ -171,11 +171,52 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
     
      const LineChart: React.FC<{data: {date: string, revenue: number}[]}> = ({data}) => {
         if (data.length === 0) return <p className="text-center text-sm text-gray-500 py-8">No data for this period.</p>;
-        const width = 500, height = 200, padding = 30;
+        const width = 500, height = 200, padding = 40;
         const maxRevenue = Math.max(...data.map(d => d.revenue), 0);
         const yMax = maxRevenue === 0 ? 1000 : Math.ceil(maxRevenue * 1.1);
-        const points = data.map((d, i) => `${(i / (data.length -1)) * (width - padding*2) + padding},${height - padding - (d.revenue / yMax) * (height - padding*2)}`).join(' ');
-        return ( <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto"><line x1={padding} y1={height - padding} x2={width - padding} y2={height-padding} stroke="#4b5563" /><line x1={padding} y1={padding} x2={padding} y2={height-padding} stroke="#4b5563" /><polyline fill="none" stroke="#34D399" strokeWidth="2" points={points} /><text x="10" y="15" className="text-[10px] fill-gray-400">{formatCurrency(yMax)}</text><text x="10" y={height-padding+3} className="text-[10px] fill-gray-400">{formatCurrency(0)}</text></svg> );
+        const barWidth = Math.min(40, (width - padding * 2) / data.length * 0.8);
+        const spacing = (width - padding * 2) / data.length;
+        
+        return ( 
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+                {/* Axes */}
+                <line x1={padding} y1={height - padding} x2={width - padding} y2={height-padding} stroke="#4b5563" strokeWidth="1" />
+                <line x1={padding} y1={padding} x2={padding} y2={height-padding} stroke="#4b5563" strokeWidth="1" />
+                
+                {/* Y-axis labels */}
+                <text x="5" y="15" className="text-[10px] fill-gray-400">{formatCurrency(yMax)}</text>
+                <text x="5" y={height-padding+3} className="text-[10px] fill-gray-400">{formatCurrency(0)}</text>
+                
+                {/* Bars */}
+                {data.map((d, i) => {
+                    const barHeight = (d.revenue / yMax) * (height - padding * 2);
+                    const x = padding + i * spacing + (spacing - barWidth) / 2;
+                    const y = height - padding - barHeight;
+                    
+                    return (
+                        <g key={i}>
+                            <rect 
+                                x={x} 
+                                y={y} 
+                                width={barWidth} 
+                                height={barHeight} 
+                                fill="#34D399" 
+                                className="hover:opacity-80 transition-opacity"
+                            />
+                            {/* Date label */}
+                            <text 
+                                x={x + barWidth / 2} 
+                                y={height - padding + 15} 
+                                className="text-[8px] fill-gray-400" 
+                                textAnchor="middle"
+                            >
+                                {new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </text>
+                        </g>
+                    );
+                })}
+            </svg> 
+        );
     };
 
     return (
