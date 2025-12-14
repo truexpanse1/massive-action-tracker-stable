@@ -22,6 +22,7 @@ const AIImagesPageEnhanced: React.FC = () => {
   const [selectedStyle, setSelectedStyle] = useState<string>('');
   const [selectedColorTheme, setSelectedColorTheme] = useState<string>('');
   const [useTemplateMode, setUseTemplateMode] = useState(true);
+  const [customDescription, setCustomDescription] = useState<string>('');
 
   // Edit states
   const [imageToEdit, setImageToEdit] = useState<string | null>(null);
@@ -209,6 +210,26 @@ const AIImagesPageEnhanced: React.FC = () => {
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Custom Description */}
+              <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
+                <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">
+                  ✏️ Custom Description
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  Don't see your industry or want something specific? Describe what you need!
+                </p>
+                <textarea
+                  value={customDescription}
+                  onChange={(e) => {
+                    setCustomDescription(e.target.value);
+                    setPrompt(e.target.value);
+                  }}
+                  rows={4}
+                  className="w-full bg-brand-light-bg dark:bg-brand-gray/50 border border-brand-light-border dark:border-brand-gray rounded-md p-2 text-sm text-brand-light-text dark:text-white"
+                  placeholder="Example: Luxury yacht broker showcasing premium boats at sunset marina, professional and elegant..."
+                ></textarea>
               </div>
 
               {/* Marketing Pieces */}

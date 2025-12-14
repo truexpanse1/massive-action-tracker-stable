@@ -23,6 +23,118 @@ export const socialMediaPresets = [
 
 // INDUSTRY-SPECIFIC TEMPLATES
 export const industryTemplates = {
+  'Accountant': [
+    { name: 'Tax Season Professional', prompt: 'Professional accountant workspace, organized tax documents and calculator, expertise and precision theme, corporate office setting, trustworthy and detail-oriented aesthetic', aspectRatio: '16:9', category: 'Accountant' },
+    { name: 'Financial Planning Meeting', prompt: 'Accountant consulting with client, financial planning session, professional office environment, trust and expertise theme, collaborative and approachable', aspectRatio: '4:3', category: 'Accountant' },
+    { name: 'Bookkeeping Excellence', prompt: 'Clean organized bookkeeping concept, professional financial records, accuracy and efficiency theme, modern accounting aesthetic, reliable and systematic', aspectRatio: '16:9', category: 'Accountant' },
+    { name: 'Business Growth Analytics', prompt: 'Business financial growth charts and analytics, professional accounting visualization, success and prosperity theme, data-driven and insightful', aspectRatio: '16:9', category: 'Accountant' },
+    { name: 'CPA Credibility', prompt: 'Professional CPA certification and credentials showcase, trust and authority theme, corporate accounting aesthetic, established and credible', aspectRatio: '4:3', category: 'Accountant' },
+  ],
+
+  'Business Coach': [
+    { name: 'Leadership Development', prompt: 'Business coaching leadership session, professional mentor and mentee, growth and transformation theme, inspiring and motivational aesthetic, success-focused', aspectRatio: '16:9', category: 'Business Coach' },
+    { name: 'Goal Achievement Vision', prompt: 'Goal setting and achievement visualization, business success concept, motivational and inspiring theme, professional coaching imagery, empowering and focused', aspectRatio: '1:1', category: 'Business Coach' },
+    { name: 'Strategy Workshop', prompt: 'Business strategy workshop session, collaborative planning environment, professional coaching setting, growth and innovation theme, dynamic and engaging', aspectRatio: '16:9', category: 'Business Coach' },
+    { name: 'Success Mindset', prompt: 'Success mindset and breakthrough concept, motivational business coaching theme, professional and inspiring imagery, transformational and powerful', aspectRatio: '4:3', category: 'Business Coach' },
+    { name: 'Executive Coaching', prompt: 'Executive business coaching session, high-level professional development, leadership and excellence theme, sophisticated and impactful', aspectRatio: '16:9', category: 'Business Coach' },
+  ],
+
+  'Electrician': [
+    { name: 'Professional Installation', prompt: 'Professional electrician installing modern electrical panel, skilled tradesperson at work, expertise and safety theme, clean and professional service aesthetic', aspectRatio: '4:3', category: 'Electrician' },
+    { name: 'Emergency Service Ready', prompt: 'Emergency electrical service truck and equipment, 24/7 availability theme, reliable and responsive service, professional and trustworthy', aspectRatio: '16:9', category: 'Electrician' },
+    { name: 'Smart Home Technology', prompt: 'Modern smart home electrical installation, cutting-edge technology and automation, professional electrical service, innovative and efficient', aspectRatio: '16:9', category: 'Electrician' },
+    { name: 'Commercial Electrical', prompt: 'Commercial electrical project, large-scale professional installation, industrial and commercial theme, expert and reliable service', aspectRatio: '16:9', category: 'Electrician' },
+    { name: 'Safety Inspection', prompt: 'Electrical safety inspection and testing, professional electrician with diagnostic equipment, safety and compliance theme, thorough and certified', aspectRatio: '4:3', category: 'Electrician' },
+  ],
+
+  'General Contractor': [
+    { name: 'Construction Project', prompt: 'Active construction site with professional contractor, building project in progress, quality and craftsmanship theme, reliable and experienced', aspectRatio: '16:9', category: 'General Contractor' },
+    { name: 'Home Renovation', prompt: 'Beautiful home renovation transformation, before and after concept, quality craftsmanship theme, professional contractor work, impressive results', aspectRatio: '4:3', category: 'General Contractor' },
+    { name: 'Commercial Build', prompt: 'Commercial construction project, large-scale building development, professional contractor management, quality and efficiency theme', aspectRatio: '16:9', category: 'General Contractor' },
+    { name: 'Custom Build Quality', prompt: 'Custom home construction, high-end building project, craftsmanship and attention to detail theme, premium contractor service', aspectRatio: '4:3', category: 'General Contractor' },
+    { name: 'Project Planning', prompt: 'Contractor reviewing blueprints and plans, professional project management, expertise and precision theme, organized and thorough', aspectRatio: '16:9', category: 'General Contractor' },
+  ],
+
+  'HVAC': [
+    { name: 'System Installation', prompt: 'Professional HVAC technician installing modern heating and cooling system, expert service and quality equipment, comfort and efficiency theme', aspectRatio: '4:3', category: 'HVAC' },
+    { name: 'Maintenance Service', prompt: 'HVAC maintenance and tune-up service, professional technician with diagnostic tools, preventive care theme, reliable and thorough', aspectRatio: '16:9', category: 'HVAC' },
+    { name: 'Energy Efficiency', prompt: 'Energy-efficient HVAC system concept, modern climate control technology, savings and comfort theme, professional and eco-friendly', aspectRatio: '16:9', category: 'HVAC' },
+    { name: 'Emergency Repair', prompt: 'Emergency HVAC repair service, 24/7 availability and quick response, reliable and professional service, comfort restoration theme', aspectRatio: '16:9', category: 'HVAC' },
+    { name: 'Indoor Comfort', prompt: 'Perfect indoor climate and comfort concept, modern HVAC system benefits, comfort and quality of life theme, professional and inviting', aspectRatio: '4:3', category: 'HVAC' },
+  ],
+
+  'Hardscaper': [
+    { name: 'Patio Paradise', prompt: 'Beautiful hardscape patio design, professional stone or paver installation, outdoor living space theme, elegant and inviting', aspectRatio: '16:9', category: 'Hardscaper' },
+    { name: 'Retaining Wall Mastery', prompt: 'Professional retaining wall construction, expert hardscape engineering, functional and beautiful design, quality craftsmanship', aspectRatio: '4:3', category: 'Hardscaper' },
+    { name: 'Driveway Excellence', prompt: 'Premium driveway hardscape installation, professional paver or concrete work, curb appeal and durability theme, high-quality results', aspectRatio: '16:9', category: 'Hardscaper' },
+    { name: 'Outdoor Kitchen', prompt: 'Luxury outdoor kitchen hardscape, professional stone and masonry work, outdoor entertainment theme, sophisticated and functional', aspectRatio: '16:9', category: 'Hardscaper' },
+    { name: 'Walkway Design', prompt: 'Beautiful hardscape walkway and pathway, professional landscape integration, aesthetic and functional design, inviting and well-crafted', aspectRatio: '4:3', category: 'Hardscaper' },
+  ],
+
+  'IT Services': [
+    { name: 'Network Solutions', prompt: 'Professional IT network infrastructure, server room and technology systems, reliability and security theme, expert IT services', aspectRatio: '16:9', category: 'IT Services' },
+    { name: 'Cybersecurity Protection', prompt: 'IT cybersecurity and data protection concept, digital security shield, safety and trust theme, professional IT security services', aspectRatio: '16:9', category: 'IT Services' },
+    { name: 'Cloud Migration', prompt: 'Cloud computing and migration services, modern IT infrastructure, efficiency and scalability theme, professional cloud solutions', aspectRatio: '16:9', category: 'IT Services' },
+    { name: 'Help Desk Support', prompt: 'IT support and help desk service, professional technician assisting client, responsive and reliable support theme, customer-focused', aspectRatio: '4:3', category: 'IT Services' },
+    { name: 'Managed IT Services', prompt: 'Comprehensive managed IT services concept, proactive technology management, efficiency and peace of mind theme, professional and reliable', aspectRatio: '16:9', category: 'IT Services' },
+  ],
+
+  'Landscaper': [
+    { name: 'Lawn Perfection', prompt: 'Perfectly manicured lawn and landscape, professional landscaping service results, lush and beautiful outdoor space, quality and care', aspectRatio: '16:9', category: 'Landscaper' },
+    { name: 'Garden Design', prompt: 'Beautiful garden landscape design, professional planting and arrangement, colorful and vibrant outdoor space, artistic and natural', aspectRatio: '4:3', category: 'Landscaper' },
+    { name: 'Seasonal Cleanup', prompt: 'Professional landscape maintenance and cleanup, seasonal yard care service, neat and well-maintained property, reliable service', aspectRatio: '16:9', category: 'Landscaper' },
+    { name: 'Landscape Transformation', prompt: 'Dramatic landscape transformation before and after, professional landscaping results, impressive improvement theme, quality workmanship', aspectRatio: '16:9', category: 'Landscaper' },
+    { name: 'Outdoor Living Space', prompt: 'Beautiful outdoor living space with professional landscaping, integrated design and natural elements, relaxing and inviting atmosphere', aspectRatio: '4:3', category: 'Landscaper' },
+  ],
+
+  'Lawyer': [
+    { name: 'Legal Expertise', prompt: 'Professional lawyer in office with law books, legal expertise and authority theme, trustworthy and credible, corporate legal aesthetic', aspectRatio: '4:3', category: 'Lawyer' },
+    { name: 'Courtroom Advocacy', prompt: 'Courtroom and legal advocacy concept, professional legal representation, justice and expertise theme, authoritative and confident', aspectRatio: '16:9', category: 'Lawyer' },
+    { name: 'Contract Review', prompt: 'Legal contract review and consultation, professional lawyer analyzing documents, attention to detail theme, thorough and expert', aspectRatio: '16:9', category: 'Lawyer' },
+    { name: 'Client Consultation', prompt: 'Lawyer consulting with client, professional legal advice session, trust and guidance theme, approachable and expert', aspectRatio: '4:3', category: 'Lawyer' },
+    { name: 'Justice & Protection', prompt: 'Legal protection and justice concept, scales of justice and legal symbols, defense and advocacy theme, professional and trustworthy', aspectRatio: '16:9', category: 'Lawyer' },
+  ],
+
+  'Marketing Agency': [
+    { name: 'Creative Campaign', prompt: 'Creative marketing campaign concept, brainstorming and strategy session, innovation and results theme, dynamic agency environment', aspectRatio: '16:9', category: 'Marketing Agency' },
+    { name: 'Digital Marketing', prompt: 'Digital marketing analytics and performance, social media and online presence, growth and engagement theme, data-driven results', aspectRatio: '16:9', category: 'Marketing Agency' },
+    { name: 'Brand Development', prompt: 'Brand development and identity creation, professional branding services, creative and strategic theme, impactful and memorable', aspectRatio: '4:3', category: 'Marketing Agency' },
+    { name: 'Content Creation', prompt: 'Content creation and marketing production, professional creative team at work, engaging and quality content theme, innovative and strategic', aspectRatio: '16:9', category: 'Marketing Agency' },
+    { name: 'ROI Success', prompt: 'Marketing ROI and business growth results, successful campaign metrics, performance and results theme, proven and effective', aspectRatio: '16:9', category: 'Marketing Agency' },
+  ],
+
+  'Painter': [
+    { name: 'Interior Transformation', prompt: 'Professional interior painting transformation, fresh painted room with perfect finish, quality and craftsmanship theme, clean and beautiful results', aspectRatio: '4:3', category: 'Painter' },
+    { name: 'Exterior Excellence', prompt: 'Exterior house painting project, professional painter at work, curb appeal and protection theme, quality and durability', aspectRatio: '16:9', category: 'Painter' },
+    { name: 'Color Consultation', prompt: 'Professional color consultation and paint selection, expert advice and samples, personalized and creative theme, helpful and knowledgeable', aspectRatio: '4:3', category: 'Painter' },
+    { name: 'Commercial Painting', prompt: 'Commercial painting project, large-scale professional work, efficiency and quality theme, reliable business service', aspectRatio: '16:9', category: 'Painter' },
+    { name: 'Detail & Precision', prompt: 'Precision painting detail work, professional craftsmanship close-up, attention to detail theme, quality and expertise', aspectRatio: '4:3', category: 'Painter' },
+  ],
+
+  'Personal Trainer': [
+    { name: 'Fitness Transformation', prompt: 'Personal training fitness transformation, client achieving goals with trainer support, motivation and results theme, inspiring and empowering', aspectRatio: '16:9', category: 'Personal Trainer' },
+    { name: 'Workout Session', prompt: 'Personal training workout session, trainer coaching client, professional fitness guidance, energetic and motivating', aspectRatio: '4:3', category: 'Personal Trainer' },
+    { name: 'Nutrition Coaching', prompt: 'Personal trainer nutrition coaching, healthy meal planning and guidance, wellness and health theme, holistic and supportive', aspectRatio: '16:9', category: 'Personal Trainer' },
+    { name: 'Strength Training', prompt: 'Strength training with personal trainer, professional fitness coaching, power and progress theme, motivating and results-focused', aspectRatio: '4:3', category: 'Personal Trainer' },
+    { name: 'Goal Achievement', prompt: 'Fitness goal achievement celebration, personal training success story, transformation and victory theme, inspiring and motivational', aspectRatio: '1:1', category: 'Personal Trainer' },
+  ],
+
+  'Photographer': [
+    { name: 'Portrait Session', prompt: 'Professional portrait photography session, photographer with camera and lighting, artistic and creative theme, quality and expertise', aspectRatio: '4:3', category: 'Photographer' },
+    { name: 'Wedding Photography', prompt: 'Beautiful wedding photography moment, romantic and elegant capture, special memories theme, artistic and professional', aspectRatio: '16:9', category: 'Photographer' },
+    { name: 'Commercial Photography', prompt: 'Commercial photography studio setup, professional product or business photography, quality and precision theme, expert and versatile', aspectRatio: '16:9', category: 'Photographer' },
+    { name: 'Event Coverage', prompt: 'Event photography coverage, photographer capturing special moments, professional documentation theme, reliable and skilled', aspectRatio: '16:9', category: 'Photographer' },
+    { name: 'Creative Vision', prompt: 'Creative photography concept, artistic vision and unique perspective, innovation and artistry theme, distinctive and professional', aspectRatio: '4:3', category: 'Photographer' },
+  ],
+
+  'Plumber': [
+    { name: 'Expert Installation', prompt: 'Professional plumber installing modern fixtures, expert plumbing service, quality and reliability theme, skilled and trustworthy', aspectRatio: '4:3', category: 'Plumber' },
+    { name: 'Emergency Service', prompt: 'Emergency plumbing service response, 24/7 availability and quick repair, reliable and professional service, problem-solving theme', aspectRatio: '16:9', category: 'Plumber' },
+    { name: 'Pipe Repair', prompt: 'Professional pipe repair and plumbing maintenance, expert diagnosis and fix, quality workmanship theme, thorough and reliable', aspectRatio: '16:9', category: 'Plumber' },
+    { name: 'Bathroom Renovation', prompt: 'Bathroom plumbing renovation, modern fixture installation, upgrade and improvement theme, quality and style', aspectRatio: '4:3', category: 'Plumber' },
+    { name: 'Water Heater Service', prompt: 'Water heater installation or repair service, professional plumbing expertise, comfort and efficiency theme, reliable and expert', aspectRatio: '16:9', category: 'Plumber' },
+  ],
+
   'Real Estate': [
     { name: 'Luxury Property Showcase', prompt: 'Elegant luxury home exterior with modern architecture, manicured landscaping, golden hour lighting, professional real estate photography style, high-end residential property', aspectRatio: '4:3', category: 'Real Estate' },
     { name: 'Open House Invitation', prompt: 'Welcoming open house scene with "Welcome Home" aesthetic, bright and inviting residential entrance, professional staging, warm afternoon lighting, real estate marketing style', aspectRatio: '16:9', category: 'Real Estate' },
@@ -69,6 +181,30 @@ export const industryTemplates = {
     { name: 'Growth & Transformation', prompt: 'Business growth and transformation concept, upward trajectory visualization, success and innovation theme, professional consulting imagery, dynamic and progressive', aspectRatio: '16:9', category: 'Consulting' },
     { name: 'Team Collaboration', prompt: 'Collaborative team working together, modern office environment, teamwork and synergy theme, professional business photography, energetic and productive', aspectRatio: '16:9', category: 'Consulting' },
     { name: 'Problem Solving Expert', prompt: 'Problem-solving and strategic thinking concept, professional consultant analyzing data, expertise and solutions theme, corporate imagery, analytical and confident', aspectRatio: '4:3', category: 'Consulting' },
+  ],
+
+  'Roofer': [
+    { name: 'Roof Installation', prompt: 'Professional roofing installation project, roofer working on quality roof, craftsmanship and durability theme, reliable and expert service', aspectRatio: '16:9', category: 'Roofer' },
+    { name: 'Storm Damage Repair', prompt: 'Emergency roof repair after storm damage, professional roofing restoration, quick response and quality work theme, reliable and trustworthy', aspectRatio: '16:9', category: 'Roofer' },
+    { name: 'Roof Inspection', prompt: 'Professional roof inspection service, roofer examining roof condition, preventive maintenance theme, thorough and expert assessment', aspectRatio: '4:3', category: 'Roofer' },
+    { name: 'New Construction Roofing', prompt: 'New construction roofing project, professional installation on new build, quality and precision theme, expert craftsmanship', aspectRatio: '16:9', category: 'Roofer' },
+    { name: 'Roof Replacement', prompt: 'Complete roof replacement project, transformation and upgrade, quality materials and workmanship theme, professional and reliable', aspectRatio: '4:3', category: 'Roofer' },
+  ],
+
+  'Software/SaaS': [
+    { name: 'Product Dashboard', prompt: 'Modern SaaS product dashboard interface, clean user experience design, professional software visualization, innovation and usability theme', aspectRatio: '16:9', category: 'Software/SaaS' },
+    { name: 'Development Team', prompt: 'Software development team collaborating, modern tech office environment, innovation and expertise theme, professional and dynamic', aspectRatio: '16:9', category: 'Software/SaaS' },
+    { name: 'Cloud Platform', prompt: 'Cloud-based software platform concept, scalable technology infrastructure, efficiency and reliability theme, professional and cutting-edge', aspectRatio: '16:9', category: 'Software/SaaS' },
+    { name: 'Integration Ecosystem', prompt: 'Software integration and API ecosystem, connected platforms visualization, versatility and compatibility theme, professional tech imagery', aspectRatio: '16:9', category: 'Software/SaaS' },
+    { name: 'Customer Success', prompt: 'SaaS customer success and support, professional client relationship, satisfaction and results theme, trustworthy and supportive', aspectRatio: '4:3', category: 'Software/SaaS' },
+  ],
+
+  'Web Developer': [
+    { name: 'Modern Website Design', prompt: 'Modern responsive website design showcase, professional web development, clean user interface theme, innovative and functional', aspectRatio: '16:9', category: 'Web Developer' },
+    { name: 'Coding Workspace', prompt: 'Professional web developer coding workspace, multiple monitors with code, expertise and precision theme, technical and focused', aspectRatio: '16:9', category: 'Web Developer' },
+    { name: 'E-commerce Platform', prompt: 'Professional e-commerce website development, online store platform, conversion and user experience theme, polished and effective', aspectRatio: '16:9', category: 'Web Developer' },
+    { name: 'Mobile Responsive', prompt: 'Mobile-responsive web design concept, cross-device compatibility, modern web development theme, professional and versatile', aspectRatio: '4:3', category: 'Web Developer' },
+    { name: 'Web Application', prompt: 'Custom web application development, complex functionality and clean interface, professional software engineering theme, sophisticated and powerful', aspectRatio: '16:9', category: 'Web Developer' },
   ],
 };
 
