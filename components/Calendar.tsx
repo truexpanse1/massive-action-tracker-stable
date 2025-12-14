@@ -1,12 +1,12 @@
-
 import React from 'react';
 
 interface CalendarProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
+  datesWithActivity?: string[]; // Array of date strings (YYYY-MM-DD) that have activity
 }
 
-const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateChange }) => {
+const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateChange, datesWithActivity = [] }) => {
   const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   
   const currentMonth = selectedDate.getMonth();
@@ -22,7 +22,7 @@ const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateChange }) => {
   };
 
   const handleDayClick = (day: number) => {
-    if (day > 0 && day !== currentDate) {
+    if (day > 0) {
         const newDate = new Date(currentYear, currentMonth, day);
         onDateChange(newDate);
     }
@@ -36,13 +36,18 @@ const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateChange }) => {
     return new Date(year, month, 1).getDay();
   };
 
+  const hasActivity = (day: number): boolean => {
+    if (!day) return false;
+    const dateKey = new Date(currentYear, currentMonth, day).toISOString().split('T')[0];
+    return datesWithActivity.includes(dateKey);
+  };
+
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
 
   const calendarDays = Array.from({ length: firstDay }, () => null).concat(
     Array.from({ length: daysInMonth }, (_, i) => i + 1)
   );
-
 
   return (
     <div className="bg-brand-light-card dark:bg-brand-navy p-3 rounded-lg border border-brand-light-border dark:border-brand-gray">
@@ -63,18 +68,26 @@ const Calendar: React.FC<CalendarProps> = ({ selectedDate, onDateChange }) => {
       </div>
       <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 dark:text-gray-400">
         {daysOfWeek.map((day, i) => <div key={i} className="font-semibold w-7 h-7 flex items-center justify-center">{day}</div>)}
-        {calendarDays.map((day, index) => (
-          <button
-            key={index}
-            onClick={() => handleDayClick(day as number)}
-            disabled={!day}
-            className={`p-1 rounded-full w-7 h-7 mx-auto flex items-center justify-center text-xs transition-colors ${
-                !day ? 'cursor-default' : 'hover:bg-gray-200 dark:hover:bg-brand-gray'
-            } ${day === currentDate ? 'bg-brand-blue text-white font-bold' : 'text-brand-light-text dark:text-gray-300'}`}
-          >
-            {day}
-          </button>
-        ))}
+        {calendarDays.map((day, index) => {
+          const isSelected = day === currentDate;
+          const hasLeads = hasActivity(day as number);
+          
+          return (
+            <button
+              key={index}
+              onClick={() => handleDayClick(day as number)}
+              disabled={!day}
+              className={`p-1 rounded-full w-7 h-7 mx-auto flex items-center justify-center text-xs transition-colors relative ${
+                  !day ? 'cursor-default' : 'hover:bg-gray-200 dark:hover:bg-brand-gray'
+              } ${isSelected ? 'bg-brand-blue text-white font-bold' : 'text-brand-light-text dark:text-gray-300'}`}
+            >
+              {day}
+              {hasLeads && (
+                <span className={`absolute bottom-0.5 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-brand-lime'}`} />
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

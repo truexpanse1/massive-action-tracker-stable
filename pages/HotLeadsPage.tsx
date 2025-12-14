@@ -22,15 +22,31 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Contact | null>(null);
   const [expandedFollowUps, setExpandedFollowUps] = useState<string | null>(null);
-  const [filterDate, setFilterDate] = useState<string>('');
+  const [isCalendarFiltered, setIsCalendarFiltered] = useState(false);
 
+  // Get dates that have hot leads
+  const datesWithLeads = useMemo(() => {
+    const dates = new Set<string>();
+    hotLeads.forEach(lead => {
+      if (lead.dateAdded) {
+        const dateKey = lead.dateAdded.split('T')[0];
+        dates.add(dateKey);
+      }
+    });
+    return Array.from(dates);
+  }, [hotLeads]);
+
+  // Filter leads based on calendar selection
   const filteredLeads = useMemo(() => {
     const sorted = [...hotLeads].sort((a, b) => new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime());
-    if (!filterDate) {
-        return sorted;
+    
+    if (!isCalendarFiltered) {
+      return sorted;
     }
-    return sorted.filter(lead => lead.dateAdded && lead.dateAdded.startsWith(filterDate));
-  }, [hotLeads, filterDate]);
+    
+    const selectedDateKey = selectedDate.toISOString().split('T')[0];
+    return sorted.filter(lead => lead.dateAdded && lead.dateAdded.startsWith(selectedDateKey));
+  }, [hotLeads, selectedDate, isCalendarFiltered]);
 
   const handleLeadChange = (id: string, field: keyof Omit<Contact, 'id'>, value: string | number) => {
     const leadToUpdate = hotLeads.find(l => l.id === id);
@@ -91,25 +107,50 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
     alert(`${data.name} added to Hot Leads!`);
   };
 
+  const handleCalendarDateChange = (date: Date) => {
+    onDateChange(date);
+    setIsCalendarFiltered(true);
+  };
+
+  const handleShowAllLeads = () => {
+    setIsCalendarFiltered(false);
+  };
+
   return (
     <>
      <SetAppointmentModal isOpen={isAppointmentModalOpen} onClose={() => setIsAppointmentModalOpen(false)} onSave={handleSaveAppointment} contact={selectedLead} />
      <ConvertToClientModal isOpen={isConvertModalOpen} onClose={() => setIsConvertModalOpen(false)} onSave={handleConfirmConvertToClient} contact={selectedLead} />
      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-3 space-y-8">
-            <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
+            <Calendar 
+              selectedDate={selectedDate} 
+              onDateChange={handleCalendarDateChange}
+              datesWithActivity={datesWithLeads}
+            />
              <QuickActions onSetAppointment={handleQuickSetAppointment} onAddToHotLeads={handleQuickAddToHotLeads} />
         </div>
         <div className="lg:col-span-9">
             <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
               <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                <h1 className="text-3xl font-bold text-brand-light-text dark:text-white">Hot Leads</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-bold text-brand-light-text dark:text-white">
+                    Hot Leads
+                    {isCalendarFiltered && (
+                      <span className="text-lg font-normal text-gray-500 dark:text-gray-400 ml-2">
+                        - {selectedDate.toLocaleDateString()} ({filteredLeads.length})
+                      </span>
+                    )}
+                  </h1>
+                  {isCalendarFiltered && (
+                    <button
+                      onClick={handleShowAllLeads}
+                      className="text-sm bg-gray-200 dark:bg-brand-gray text-gray-700 dark:text-gray-300 px-3 py-1 rounded-lg hover:bg-gray-300 dark:hover:bg-brand-gray/70 transition"
+                    >
+                      Show All Leads
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Filter Date:</label>
-                        <DatePicker value={filterDate} onChange={setFilterDate} className="w-32" />
-                        {filterDate && <button onClick={() => setFilterDate('')} className="text-red-500 hover:text-red-400 font-bold text-xl" title="Clear filter">&times;</button>}
-                    </div>
                     <button onClick={handleAddLead} className="bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm whitespace-nowrap">+ Add New Lead</button>
                 </div>
               </div>
@@ -136,7 +177,15 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
                       {expandedFollowUps === lead.id && (<tr><td colSpan={6} className="p-3 bg-brand-light-bg dark:bg-brand-gray/20"><h4 className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2">Follow-up Plan (Starts: {lead.appointmentDate})</h4><ul className="text-xs space-y-1">{Object.entries(followUpSchedule).map(([day, activity]) => { const isCompleted = lead.completedFollowUps && lead.completedFollowUps[parseInt(day,10)]; return (<li key={day} className={`flex items-center ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-700 dark:text-gray-300'}`}><span className="font-bold w-12">Day {day}:</span><span>{activity}</span></li>)})}</ul></td></tr>)}
                       </React.Fragment>
                     ))}
-                    {filteredLeads.length === 0 && (<tr><td colSpan={6} className="text-center p-8 text-gray-500 dark:text-gray-400">{filterDate ? `No hot leads acquired on ${filterDate}.` : 'No hot leads yet. Add some from the Prospecting page!'}</td></tr>)}
+                    {filteredLeads.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center p-8 text-gray-500 dark:text-gray-400">
+                          {isCalendarFiltered 
+                            ? `No hot leads added on ${selectedDate.toLocaleDateString()}.` 
+                            : 'No hot leads yet. Add some from the Prospecting page!'}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
