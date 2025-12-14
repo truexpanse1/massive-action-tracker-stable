@@ -23,6 +23,7 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
   const [selectedLead, setSelectedLead] = useState<Contact | null>(null);
   const [expandedFollowUps, setExpandedFollowUps] = useState<string | null>(null);
   const [isCalendarFiltered, setIsCalendarFiltered] = useState(false);
+  const [showFollowUpLegend, setShowFollowUpLegend] = useState(false);
 
   // Get dates that have hot leads
   const datesWithLeads = useMemo(() => {
@@ -155,12 +156,48 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
                 </div>
               </div>
               
+              {showFollowUpLegend && (
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-brand-gray/30 border border-brand-blue/30 rounded-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-sm font-bold text-brand-blue uppercase">📋 30-Day Follow-Up Plan</h3>
+                    <button
+                      onClick={() => setShowFollowUpLegend(false)}
+                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 font-bold text-lg"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                    Follow-ups begin on the appointment date. Complete each step to maximize conversion.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
+                    {Object.entries(followUpSchedule).map(([day, activity]) => (
+                      <div key={day} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                        <span className="font-bold text-brand-blue min-w-[60px]">Day {day}:</span>
+                        <span>{activity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left table-auto">
                   <thead className="bg-brand-light-bg dark:bg-brand-gray/50 text-xs uppercase text-gray-500 dark:text-gray-400">
                     <tr>
                       <th className="p-3">Name</th><th className="p-3">Phone</th><th className="p-3">Email</th>
-                      <th className="p-3 text-center">Follow-ups</th><th className="p-3">Actions</th><th className="p-3 text-center w-12"></th>
+                      <th className="p-3 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <span>Follow-ups</span>
+                          <button
+                            onClick={() => setShowFollowUpLegend(!showFollowUpLegend)}
+                            className="text-brand-blue hover:text-blue-600 font-bold text-sm"
+                            title="View 30-Day Follow-Up Plan"
+                          >
+                            ℹ️
+                          </button>
+                        </div>
+                      </th><th className="p-3">Actions</th><th className="p-3 text-center w-12"></th>
                     </tr>
                   </thead>
                   <tbody>
