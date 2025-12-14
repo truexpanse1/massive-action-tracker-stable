@@ -92,33 +92,40 @@ export const getProductsForIndustry = async (industry: string): Promise<string[]
 };
 
 /**
- * CORRECTED: Uses 'imagen-3.0-generate-002' and maps aspect ratio to pixel size.
+ * IMAGE GENERATION
+ * Uses gemini-2.5-flash-image to generate an image from text.
+ * Returns a data URL (base64) you can drop straight into an <img src="...">.
  */
 export const generateImage = async (prompt: string, aspectRatio: string): Promise<string> => {
-    // Map the frontend aspect ratio string to the required Imagen API format
-    const dimensionsMap: Record<string, string> = {
-        '1:1': '1024x1024',
-        '16:9': '1792x1024',
-        '9:16': '1024x1792',
-        '4:3': '1344x1024',
-        '3:4': '1024x1344',
-    };
-    
-    const size = dimensionsMap[aspectRatio] || '1024x1024';
-    
     try {
-        const response = await ai.models.generateImages({
-            model: 'imagen-3.0-generate-001', 
-            prompt,
-            config: { 
-                numberOfImages: 1, 
-                outputMimeType: 'image/jpeg', 
-                aspectRatio: size, 
-                style: "PHOTOREALISM"
+        // We pass everything through gemini-2.5-flash-image instead of Imagen,
+        // because this matches what works in Google AI Studio and avoids
+        // separate Imagen / Vertex configuration.
+        const fullPrompt = aspectRatio
+            ? `${prompt}\n\nAspect ratio: ${aspectRatio}`
+            : prompt;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: fullPrompt,
+            config: {
+                // Tell the model we want image output.
+                responseModalities: [Modality.IMAGE],
             },
         });
-        const base64ImageBytes = response.generatedImages[0].image.imageBytes;
-        return `data:image/jpeg;base64,${base64ImageBytes}`;
+
+        const candidate = response.candidates?.[0];
+        const parts = candidate?.content?.parts ?? [];
+
+        for (const part of parts) {
+            if (part.inlineData) {
+                const mime = part.inlineData.mimeType || 'image/png';
+                return `data:${mime};base64,${part.inlineData.data}`;
+            }
+        }
+
+        console.error('generateImage: No inlineData part found in response', { response });
+        throw new Error('No image was returned from generateImage.');
     } catch (error) {
         console.error('Error generating image:', error);
         throw error;
@@ -126,28 +133,36 @@ export const generateImage = async (prompt: string, aspectRatio: string): Promis
 };
 
 /**
- * CORRECTED: Uses 'imagen-3.0-generate-002' endpoint and passes image data as sourceImage for editing.
+ * IMAGE EDITING
+ * Takes an existing base64 image + prompt and returns a new edited image as data URL.
  */
 export const editImage = async (base64ImageData: string, mimeType: string, prompt: string): Promise<string> => {
     try {
-        // Extract the base64 data only from the full Data URL
-        const base64DataOnly = base64ImageData.split(',')[1];
-
-        const response = await ai.models.generateImages({
-            model: 'imagen-3.0-generate-001', 
-            prompt: prompt,
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: {
+                parts: [
+                    { inlineData: { data: base64ImageData, mimeType } },
+                    { text: prompt },
+                ],
+            },
             config: {
-                numberOfImages: 1,
-                outputMimeType: 'image/jpeg',
-                sourceImage: {
-                    imageBytes: base64DataOnly,
-                    mimeType: mimeType,
-                },
+                responseModalities: [Modality.IMAGE],
             },
         });
 
-        const base64ImageBytes = response.generatedImages[0].image.imageBytes;
-        return `data:image/jpeg;base64,${base64ImageBytes}`;
+        const candidate = response.candidates?.[0];
+        const parts = candidate?.content?.parts ?? [];
+
+        for (const part of parts) {
+            if (part.inlineData) {
+                const mime = part.inlineData.mimeType || 'image/png';
+                return `data:${mime};base64,${part.inlineData.data}`;
+            }
+        }
+
+        console.error('editImage: No inlineData part found in response', { response });
+        throw new Error('No image was returned from the editImage call.');
     } catch (error) {
         console.error('Error editing image:', error);
         throw error;
@@ -155,23 +170,23 @@ export const editImage = async (base64ImageData: string, mimeType: string, promp
 };
 
 /**
- * RETAINED: Uses gemini-2.5-flash for the vision-to-text task (suggestion).
+ * Suggest a simple edit command for an image (used for the "Suggest edit" button).
  */
 export const getEditSuggestion = async (base64ImageData: string, mimeType: string): Promise<string> => {
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: { 
+            contents: {
                 parts: [
-                    { inlineData: { data: base64ImageData, mimeType } }, 
-                    { text: 'Suggest a short, creative edit for this image. The suggestion should be a command, like "Make the sky a vibrant sunset" or "Add a small, red boat on the water". Provide only the command text, nothing else.' }
-                ] 
+                    { inlineData: { data: base64ImageData, mimeType } },
+                    { text: 'Suggest a short, creative edit for this image. The suggestion should be a command, like "Make the sky a vibrant sunset" or "Add a small, red boat on the water". Provide only the command text, nothing else.' },
+                ],
             },
         });
-        return response.text.trim();
+        return (response.text ?? '').trim() || 'Enhance the lighting and colors.';
     } catch (error) {
         console.error('Error getting edit suggestion:', error);
-        return 'Enhance the lighting and colors.'; 
+        return 'Enhance the lighting and colors.';
     }
 };
 
