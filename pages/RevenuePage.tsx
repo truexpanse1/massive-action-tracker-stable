@@ -282,15 +282,16 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                                 fill="#34D399" 
                                 className="hover:opacity-80 transition-opacity"
                             />
-                            {/* Value label on top of bar */}
+                            {/* Value label on top of bar - angled at 45 degrees */}
                             {d.revenue > 0 && (
                                 <text 
                                     x={x + barWidth / 2} 
-                                    y={y - 5} 
-                                    className="text-[9px] fill-gray-600 dark:fill-gray-300 font-semibold" 
-                                    textAnchor="middle"
+                                    y={y - 8} 
+                                    className="text-[8px] fill-gray-600 dark:fill-gray-300 font-semibold" 
+                                    textAnchor="start"
+                                    transform={`rotate(-45 ${x + barWidth / 2} ${y - 8})`}
                                 >
-                                    {formatCurrency(d.revenue)}
+                                    {`$${Math.round(d.revenue).toLocaleString()}`}
                                 </text>
                             )}
                             {/* X-axis label */}
