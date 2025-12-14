@@ -174,8 +174,11 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
         const width = 500, height = 200, padding = 40;
         const maxRevenue = Math.max(...data.map(d => d.revenue), 0);
         const yMax = maxRevenue === 0 ? 1000 : Math.ceil(maxRevenue * 1.1);
-        const barWidth = Math.min(40, (width - padding * 2) / data.length * 0.8);
-        const spacing = (width - padding * 2) / data.length;
+        
+        // Dynamic bar width calculation - always fills the space nicely
+        const availableWidth = width - padding * 2;
+        const spacing = availableWidth / data.length;
+        const barWidth = spacing * 0.75; // 75% of space for bar, 25% for gap
         
         return ( 
             <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
