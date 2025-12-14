@@ -27,6 +27,7 @@ import NewClientsPage from '../pages/NewClientsPage';
 import RevenuePage from '../pages/RevenuePage';
 import MonthViewPage from '../pages/MonthViewPage';
 import AIImagesPage from '../pages/AIImagesPage';
+import AIImagesPageEnhanced from '../pages/AIImagesPageEnhanced';
 import AIContentPage from '../pages/AIContentPage';
 import CoachingPage from '../pages/CoachingPage';
 import TeamControlPage from '../pages/TeamControlPage';
@@ -841,6 +842,8 @@ const App: React.FC = () => {
         );
       case 'ai-images':
         return <AIImagesPage />;
+      case 'ai-images-pro':
+        return <AIImagesPageEnhanced />;
       case 'ai-content':
         return <AIContentPage />;
       case 'coaching':

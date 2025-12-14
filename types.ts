@@ -13,6 +13,7 @@ export type View =
   | 'new-clients'
   | 'revenue'
   | 'ai-images'
+  | 'ai-images-pro'
   | 'ai-content'
   | 'coaching'
   | 'team-control'
