@@ -91,15 +91,15 @@ const DayView: React.FC<DayViewProps> = ({
 
       if (alreadyRolledOver) return;
 
-      // Find uncompleted targets from yesterday
+      // Find uncompleted targets from yesterday that haven't been rolled yet
       const uncompletedTargets = (yesterdayData.topTargets || [])
-        .filter(g => !g.completed)
-        .map(g => ({ ...g, rolledOver: true, id: `${g.id}-rolled` })); // New ID to avoid conflicts
+        .filter(g => !g.completed && !g.rolledOver) // Don't roll items that were already rolled
+        .map(g => ({ ...g, rolledOver: true, id: `${g.id}-rolled-${currentDateKey}` })); // Unique ID per day
 
-      // Find uncompleted massive goals from yesterday
+      // Find uncompleted massive goals from yesterday that haven't been rolled yet
       const uncompletedGoals = (yesterdayData.massiveGoals || [])
-        .filter(g => !g.completed)
-        .map(g => ({ ...g, id: `${g.id}-rolled` })); // New ID, but no rolledOver flag for goals
+        .filter(g => !g.completed && !g.id.includes('-rolled')) // Don't roll items that were already rolled
+        .map(g => ({ ...g, id: `${g.id}-rolled-${currentDateKey}` })); // Unique ID per day
 
       // If there are items to roll over
       if (uncompletedTargets.length > 0 || uncompletedGoals.length > 0) {
