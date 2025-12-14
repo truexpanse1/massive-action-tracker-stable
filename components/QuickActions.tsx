@@ -1,19 +1,21 @@
 import React, { useState, useMemo } from 'react';
-import { formatPhoneNumber } from '../types';
+import { formatPhoneNumber, followUpSchedule } from '../types';
 import DatePicker from './DatePicker';
 
 interface QuickActionsProps {
   onSetAppointment: (data: { name: string, phone: string, email: string, date: string, time: string, interestLevel: number }) => void;
-  onAddToHotLeads: (data: { name: string, phone: string, email: string, interestLevel: number }) => void;
+  onAddToHotLeads: (data: { name: string, phone: string, email: string, interestLevel: number, appointmentDate?: string }) => void;
+  autoEnrollInHotLeads?: boolean; // New prop to control auto-enrollment
 }
 
-const QuickActions: React.FC<QuickActionsProps> = ({ onSetAppointment, onAddToHotLeads }) => {
+const QuickActions: React.FC<QuickActionsProps> = ({ onSetAppointment, onAddToHotLeads, autoEnrollInHotLeads = true }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [interestLevel, setInterestLevel] = useState(5);
+  const [showLegend, setShowLegend] = useState(false);
 
   const timeOptions = useMemo(() => {
     const options: { display: string; value: string }[] = [];
@@ -50,6 +52,12 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onSetAppointment, onAddToHo
       return;
     }
     onSetAppointment({ name, phone, email, date, time, interestLevel });
+    
+    // Auto-enroll in Hot Leads when setting appointment with appointment date
+    if (autoEnrollInHotLeads) {
+      onAddToHotLeads({ name, phone, email, interestLevel, appointmentDate: date });
+    }
+    
     resetForm();
   };
 
@@ -64,7 +72,78 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onSetAppointment, onAddToHo
 
   return (
     <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
-      <h3 className="text-lg font-bold mb-4 bg-brand-gray/80 text-white p-2 rounded text-center">PIPELINE PROGRESS</h3>
+      <div className="flex items-center justify-between mb-4 bg-brand-gray/80 text-white p-2 rounded">
+        <h3 className="text-lg font-bold text-center flex-1">PIPELINE PROGRESS</h3>
+        <button
+          onClick={() => setShowLegend(!showLegend)}
+          className="text-white hover:text-brand-lime transition-colors text-xl font-bold ml-2"
+          title="Show/Hide Follow-up Plan"
+        >
+          ℹ️
+        </button>
+      </div>
+      
+      {/* Follow-up Legend - Collapsible */}
+      {showLegend && (
+        <div className="mb-4 p-3 bg-brand-blue/10 dark:bg-brand-blue/20 border border-brand-blue/30 rounded-lg relative">
+          <button
+            onClick={() => setShowLegend(false)}
+            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-xl font-bold leading-none"
+            title="Close"
+          >
+            ×
+          </button>
+          <h4 className="text-sm font-bold text-brand-blue dark:text-brand-lime mb-2">30-Day Follow-up Plan</h4>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 italic">Follow-ups start on appointment date (Day 1)</p>
+          <div className="grid grid-cols-1 gap-2 text-xs">
+            <div className="flex items-center">
+              <span className="font-bold text-brand-blue dark:text-brand-lime mr-2 w-16">Day 1:</span>
+              <span className="mr-2">📞</span>
+              <span className="text-gray-700 dark:text-gray-300">Call</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-bold text-brand-blue dark:text-brand-lime mr-2 w-16">Day 2:</span>
+              <span className="mr-2">✉️</span>
+              <span className="text-gray-700 dark:text-gray-300">Handwritten Letter</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-bold text-brand-blue dark:text-brand-lime mr-2 w-16">Day 3:</span>
+              <span className="mr-2">📱</span>
+              <span className="text-gray-700 dark:text-gray-300">Text Video</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-bold text-brand-blue dark:text-brand-lime mr-2 w-16">Day 4:</span>
+              <span className="mr-2">🚗</span>
+              <span className="text-gray-700 dark:text-gray-300">Personal Visit</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-bold text-brand-blue dark:text-brand-lime mr-2 w-16">Day 5:</span>
+              <span className="mr-2">💭</span>
+              <span className="text-gray-700 dark:text-gray-300">Thought of You</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-bold text-brand-blue dark:text-brand-lime mr-2 w-16">Day 10:</span>
+              <span className="mr-2">🎟️</span>
+              <span className="text-gray-700 dark:text-gray-300">Event Offer</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-bold text-brand-blue dark:text-brand-lime mr-2 w-16">Day 14:</span>
+              <span className="mr-2">🔗</span>
+              <span className="text-gray-700 dark:text-gray-300">Informational Links</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-bold text-brand-blue dark:text-brand-lime mr-2 w-16">Day 21:</span>
+              <span className="mr-2">🎥</span>
+              <span className="text-gray-700 dark:text-gray-300">Video Email</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-bold text-brand-blue dark:text-brand-lime mr-2 w-16">Day 30:</span>
+              <span className="mr-2">🎁</span>
+              <span className="text-gray-700 dark:text-gray-300">Special Offer</span>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="space-y-3">
         {/* Input Fields */}
         <input type="text" placeholder="Contact Name" value={name} onChange={e => setName(e.target.value)} className="w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white text-sm p-1 focus:outline-none focus:border-brand-blue focus:border-solid" />

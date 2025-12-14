@@ -171,6 +171,9 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
       };
       updateCurrentData({ prospectingContacts: newContacts });
     }
+    
+    // Show success message for appointment
+    alert(`Appointment set for ${data.name} on ${data.date} at ${data.time}. Contact added to Hot Leads with follow-up tracking!`);
   };
 
   const handleQuickAddToHotLeads = async (data: {
@@ -178,6 +181,7 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
     phone: string;
     email: string;
     interestLevel: number;
+    appointmentDate?: string; // Optional appointment date for auto-enrollment
   }) => {
     const newContactData = {
       name: data.name,
@@ -187,6 +191,7 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
       interestLevel: data.interestLevel,
       prospecting: {},
       dateAdded: new Date().toISOString(),
+      appointmentDate: data.appointmentDate, // Pass appointment date for follow-up tracking
       completedFollowUps: {},
     };
     const newHotLead = await onAddHotLead(newContactData);
@@ -197,7 +202,10 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
         newContacts[emptyIndex] = { ...newContacts[emptyIndex], ...newHotLead };
         updateCurrentData({ prospectingContacts: newContacts });
       }
-      alert(`${data.name} added to Hot Leads!`);
+      // Only show alert if not auto-enrolled from appointment
+      if (!data.appointmentDate) {
+        alert(`${data.name} added to Hot Leads!`);
+      }
     }
   };
 
