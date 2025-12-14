@@ -1,210 +1,149 @@
 import React, { useState, useMemo } from 'react';
-import { Contact, User } from '../types';
-import HotLeadCard from '@/components/HotLeadCard';
-import StatCard from '@/components/StatCard'; // <-- THIS IS THE FIX
-import { formatCurrency } from '../types';
-import { CalendarDaysIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { Contact, CalendarEvent, formatPhoneNumber, followUpSchedule } from '../src/types';
+import Calendar from '../components/Calendar';
+import QuickActions from '../components/QuickActions';
+import SetAppointmentModal from '../components/SetAppointmentModal';
+import ConvertToClientModal from '../components/ConvertToClientModal';
+import DatePicker from '../components/DatePicker';
 
 interface HotLeadsPageProps {
   hotLeads: Contact[];
-  onAddHotLead: (lead: Contact) => void; // Not used here, but passed down
+  onAddHotLead: (leadData: Omit<Contact, 'id'>) => Promise<Contact | null>;
   onUpdateHotLead: (lead: Contact) => void;
   onDeleteHotLead: (leadId: string) => void;
-  onConvertLead: (lead: Contact, initialAmountCollected: number) => void;
   selectedDate: Date;
   onDateChange: (date: Date) => void;
-  handleSetAppointment: () => void;
+  handleSetAppointment: (appointment: { client: string, lead: string, time: string, details?: string }, date: Date) => void;
   onConvertToClient: (contact: Contact, initialAmountCollected: number) => void;
-  onEmailLead: (lead: Contact) => void;
-  onScheduleLead: (lead: Contact) => void;
 }
 
-const HotLeadsPage: React.FC<HotLeadsPageProps> = ({
-  hotLeads,
-  onUpdateHotLead,
-  onDeleteHotLead,
-  onConvertLead,
-  selectedDate,
-  onDateChange,
-  handleSetAppointment,
-  onConvertToClient,
-  onEmailLead,
-  onScheduleLead,
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'overdue' | 'due-today'>('all');
+const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onUpdateHotLead, onDeleteHotLead, selectedDate, onDateChange, handleSetAppointment, onConvertToClient }) => {
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Contact | null>(null);
+  const [expandedFollowUps, setExpandedFollowUps] = useState<string | null>(null);
+  const [filterDate, setFilterDate] = useState<string>('');
 
   const filteredLeads = useMemo(() => {
-    let leads = hotLeads.filter(lead =>
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.company?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    if (filter === 'overdue') {
-      // Logic to determine if a lead has an overdue follow-up step
-      leads = leads.filter(lead => {
-        if (!lead.followUpSteps || !lead.hotLeadDate) return false;
-        const nextStep = lead.followUpSteps.find(step => !step.isCompleted);
-        if (!nextStep) return false; // All steps complete
-
-        const hotLeadDate = new Date(lead.hotLeadDate);
-        const dueDate = new Date(hotLeadDate);
-        dueDate.setDate(hotLeadDate.getDate() + nextStep.dayOffset);
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        return dueDate < today;
-      });
-    } else if (filter === 'due-today') {
-      // Logic to determine if a lead has a follow-up step due today
-      leads = leads.filter(lead => {
-        if (!lead.followUpSteps || !lead.hotLeadDate) return false;
-        const nextStep = lead.followUpSteps.find(step => !step.isCompleted);
-        if (!nextStep) return false;
-
-        const hotLeadDate = new Date(lead.hotLeadDate);
-        const dueDate = new Date(hotLeadDate);
-        dueDate.setDate(hotLeadDate.getDate() + nextStep.dayOffset);
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        return dueDate.getTime() === today.getTime();
-      });
+    const sorted = [...hotLeads].sort((a, b) => new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime());
+    if (!filterDate) {
+        return sorted;
     }
+    return sorted.filter(lead => lead.dateAdded && lead.dateAdded.startsWith(filterDate));
+  }, [hotLeads, filterDate]);
 
-    return leads;
-  }, [hotLeads, searchTerm, filter]);
+  const handleLeadChange = (id: string, field: keyof Omit<Contact, 'id'>, value: string | number) => {
+    const leadToUpdate = hotLeads.find(l => l.id === id);
+    if (!leadToUpdate) return;
+    const updatedValue = field === 'phone' ? formatPhoneNumber(String(value)) : value;
+    onUpdateHotLead({ ...leadToUpdate, [field]: updatedValue });
+  };
 
-  const stats = useMemo(() => {
-    const totalLeads = hotLeads.length;
-    const totalFollowUps = hotLeads.reduce((sum, lead) => sum + (lead.followUpSteps?.length || 0), 0);
-    const completedFollowUps = hotLeads.reduce((sum, lead) => sum + (lead.followUpSteps?.filter(s => s.isCompleted).length || 0), 0);
-    const followUpCompletionRate = totalFollowUps > 0 ? (completedFollowUps / totalFollowUps) * 100 : 0;
+  const handleRemoveLead = (id: string) => {
+    if (window.confirm("Are you sure you want to remove this hot lead?")) {
+        onDeleteHotLead(id);
+    }
+  };
 
-    const overdueLeads = hotLeads.filter(lead => {
-      if (!lead.followUpSteps || !lead.hotLeadDate) return false;
-      const nextStep = lead.followUpSteps.find(step => !step.isCompleted);
-      if (!nextStep) return false;
-
-      const hotLeadDate = new Date(lead.hotLeadDate);
-      const dueDate = new Date(hotLeadDate);
-      dueDate.setDate(hotLeadDate.getDate() + nextStep.dayOffset);
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      return dueDate < today;
-    }).length;
-
-    return {
-      totalLeads,
-      followUpCompletionRate: followUpCompletionRate.toFixed(1),
-      overdueLeads,
-      dueToday: filteredLeads.filter(lead => {
-        if (!lead.followUpSteps || !lead.hotLeadDate) return false;
-        const nextStep = lead.followUpSteps.find(step => !step.isCompleted);
-        if (!nextStep) return false;
-
-        const hotLeadDate = new Date(lead.hotLeadDate);
-        const dueDate = new Date(hotLeadDate);
-        dueDate.setDate(hotLeadDate.getDate() + nextStep.dayOffset);
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        return dueDate.getTime() === today.getTime();
-      }).length,
+  const handleAddLead = () => {
+    const newLead: Omit<Contact, 'id'> = {
+      name: '', company: '', date: new Date().toISOString().split('T')[0], phone: '', email: '',
+      interestLevel: 5, prospecting: {}, dateAdded: new Date().toISOString(), completedFollowUps: {}
     };
-  }, [hotLeads, filteredLeads]);
+    onAddHotLead(newLead);
+  };
+  
+  const handleOpenAppointmentModal = (lead: Contact) => {
+      setSelectedLead(lead);
+      setIsAppointmentModalOpen(true);
+  };
+
+  const handleOpenConvertToClientModal = (lead: Contact) => {
+      setSelectedLead(lead);
+      setIsConvertModalOpen(true);
+  };
+  
+  const handleSaveAppointment = ({ date, time, note }: { date: string, time: string, note: string }) => {
+    if (!selectedLead) return;
+    const appointmentDate = new Date(`${date}T${time}`);
+    handleSetAppointment({ client: selectedLead.name, lead: 'Hot Lead', time: time, details: note }, appointmentDate);
+    onUpdateHotLead({ ...selectedLead, appointmentDate: date });
+    setIsAppointmentModalOpen(false);
+  };
+
+  const handleConfirmConvertToClient = (amount: number) => {
+    if (!selectedLead) return;
+    onConvertToClient(selectedLead, amount);
+    setIsConvertModalOpen(false);
+  }
+
+  const handleQuickSetAppointment = (data: { name: string, phone: string, email: string, date: string, time: string, interestLevel: number }) => {
+    const appointmentDate = new Date(`${data.date}T${data.time}`);
+    handleSetAppointment({ client: data.name, lead: 'Hot Lead', time: data.time }, appointmentDate);
+  };
+  
+  const handleQuickAddToHotLeads = (data: { name: string, phone: string, email: string, interestLevel: number }) => {
+    const newLead: Omit<Contact, 'id'> = {
+        name: data.name, company: '', date: new Date().toISOString().split('T')[0], phone: data.phone, email: data.email,
+        interestLevel: data.interestLevel, prospecting: {}, dateAdded: new Date().toISOString(), completedFollowUps: {}
+    };
+    onAddHotLead(newLead);
+    alert(`${data.name} added to Hot Leads!`);
+  };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-brand-ink dark:text-white">Hot Leads Management</h1>
-
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard title="Total Hot Leads" value={stats.totalLeads} />
-        <StatCard title="Follow-up Rate" value={`${stats.followUpCompletionRate}%`} />
-        <StatCard title="Overdue Leads" value={stats.overdueLeads} isAlert={stats.overdueLeads > 0} />
-        <StatCard title="Due Today" value={stats.dueToday} isAlert={stats.dueToday > 0} />
-      </div>
-
-      {/* Controls Section */}
-      <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-              filter === 'all'
-                ? 'bg-brand-blue text-white'
-                : 'bg-gray-200 text-brand-ink hover:bg-gray-300 dark:bg-brand-gray dark:text-white dark:hover:bg-brand-gray-light'
-            }`}
-          >
-            All Leads ({stats.totalLeads})
-          </button>
-          <button
-            onClick={() => setFilter('overdue')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-              filter === 'overdue'
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-200 text-brand-ink hover:bg-gray-300 dark:bg-brand-gray dark:text-white dark:hover:bg-brand-gray-light'
-            }`}
-          >
-            Overdue ({stats.overdueLeads})
-          </button>
-          <button
-            onClick={() => setFilter('due-today')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-              filter === 'due-today'
-                ? 'bg-yellow-500 text-white'
-                : 'bg-gray-200 text-brand-ink hover:bg-gray-300 dark:bg-brand-gray dark:text-white dark:hover:bg-brand-gray-light'
-            }`}
-          >
-            Due Today ({stats.dueToday})
-          </button>
+    <>
+     <SetAppointmentModal isOpen={isAppointmentModalOpen} onClose={() => setIsAppointmentModalOpen(false)} onSave={handleSaveAppointment} contact={selectedLead} />
+     <ConvertToClientModal isOpen={isConvertModalOpen} onClose={() => setIsConvertModalOpen(false)} onSave={handleConfirmConvertToClient} contact={selectedLead} />
+     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-3 space-y-8">
+            <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
+             <QuickActions onSetAppointment={handleQuickSetAppointment} onAddToHotLeads={handleQuickAddToHotLeads} />
         </div>
-
-        <div className="flex space-x-4 items-center">
-          <input
-            type="text"
-            placeholder="Search leads..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-full w-full md:w-64 dark:bg-brand-ink-light dark:border-brand-gray dark:text-white"
-          />
-          <button
-            onClick={handleSetAppointment}
-            className="flex items-center space-x-2 px-4 py-2 bg-brand-lime text-brand-ink rounded-full font-semibold hover:bg-brand-lime-dark transition"
-          >
-            <PlusIcon className="w-5 h-5" />
-            <span>Add New Lead</span>
-          </button>
+        <div className="lg:col-span-9">
+            <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+              <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                <h1 className="text-3xl font-bold text-brand-light-text dark:text-white">Hot Leads</h1>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Filter Date:</label>
+                        <DatePicker value={filterDate} onChange={setFilterDate} className="w-32" />
+                        {filterDate && <button onClick={() => setFilterDate('')} className="text-red-500 hover:text-red-400 font-bold text-xl" title="Clear filter">&times;</button>}
+                    </div>
+                    <button onClick={handleAddLead} className="bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm whitespace-nowrap">+ Add New Lead</button>
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left table-auto">
+                  <thead className="bg-brand-light-bg dark:bg-brand-gray/50 text-xs uppercase text-gray-500 dark:text-gray-400">
+                    <tr>
+                      <th className="p-3">Name</th><th className="p-3">Phone</th><th className="p-3">Email</th>
+                      <th className="p-3 text-center">Follow-ups</th><th className="p-3">Actions</th><th className="p-3 text-center w-12"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredLeads.map(lead => (
+                      <React.Fragment key={lead.id}>
+                      <tr className="border-b border-brand-light-border dark:border-brand-gray">
+                        <td className="p-2"><input type="text" value={lead.name} onBlur={e => handleLeadChange(lead.id, 'name', e.target.value)} onChange={e => handleLeadChange(lead.id, 'name', e.target.value)} className="w-full bg-transparent p-1 focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white" /></td>
+                        <td className="p-2"><input type="tel" value={lead.phone} onBlur={e => handleLeadChange(lead.id, 'phone', e.target.value)} onChange={e => handleLeadChange(lead.id, 'phone', e.target.value)} className="w-full bg-transparent p-1 focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white" /></td>
+                        <td className="p-2"><input type="email" value={lead.email} onBlur={e => handleLeadChange(lead.id, 'email', e.target.value)} onChange={e => handleLeadChange(lead.id, 'email', e.target.value)} className="w-full bg-transparent p-1 focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white" /></td>
+                        <td className="p-2 text-center"><button onClick={() => setExpandedFollowUps(expandedFollowUps === lead.id ? null : lead.id)} className="font-bold text-brand-blue hover:underline" disabled={!lead.appointmentDate} title={!lead.appointmentDate ? "Set an appointment to start follow-ups" : "View Follow-up Plan"}>{lead.completedFollowUps ? Object.keys(lead.completedFollowUps).length : 0} / {Object.keys(followUpSchedule).length}</button></td>
+                        <td className="p-2 flex items-center gap-2"><button onClick={() => handleOpenAppointmentModal(lead)} className="bg-brand-blue text-white font-bold py-1 px-3 rounded-md hover:bg-blue-700 transition text-xs">Set Appt</button><button onClick={() => handleOpenConvertToClientModal(lead)} className="bg-brand-lime text-brand-ink font-bold py-1 px-3 rounded-md hover:bg-green-400 transition text-xs">Convert</button></td>
+                        <td className="p-2 text-center"><button onClick={() => handleRemoveLead(lead.id)} className="text-red-500 hover:text-red-400 font-bold text-xl" title="Remove Lead">&times;</button></td>
+                      </tr>
+                      {expandedFollowUps === lead.id && (<tr><td colSpan={6} className="p-3 bg-brand-light-bg dark:bg-brand-gray/20"><h4 className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2">Follow-up Plan (Starts: {lead.appointmentDate})</h4><ul className="text-xs space-y-1">{Object.entries(followUpSchedule).map(([day, activity]) => { const isCompleted = lead.completedFollowUps && lead.completedFollowUps[parseInt(day,10)]; return (<li key={day} className={`flex items-center ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-700 dark:text-gray-300'}`}><span className="font-bold w-12">Day {day}:</span><span>{activity}</span></li>)})}</ul></td></tr>)}
+                      </React.Fragment>
+                    ))}
+                    {filteredLeads.length === 0 && (<tr><td colSpan={6} className="text-center p-8 text-gray-500 dark:text-gray-400">{filterDate ? `No hot leads acquired on ${filterDate}.` : 'No hot leads yet. Add some from the Prospecting page!'}</td></tr>)}
+                  </tbody>
+                </table>
+              </div>
+            </div>
         </div>
-      </div>
-
-      {/* Leads Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredLeads.length > 0 ? (
-          filteredLeads.map((lead) => (
-            <HotLeadCard
-              key={lead.id}
-              lead={lead}
-              onUpdate={onUpdateHotLead}
-              onDelete={onDeleteHotLead}
-              onConvert={onConvertLead}
-              onEmail={onEmailLead}
-              onSchedule={onScheduleLead}
-            />
-          ))
-        ) : (
-          <div className="lg:col-span-3 text-center py-12 text-gray-500 dark:text-gray-400">
-            No hot leads match the current filter.
-          </div>
-        )}
-      </div>
     </div>
+    </>
   );
 };
 
