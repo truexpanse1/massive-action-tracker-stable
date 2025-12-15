@@ -66,53 +66,55 @@ const DayView: React.FC<DayViewProps> = ({
   // Single source of truth for the day
   const currentData: DayData = allData[currentDateKey] || getInitialDayData();
 
-  // ---------- Automatic Rollover Logic ----------
-  useEffect(() => {
-    const performRollover = async () => {
-      // Get yesterday's date
-      const yesterday = new Date(selectedDate);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayKey = getDateKey(yesterday);
-      const yesterdayData = allData[yesterdayKey];
+  // ---------- Manual Rollover Logic ----------
+  // Check if there are uncompleted items from yesterday
+  const getUncompletedItemsFromYesterday = () => {
+    const yesterday = new Date(selectedDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = getDateKey(yesterday);
+    const yesterdayData = allData[yesterdayKey];
 
-      // Only rollover if yesterday's data exists
-      if (!yesterdayData) return;
+    if (!yesterdayData) return { targets: [], goals: [] };
 
-      // Check if we've already rolled over TODAY (using lastRolloverDate)
-      if (currentData.lastRolloverDate === currentDateKey) {
-        return; // Already rolled over today, skip
-      }
+    // Check if we've already rolled over TODAY
+    if (currentData.lastRolloverDate === currentDateKey) {
+      return { targets: [], goals: [] };
+    }
 
-      const todayTopTargets = currentData.topTargets || [];
-      const todayMassiveGoals = currentData.massiveGoals || [];
+    const uncompletedTargets = (yesterdayData.topTargets || [])
+      .filter(g => !g.completed && !g.rolledOver);
+    
+    const uncompletedGoals = (yesterdayData.massiveGoals || [])
+      .filter(g => !g.completed && !g.id.includes('-rolled'));
 
-      // Find uncompleted targets from yesterday that haven't been rolled yet
-      const uncompletedTargets = (yesterdayData.topTargets || [])
-        .filter(g => !g.completed && !g.rolledOver) // Don't roll items that were already rolled
-        .map(g => ({ ...g, rolledOver: true, id: `${g.id}-rolled-${currentDateKey}` })); // Unique ID per day
+    return { targets: uncompletedTargets, goals: uncompletedGoals };
+  };
 
-      // Find uncompleted massive goals from yesterday that haven't been rolled yet
-      const uncompletedGoals = (yesterdayData.massiveGoals || [])
-        .filter(g => !g.completed && !g.id.includes('-rolled')) // Don't roll items that were already rolled
-        .map(g => ({ ...g, id: `${g.id}-rolled-${currentDateKey}` })); // Unique ID per day
+  const uncompletedFromYesterday = getUncompletedItemsFromYesterday();
+  const hasUncompletedItems = uncompletedFromYesterday.targets.length > 0 || uncompletedFromYesterday.goals.length > 0;
 
-      // If there are items to roll over
-      if (uncompletedTargets.length > 0 || uncompletedGoals.length > 0) {
-        // Merge: rolled items at TOP, then today's items
-        // Limit to 6 items maximum for each section
-        const newTopTargets = [...uncompletedTargets, ...todayTopTargets].slice(0, 6);
-        const newMassiveGoals = [...uncompletedGoals, ...todayMassiveGoals].slice(0, 6);
+  // Manual rollover function
+  const handleRollForward = async () => {
+    const todayTopTargets = currentData.topTargets || [];
+    const todayMassiveGoals = currentData.massiveGoals || [];
 
-        await saveDayData({
-          topTargets: newTopTargets,
-          massiveGoals: newMassiveGoals,
-          lastRolloverDate: currentDateKey, // Mark that we rolled over today
-        });
-      }
-    };
+    // Map uncompleted items with new IDs and rolledOver flag
+    const uncompletedTargets = uncompletedFromYesterday.targets
+      .map(g => ({ ...g, rolledOver: true, id: `${g.id}-rolled-${currentDateKey}` }));
+    
+    const uncompletedGoals = uncompletedFromYesterday.goals
+      .map(g => ({ ...g, id: `${g.id}-rolled-${currentDateKey}` }));
 
-    performRollover();
-  }, [currentDateKey]); // Run when date changes
+    // Merge: rolled items at TOP, then today's items, limit to 6
+    const newTopTargets = [...uncompletedTargets, ...todayTopTargets].slice(0, 6);
+    const newMassiveGoals = [...uncompletedGoals, ...todayMassiveGoals].slice(0, 6);
+
+    await saveDayData({
+      topTargets: newTopTargets,
+      massiveGoals: newMassiveGoals,
+      lastRolloverDate: currentDateKey,
+    });
+  };
 
   // ---------- Helper: persist full DayData snapshot ----------
   const saveDayData = async (partial: Partial<DayData>) => {
@@ -382,12 +384,12 @@ const DayView: React.FC<DayViewProps> = ({
                       />
                       <div
                         className={
-                          event.conducted ? 'line-through text-gray-500' : ''
+                          event.conducted ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'
                         }
                       >
                         <p className="font-medium">{label}</p>
                         {event.time && (
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
                             {formatTime12Hour(event.time)}
                           </p>
                         )}
@@ -411,6 +413,27 @@ const DayView: React.FC<DayViewProps> = ({
 
         {/* RIGHT COLUMN */}
         <div className="space-y-8">
+          {/* Roll Forward Button */}
+          {hasUncompletedItems && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
+                    📋 Uncompleted Items from Yesterday
+                  </p>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    {uncompletedFromYesterday.targets.length} target(s) and {uncompletedFromYesterday.goals.length} goal(s)
+                  </p>
+                </div>
+                <button
+                  onClick={handleRollForward}
+                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
+                >
+                  Roll Forward ➡️
+                </button>
+              </div>
+            </div>
+          )}
           <GoalsBlock
             title="Today's Top 6 Targets"
             goals={currentData.topTargets || []}
