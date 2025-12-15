@@ -38,6 +38,9 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({
     onGoalChange(updatedGoal, false);
   };
 
+  // Limit to maximum 6 goals
+  const displayGoals = localGoals.slice(0, 6);
+
   return (
     <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
       <h3
@@ -48,7 +51,7 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({
         {title}
       </h3>
       <div className="space-y-2">
-        {localGoals.map((goal) => (
+        {displayGoals.map((goal) => (
           <div key={goal.id} className="flex items-center space-x-3">
             <div className="relative flex items-center">
               {iconType === 'checkbox' ? (

@@ -6,7 +6,7 @@ import HotLeadsPage from './pages/HotLeadsPage';
 import NewClientsPage from './pages/NewClientsPage';
 import RevenuePage from './pages/RevenuePage';
 import CoachingPage from './pages/CoachingPage';
-import AIImagesPage from './pages/AIImagesPage';
+import AIImagesPageEnhanced from './pages/AIImagesPageEnhanced';
 import AIContentPage from './pages/AIContentPage';
 import AddClientModal from './components/AddClientModal'; // Import the modal
 
@@ -149,7 +149,7 @@ const App: React.FC = () => {
       case 'coaching':
         return <CoachingPage />;
       case 'ai-images':
-        return <AIImagesPage />;
+        return <AIImagesPageEnhanced />;
       case 'ai-content':
         return <AIContentPage />;
       default:
