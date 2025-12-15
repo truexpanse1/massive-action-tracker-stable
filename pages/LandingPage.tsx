@@ -63,6 +63,9 @@ export default function LandingPage() {
   const [loginError, setLoginError] = useState('');
   const [purchaseError, setPurchaseError] = useState('');
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
 
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => {
@@ -104,6 +107,30 @@ export default function LandingPage() {
     } else {
       closeLoginModal();
     }
+    setIsLoggingIn(false);
+  };
+
+  const handleForgotPassword = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setResetMessage('');
+    setIsLoggingIn(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      setLoginError(error.message);
+    } else {
+      setResetMessage('Password reset email sent! Check your inbox.');
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setResetEmail('');
+        setResetMessage('');
+      }, 3000);
+    }
+
     setIsLoggingIn(false);
   };
 
@@ -200,6 +227,77 @@ export default function LandingPage() {
                   }`}
                 >
                   {isLoggingIn ? 'Logging in...' : 'Login'}
+                </button>
+              </div>
+
+              {/* Forgot Password Link */}
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================ */}
+      {/* FORGOT PASSWORD MODAL */}
+      {/* ============================================ */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8">
+            <h2 className="text-2xl font-black mb-4 text-gray-900">Reset Password</h2>
+            <p className="text-gray-600 mb-6 text-sm">Enter your email address and we'll send you a link to reset your password.</p>
+            <form onSubmit={handleForgotPassword}>
+              <div className="space-y-4 mb-6">
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                  placeholder="Your email address"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 transition"
+                />
+              </div>
+
+              {loginError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 mb-4">
+                  <p className="text-sm text-red-700">{loginError}</p>
+                </div>
+              )}
+
+              {resetMessage && (
+                <div className="p-3 rounded-lg bg-green-50 border border-green-200 mb-4">
+                  <p className="text-sm text-green-700">{resetMessage}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setResetEmail('');
+                    setResetMessage('');
+                    setLoginError('');
+                  }}
+                  className="flex-1 py-3 rounded-xl border-2 border-gray-300 font-bold text-gray-700 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoggingIn}
+                  className={`flex-1 py-3 rounded-xl font-bold text-white text-lg bg-blue-600 hover:bg-blue-700 transition ${
+                    isLoggingIn ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isLoggingIn ? 'Sending...' : 'Send Reset Link'}
                 </button>
               </div>
             </form>
