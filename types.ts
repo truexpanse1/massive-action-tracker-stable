@@ -177,6 +177,7 @@ export interface DayData {
     eodSubmitted?: boolean;
     userId?: string;
     lastRolloverDate?: string; // Track when rollover last ran (YYYY-MM-DD)
+    dailyNotes?: string; // Daily reflection/notes
 }
 
 export const getInitialDayData = (): DayData => ({

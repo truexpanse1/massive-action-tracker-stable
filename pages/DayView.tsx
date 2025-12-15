@@ -17,7 +17,6 @@ import RevenueCard from '../components/RevenueCard';
 import AIChallengeCard from '../components/AIChallengeCard';
 import ProspectingKPIs from '../components/ProspectingKPIs';
 import GoalsBlock from '../components/GoalsBlock';
-import NewLeadsBlock from '../components/NewLeadsBlock';
 import DailyFollowUps from '../components/DailyFollowUps';
 import AddLeadModal from '../components/AddLeadModal';
 import AddEventModal from '../components/AddEventModal';
@@ -428,12 +427,21 @@ const DayView: React.FC<DayViewProps> = ({
             highlight
             iconType="target"
           />
-          <NewLeadsBlock
-            leads={leadsAddedToday}
-            userRole={user.role}
-            onAddLeadClick={() => setIsLeadModalOpen(true)}
-            onViewLeadsClick={() => setIsViewLeadsModalOpen(true)}
-          />
+          {/* DAILY REFLECTION */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-bold text-brand-blue mb-4">
+              💭 DAILY REFLECTION
+            </h3>
+            <textarea
+              value={currentData.dailyNotes || ''}
+              onChange={(e) => saveDayData({ dailyNotes: e.target.value })}
+              placeholder="Reflect on your day...\n\n• What went well today?\n• What could be improved?\n• Key learnings or insights?\n• Tomorrow's priorities?"
+              className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-brand-light-text dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-brand-blue"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Auto-saves as you type
+            </p>
+          </div>
         </div>
       </div>
     </>
