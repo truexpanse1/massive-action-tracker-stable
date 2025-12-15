@@ -19,6 +19,7 @@ import {
 
 // Page Components
 import LandingPage from '../pages/LandingPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
 import Header from '../components/Header';
 import DayView from '../pages/DayView';
 import ProspectingPage from '../pages/ProspectingPage';
@@ -739,6 +740,11 @@ const App: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  // Check if user is on password reset page
+  if (window.location.pathname === '/reset-password') {
+    return <ResetPasswordPage />;
   }
 
   if (!session || !user) {
