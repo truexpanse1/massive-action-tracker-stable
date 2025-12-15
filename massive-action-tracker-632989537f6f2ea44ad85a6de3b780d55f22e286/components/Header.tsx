@@ -77,7 +77,6 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
                  <NavItem onClick={() => handleSetView('revenue')} active={currentView === 'revenue'}>Revenue</NavItem>
               </Dropdown>
               <Dropdown title="Marketing" isOpen={openDropdown === 'marketing'} onToggle={() => handleToggle('marketing')}>
-                 <NavItem onClick={() => handleSetView('ai-images')} active={currentView === 'ai-images'}>AI Images</NavItem>
                  <NavItem onClick={() => handleSetView('ai-content')} active={currentView === 'ai-content'}>AI Content</NavItem>
                  <NavItem onClick={() => handleSetView('coaching')} active={currentView === 'coaching'}>Coaching</NavItem>
               </Dropdown>
