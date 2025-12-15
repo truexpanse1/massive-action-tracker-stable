@@ -112,6 +112,9 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
             <div className="flex items-center ml-4">
                 <span className="hidden sm:inline text-sm text-gray-500 dark:text-gray-400 mr-3">Welcome, {userName?.split(' ')[0] || ""}
 </span>
+                <button onClick={() => handleSetView('account-settings')} className="py-2 px-3 text-xs font-bold rounded-md transition-colors text-gray-400 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-brand-gray/50 mr-2">
+                    Settings
+                </button>
                 <button onClick={onLogout} className="py-2 px-3 text-xs font-bold rounded-md transition-colors text-gray-400 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-brand-gray/50">
                     Logout
                 </button>
@@ -190,6 +193,9 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
               <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
                 Welcome, {userName?.split(' ')[0] || ""}
               </div>
+              <button onClick={() => { handleSetView('account-settings'); setMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                Account Settings
+              </button>
               <button onClick={() => { onLogout(); setMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
                 Logout
               </button>

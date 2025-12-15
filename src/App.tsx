@@ -32,6 +32,7 @@ import CoachingPage from '../pages/CoachingPage';
 import TeamControlPage from '../pages/TeamControlPage';
 import PerformanceDashboardPage from '../pages/PerformanceDashboardPage';
 import EODReportPage from '../pages/EODReportPage';
+import AccountSettingsPage from '../pages/AccountSettingsPage';
 
 // Components
 import ChatIcon from '../components/ChatIcon';
@@ -884,6 +885,8 @@ const App: React.FC = () => {
             onDataChange={handleUpsertDayData}
           />
         );
+      case 'account-settings':
+        return <AccountSettingsPage />;
       default:
         return <div>View not found</div>;
     }

@@ -19,6 +19,75 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+// Email notification function for new subscriptions
+async function sendNewSubscriptionEmail(userEmail: string, userName: string, plan: string, company: string) {
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'TrueXpanse <notifications@truexpanse.com>',
+        to: ['don@truexpanse.com'],
+        subject: '🎉 New Subscription - TrueXpanse MAT',
+        html: `
+          <h2>New Subscription!</h2>
+          <p><strong>User:</strong> ${userName} (${userEmail})</p>
+          <p><strong>Company:</strong> ${company}</p>
+          <p><strong>Plan:</strong> ${plan}</p>
+          <p><strong>Subscribed at:</strong> ${new Date().toLocaleString()}</p>
+          <hr>
+          <p>A new user has subscribed to the Massive Action Tracker!</p>
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send subscription email:', await response.text());
+    }
+  } catch (error) {
+    console.error('Error sending subscription email:', error);
+  }
+}
+
+// GHL Webhook function
+async function sendToGHL(userData: any) {
+  const ghlWebhookUrl = process.env.GHL_WEBHOOK_URL;
+  
+  if (!ghlWebhookUrl) {
+    console.log('GHL_WEBHOOK_URL not configured, skipping GHL notification');
+    return;
+  }
+
+  try {
+    const response = await fetch(ghlWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: userData.email,
+        fullName: userData.fullName,
+        company: userData.company,
+        phone: userData.phone || '',
+        plan: userData.planName,
+        subscribedAt: new Date().toISOString(),
+        source: 'TrueXpanse MAT',
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send to GHL:', await response.text());
+    } else {
+      console.log('Successfully sent data to GHL');
+    }
+  } catch (error) {
+    console.error('Error sending to GHL:', error);
+  }
+}
+
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
@@ -131,6 +200,18 @@ export const handler: Handler = async (event) => {
       }
 
       console.log(`Successfully created user ${email} with company ${companyName}`);
+
+      // Send email notification to don@truexpanse.com
+      await sendNewSubscriptionEmail(email, fullName, planName, companyName);
+
+      // Send to GoHighLevel
+      await sendToGHL({
+        email,
+        fullName,
+        company: companyName,
+        phone: phone || '',
+        planName,
+      });
 
       return {
         statusCode: 200,
