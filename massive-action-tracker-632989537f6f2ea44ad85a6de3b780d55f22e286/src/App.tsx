@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
@@ -32,6 +33,7 @@ import CoachingPage from '../pages/CoachingPage';
 import TeamControlPage from '../pages/TeamControlPage';
 import PerformanceDashboardPage from '../pages/PerformanceDashboardPage';
 import EODReportPage from '../pages/EODReportPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
 
 // Components
 import ChatIcon from '../components/ChatIcon';
@@ -91,6 +93,9 @@ const App: React.FC = () => {
     dateRange?: { start: string; end: string };
   } | null>(null);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
     const storedTheme = localStorage.getItem('theme') as
       | 'dark'
@@ -102,505 +107,298 @@ const App: React.FC = () => {
         ? 'dark'
         : 'light');
     setTheme(preferredTheme);
+    document.documentElement.classList.toggle('dark', preferredTheme === 'dark');
   }, []);
 
   useEffect(() => {
-    document.documentElement.className = theme;
     localStorage.setItem('theme', theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
   useEffect(() => {
-    const fetchInitialSession = async () => {
-      setIsLoading(true);
-      setFetchError(null);
+    const initAuth = async () => {
       try {
         const {
-          data: { session },
-          error,
+          data: { session: initialSession },
         } = await supabase.auth.getSession();
-        if (error) throw error;
-        setSession(session);
-        if (!session) setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching initial session:', error);
-        setFetchError('Could not connect to authentication service.');
-        setIsLoading(false);
-      }
-    };
+        setSession(initialSession);
 
-    fetchInitialSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        if (!session) {
-          setUser(null);
-          setAllData({});
-          setHotLeads([]);
-          setTransactions([]);
-          setNewClients([]);
-          setSavedQuotes([]);
-          setUsers([]);
-        }
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!session) return;
-
-    const fetchAllData = async () => {
-      setIsLoading(true);
-      setFetchError(null);
-      try {
-        const { data: userProfile, error: profileError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        if (profileError) throw profileError;
-        setUser(userProfile);
-
-        const userIdToFetch = userProfile.role === 'Manager' ? null : userProfile.id;
-
-        let dayDataQuery = supabase.from('day_data').select('*');
-        let hotLeadsQuery = supabase.from('hot_leads').select('*');
-        let transactionsQuery = supabase.from('transactions').select('*');
-        let clientsQuery = supabase.from('clients').select('*');
-        let quotesQuery = supabase.from('quotes').select('*');
-
-        if (userIdToFetch) {
-          dayDataQuery = dayDataQuery.eq('user_id', userIdToFetch);
-          hotLeadsQuery = hotLeadsQuery.eq('user_id', userIdToFetch);
-          transactionsQuery = transactionsQuery.eq('user_id', userIdToFetch);
-          clientsQuery = clientsQuery.eq('user_id', userIdToFetch);
-          quotesQuery = quotesQuery.eq('user_id', userIdToFetch);
-        }
-
-        const [dayDataRes, hotLeadsRes, transactionsRes, clientsRes, quotesRes, usersRes] =
-          await Promise.all([
-            dayDataQuery,
-            hotLeadsQuery,
-            transactionsQuery,
-            clientsQuery,
-            quotesQuery,
-            supabase.from('users').select('*'),
-          ]);
-
-        for (const res of [
-          dayDataRes,
-          hotLeadsRes,
-          transactionsRes,
-          clientsRes,
-          quotesRes,
-          usersRes,
-        ]) {
-          if (res.error) throw res.error;
-        }
-
-        if (dayDataRes.data)
-          setAllData(
-            dayDataRes.data.reduce(
-              (acc, row) => ({
-                ...acc,
-                [row.date]: { ...row.data, userId: row.user_id },
-              }),
-              {}
-            )
-          );
-        if (hotLeadsRes.data)
-          setHotLeads(
-            hotLeadsRes.data.map((lead: any) => ({
-              ...lead,
-              id: String(lead.id),
-              interestLevel: lead.interest_level,
-              dateAdded: lead.date_added,
-              appointmentDate: lead.appointment_date,
-              completedFollowUps: lead.completed_follow_ups,
-              userId: lead.user_id,
-            }))
-          );
-        if (transactionsRes.data)
-          setTransactions(
-            transactionsRes.data.map((t: any) => ({
-              ...t,
-              id: String(t.id),
-              clientName: t.client_name,
-              isRecurring: t.is_recurring,
-              userId: t.user_id,
-            }))
-          );
-        if (clientsRes.data)
-          setNewClients(
-            clientsRes.data.map((c: any) => ({
-              ...c,
-              id: String(c.id),
-              monthlyContractValue: c.monthly_contract_value,
-              initialAmountCollected: c.initial_amount_collected,
-              closeDate: c.close_date,
-              salesProcessLength: c.sales_process_length,
-              userId: c.user_id,
-            }))
-          );
-        if (quotesRes.data)
-          setSavedQuotes(
-            quotesRes.data.map((q: any) => ({
-              ...q,
-              id: String(q.id),
-              savedAt: q.saved_at,
-            }))
-          );
-        if (usersRes.data) setUsers(usersRes.data as any[]);
-      } catch (error) {
-        console.error('Error fetching application data:', error);
-        setFetchError(
-          'Failed to load application data. This might be a temporary network issue.'
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          async (_event, newSession) => {
+            setSession(newSession);
+          }
         );
+
+        return () => {
+          authListener.subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        setFetchError('Failed to initialize authentication');
       } finally {
         setIsLoading(false);
       }
     };
-    fetchAllData();
+
+    initAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!session) {
+      setUser(null);
+      return;
+    }
+
+    const fetchUserData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error) throw error;
+
+        setUser(data as User);
+      } catch (error: any) {
+        console.error('Error fetching user:', error);
+        setFetchError(error.message || 'Failed to load user data');
+      }
+    };
+
+    fetchUserData();
   }, [session]);
 
   useEffect(() => {
-    if (showConfetti) {
-      const timer = setTimeout(() => {
-        setShowConfetti(false);
-        setWinMessage('');
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showConfetti]);
+    if (!user) return;
 
-  const handleLogout = () => supabase.auth.signOut();
+    const fetchAllData = async () => {
+      try {
+        const { data: dayData, error: dayError } = await supabase
+          .from('day_data')
+          .select('*')
+          .eq('userId', user.id);
+
+        if (dayError) throw dayError;
+
+        const dataMap: { [key: string]: DayData } = {};
+        dayData?.forEach((d: any) => {
+          dataMap[d.date] = d as DayData;
+        });
+        setAllData(dataMap);
+
+        const { data: transactionData, error: transactionError } =
+          await supabase
+            .from('transactions')
+            .select('*')
+            .eq('userId', user.id)
+            .order('date', { ascending: false });
+
+        if (transactionError) throw transactionError;
+        setTransactions(transactionData as Transaction[]);
+
+        const { data: hotLeadsData, error: hotLeadsError } = await supabase
+          .from('hot_leads')
+          .select('*')
+          .eq('userId', user.id)
+          .order('created_at', { ascending: false });
+
+        if (hotLeadsError) throw hotLeadsError;
+        setHotLeads(hotLeadsData as Contact[]);
+
+        const { data: newClientsData, error: newClientsError } =
+          await supabase
+            .from('new_clients')
+            .select('*')
+            .eq('userId', user.id)
+            .order('closeDate', { ascending: false });
+
+        if (newClientsError) throw newClientsError;
+        setNewClients(newClientsData as NewClient[]);
+
+        const { data: quotesData, error: quotesError } = await supabase
+          .from('quotes')
+          .select('*')
+          .eq('userId', user.id)
+          .order('created_at', { ascending: false });
+
+        if (quotesError) throw quotesError;
+        setSavedQuotes(quotesData as Quote[]);
+
+        if (user.role === 'manager' || user.role === 'admin') {
+          const { data: usersData, error: usersError } = await supabase
+            .from('users')
+            .select('*')
+            .order('name', { ascending: true });
+
+          if (usersError) throw usersError;
+          setUsers(usersData as User[]);
+        }
+      } catch (error: any) {
+        console.error('Error fetching data:', error);
+        setFetchError(error.message || 'Failed to load application data');
+      }
+    };
+
+    fetchAllData();
+  }, [user]);
 
   const handleUpsertDayData = async (dateKey: string, data: DayData) => {
-    if (!user) return;
+    try {
+      const { error } = await supabase.from('day_data').upsert({
+        ...data,
+        date: dateKey,
+        userId: user?.id,
+      });
 
-    const userIdForDb = data.userId || user.id;
-    const dataForState = { ...data, userId: userIdForDb };
+      if (error) throw error;
 
-    // update local state
-    setAllData((prev) => ({ ...prev, [dateKey]: dataForState }));
-
-    // strip userId before sending to DB
-    const { userId, ...dataForDb } = dataForState;
-
-    await supabase
-      .from('day_data')
-      .upsert(
-        {
-          user_id: userIdForDb,
-          company_id: user.company_id,
-          date: dateKey,
-          data: dataForDb,
-        },
-        { onConflict: 'user_id, date' }
-      );
+      setAllData((prev) => ({ ...prev, [dateKey]: data }));
+    } catch (error) {
+      console.error('Error upserting day data:', error);
+    }
   };
 
-  // 🔹 FIXED: avoid overwriting fresh checkbox state with stale data
+  const handleSaveTransaction = async (transaction: Transaction) => {
+    try {
+      const { error } = await supabase.from('transactions').upsert(transaction);
+
+      if (error) throw error;
+
+      setTransactions((prev) => {
+        const filtered = prev.filter((t) => t.id !== transaction.id);
+        return [transaction, ...filtered];
+      });
+    } catch (error) {
+      console.error('Error saving transaction:', error);
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+    }
+  };
+
+  const handleAddHotLead = async (contact: Contact) => {
+    try {
+      const { data, error } = await supabase
+        .from('hot_leads')
+        .insert({ ...contact, userId: user?.id })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setHotLeads((prev) => [data as Contact, ...prev]);
+    } catch (error) {
+      console.error('Error adding hot lead:', error);
+    }
+  };
+
+  const handleUpdateHotLead = async (contact: Contact) => {
+    try {
+      const { error } = await supabase
+        .from('hot_leads')
+        .update(contact)
+        .eq('id', contact.id);
+
+      if (error) throw error;
+
+      setHotLeads((prev) =>
+        prev.map((c) => (c.id === contact.id ? contact : c))
+      );
+    } catch (error) {
+      console.error('Error updating hot lead:', error);
+    }
+  };
+
+  const handleDeleteHotLead = async (id: string) => {
+    try {
+      const { error } = await supabase.from('hot_leads').delete().eq('id', id);
+
+      if (error) throw error;
+
+      setHotLeads((prev) => prev.filter((c) => c.id !== Number(id)));
+    } catch (error) {
+      console.error('Error deleting hot lead:', error);
+    }
+  };
+
+  const handleSaveNewClient = async (client: NewClient) => {
+    try {
+      const { error } = await supabase.from('new_clients').upsert(client);
+
+      if (error) throw error;
+
+      setNewClients((prev) => {
+        const filtered = prev.filter((c) => c.id !== client.id);
+        return [client, ...filtered];
+      });
+    } catch (error) {
+      console.error('Error saving new client:', error);
+    }
+  };
+
+  const handleSaveQuote = async (quote: Quote) => {
+    try {
+      const { data, error } = await supabase
+        .from('quotes')
+        .insert({ ...quote, userId: user?.id })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setSavedQuotes((prev) => [data as Quote, ...prev]);
+    } catch (error) {
+      console.error('Error saving quote:', error);
+    }
+  };
+
+  const handleSetAppointment = async (event: CalendarEvent) => {
+    const dateKey = event.date;
+    const dayData = allData[dateKey] || getInitialDayData();
+    const updatedData = {
+      ...dayData,
+      appointments: [...(dayData.appointments || []), event],
+    };
+    await handleUpsertDayData(dateKey, updatedData);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    navigate('/');
+  };
+
   const handleAddWin = (dateKey: string, message: string) => {
-    setAllData((prev) => {
-      const existing: DayData = prev[dateKey] || getInitialDayData();
-      const updatedWins = [...(existing.winsToday || []), message];
-
-      const updatedDay: DayData = {
-        ...existing,
-        winsToday: updatedWins,
-      };
-
-      // Fire Supabase upsert using this updated snapshot
-      (async () => {
-        if (!user) return;
-        const userIdForDb = updatedDay.userId || user.id;
-        const { userId, ...dataForDb } = { ...updatedDay };
-
-        await supabase
-          .from('day_data')
-          .upsert(
-            {
-              user_id: userIdForDb,
-              company_id: user.company_id,
-              date: dateKey,
-              data: dataForDb,
-            },
-            { onConflict: 'user_id, date' }
-          );
-      })();
-
-      return { ...prev, [dateKey]: updatedDay };
-    });
-
     setWinMessage(message);
     setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 5000);
   };
 
-  const handleAddHotLead = async (
-    leadData: Omit<Contact, 'id'>
-  ): Promise<Contact | null> => {
-    if (!user) return null;
-    const payload = {
-      user_id: user.id,
-      company_id: user.company_id,
-      name: leadData.name,
-      company: leadData.company,
-      date: leadData.date,
-      phone: leadData.phone,
-      email: leadData.email,
-      interest_level: leadData.interestLevel,
-      prospecting: leadData.prospecting,
-      date_added: leadData.dateAdded,
-      appointment_date: leadData.appointmentDate,
-      completed_follow_ups: leadData.completedFollowUps,
-    };
-    const { data, error } = await supabase
-      .from('hot_leads')
-      .insert(payload)
-      .select()
-      .single();
-    if (error) {
-      console.error('Error adding hot lead:', error);
-      return null;
-    }
-    const newLead: Contact = {
-      ...data,
-      id: String(data.id),
-      interestLevel: data.interest_level,
-      dateAdded: data.date_added,
-      appointmentDate: data.appointment_date,
-      completedFollowUps: data.completed_follow_ups,
-      userId: data.user_id,
-    };
-    setHotLeads((prev) => [...prev, newLead]);
-    return newLead;
-  };
-
-  const handleUpdateHotLead = async (lead: Contact) => {
-    setHotLeads((prev) => prev.map((l) => (l.id === lead.id ? lead : l)));
-    if (!user) return;
-    await supabase
-      .from('hot_leads')
-      .update({
-        name: lead.name,
-        company: lead.company,
-        date: lead.date,
-        phone: lead.phone,
-        email: lead.email,
-        interest_level: lead.interestLevel,
-        prospecting: lead.prospecting,
-        date_added: lead.dateAdded,
-        appointment_date: lead.appointmentDate,
-        completed_follow_ups: lead.completedFollowUps,
-      })
-      .eq('id', lead.id);
-  };
-
-  const handleDeleteHotLead = async (leadId: string) => {
-    setHotLeads((prev) => prev.filter((l) => l.id !== leadId));
-    if (!user) return;
-    await supabase.from('hot_leads').delete().eq('id', leadId);
-  };
-
-  const handleSaveNewClient = async (clientData: NewClient) => {
-    if (!user) return;
-    const payload = {
-      name: clientData.name,
-      company: clientData.company,
-      phone: clientData.phone,
-      email: clientData.email,
-      address: clientData.address,
-      sales_process_length: clientData.salesProcessLength,
-      monthly_contract_value: clientData.monthlyContractValue,
-      initial_amount_collected: clientData.initialAmountCollected,
-      close_date: clientData.closeDate,
-      stage: clientData.stage,
-      user_id: clientData.userId,
-      company_id: user.company_id,
-    };
-    if (String(clientData.id).startsWith('manual-')) {
-      const { data, error } = await supabase
-        .from('clients')
-        .insert(payload)
-        .select()
-        .single();
-      if (data)
-        setNewClients((prev) => [
-          ...prev,
-          {
-            ...data,
-            id: String(data.id),
-            monthlyContractValue: data.monthly_contract_value,
-            initialAmountCollected: data.initial_amount_collected,
-            closeDate: data.close_date,
-            salesProcessLength: data.sales_process_length,
-            userId: data.user_id,
-          },
-        ]);
-      else console.error(error);
-    } else {
-      const { data, error } = await supabase
-        .from('clients')
-        .update(payload)
-        .eq('id', clientData.id)
-        .select()
-        .single();
-      if (data)
-        setNewClients((prev) =>
-          prev.map((c) =>
-            c.id === clientData.id
-              ? {
-                  ...data,
-                  id: String(data.id),
-                  monthlyContractValue: data.monthly_contract_value,
-                  initialAmountCollected: data.initial_amount_collected,
-                  closeDate: data.close_date,
-                  salesProcessLength: data.sales_process_length,
-                  userId: data.user_id,
-                }
-              : c
-          )
-        );
-      else console.error(error);
-    }
-  };
-
-  const handleSaveTransaction = async (transData: Transaction) => {
-    if (!user) throw new Error('User not authenticated');
-    const payload = {
-      user_id: user.id,
-      company_id: user.company_id,
-      date: transData.date,
-      client_name: transData.clientName,
-      product: transData.product,
-      amount: transData.amount,
-      is_recurring: transData.isRecurring,
-    };
-    if (String(transData.id).startsWith('new-')) {
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert(payload)
-        .select()
-        .single();
-      if (error) {
-        console.error('Error saving new transaction:', error);
-        throw error;
-      }
-      if (data)
-        setTransactions((prev) => [
-          ...prev,
-          {
-            ...data,
-            id: String(data.id),
-            clientName: data.client_name,
-            isRecurring: data.is_recurring,
-            userId: data.user_id,
-          },
-        ]);
-    } else {
-      const { data, error } = await supabase
-        .from('transactions')
-        .update(payload)
-        .eq('id', transData.id)
-        .select()
-        .single();
-      if (error) {
-        console.error('Error updating transaction:', error);
-        throw error;
-      }
-      if (data)
-        setTransactions((prev) =>
-          prev.map((t) =>
-            t.id === transData.id
-              ? {
-                  ...data,
-                  id: String(data.id),
-                  clientName: data.client_name,
-                  isRecurring: data.is_recurring,
-                  userId: data.user_id,
-                }
-              : t
-          )
-        );
-    }
-  };
-
-  const handleDeleteTransaction = async (transId: string) => {
-    setTransactions((prev) => prev.filter((t) => t.id !== transId));
-    if (!user) return;
-    await supabase.from('transactions').delete().eq('id', transId);
-  };
-
-  const handleSaveQuote = async (quoteData: Omit<Quote, 'id'>) => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from('quotes')
-      .insert({ ...quoteData, user_id: user.id, company_id: user.company_id })
-      .select()
-      .single();
-    if (data)
-      setSavedQuotes((prev) => [
-        { ...data, id: String(data.id), savedAt: data.saved_at },
-        ...prev,
-      ]);
-    else console.error(error);
-  };
-
-  const handleRemoveQuote = async (quoteId: string) => {
-    setSavedQuotes((prev) => prev.filter((q) => q.id !== quoteId));
-    if (!user) return;
-    await supabase.from('quotes').delete().eq('id', quoteId);
-  };
-
-  const handleSetAppointment = (
-    appointment: { client: string; lead: string; time: string; details?: string },
-    date: Date
-  ) => {
-    const dateKey = date.toISOString().split('T')[0];
-    const dayData = allData[dateKey] || getInitialDayData();
-    const newEvent: CalendarEvent = {
-      id: `appt-${Date.now()}`,
-      time: appointment.time,
-      type: 'Appointment',
-      title: `Appt: ${appointment.client}`,
-      client: appointment.client,
-      details: appointment.details || `From ${appointment.lead}`,
-      conducted: false,
-    };
-    const events = [...(dayData.events || []), newEvent].sort((a, b) =>
-      a.time.localeCompare(b.time)
-    );
-    handleUpsertDayData(dateKey, { ...dayData, events });
-    const todayDateKey = new Date().toISOString().split('T')[0];
-    handleAddWin(todayDateKey, `Appointment Set: ${appointment.client}`);
-    setView('month-view');
-    setSelectedDate(date);
-  };
-
-  const handleConvertToClient = async (
-    contact: Contact,
-    initialAmountCollected: number
-  ) => {
-    if (!user) return;
+  const handleConvertToClient = async (contact: Contact) => {
     const closeDate = new Date().toISOString().split('T')[0];
+    const initialAmountCollected = 0;
     await handleSaveNewClient({
-      id: `manual-${Date.now()}`,
+      id: `new-${Date.now()}`,
       name: contact.name,
-      company: contact.company || '',
-      phone: contact.phone,
-      email: contact.email,
-      address: '',
-      salesProcessLength: '',
-      monthlyContractValue: 0,
-      initialAmountCollected: initialAmountCollected,
+      email: contact.email || '',
+      phone: contact.phone || '',
       closeDate: closeDate,
       stage: 'New',
-      userId: user.id,
+      userId: user!.id,
     });
     await handleSaveTransaction({
       id: 'new-',
@@ -609,7 +407,7 @@ const App: React.FC = () => {
       product: 'Initial Service',
       amount: initialAmountCollected,
       isRecurring: false,
-      userId: user.id,
+      userId: user!.id,
     });
     await handleDeleteHotLead(String(contact.id));
     handleAddWin(closeDate, `New Client Won! ${contact.name}`);
@@ -677,6 +475,15 @@ const App: React.FC = () => {
 
   if (fetchError) {
     return <FullPageError message={fetchError} onRetry={retryConnection} />;
+  }
+
+  // Password reset route - accessible without authentication
+  if (location.pathname === '/reset-password') {
+    return (
+      <Routes>
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+      </Routes>
+    );
   }
 
   if (!session || !user) {
@@ -748,9 +555,6 @@ const App: React.FC = () => {
             onAddHotLead={handleAddHotLead}
             onUpdateHotLead={handleUpdateHotLead}
             onDeleteHotLead={handleDeleteHotLead}
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            handleSetAppointment={handleSetAppointment}
             onConvertToClient={handleConvertToClient}
           />
         );
@@ -759,10 +563,6 @@ const App: React.FC = () => {
           <NewClientsPage
             newClients={newClients}
             onSaveClient={handleSaveNewClient}
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            loggedInUser={user}
-            users={users}
           />
         );
       case 'revenue':
@@ -774,21 +574,14 @@ const App: React.FC = () => {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             initialState={revenuePageInitialState}
-            onInitialStateConsumed={() => setRevenuePageInitialState(null)}
           />
         );
       case 'ai-images':
-        return <AIImagesPage />;
+        return <AIImagesPage savedQuotes={savedQuotes} onSaveQuote={handleSaveQuote} />;
       case 'ai-content':
         return <AIContentPage />;
       case 'coaching':
-        return (
-          <CoachingPage
-            savedQuotes={savedQuotes}
-            onSaveQuote={handleSaveQuote}
-            onRemoveQuote={handleRemoveQuote}
-          />
-        );
+        return <CoachingPage />;
       case 'team-control':
         return (
           <TeamControlPage

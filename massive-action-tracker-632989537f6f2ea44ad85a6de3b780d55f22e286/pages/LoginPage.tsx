@@ -1,6 +1,7 @@
-// components/LoginPage.tsx   (or wherever it lives)
+// components/LoginPage.tsx
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 interface LoginPageProps {
   onClose: () => void;
@@ -12,6 +13,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +35,102 @@ const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
 
     setIsLoading(false);
   };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setResetMessage('');
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setResetMessage('Password reset email sent! Check your inbox.');
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setResetMessage('');
+        setResetEmail('');
+      }, 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (showForgotPassword) {
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div
+          className="bg-brand-light-card dark:bg-brand-navy border border-brand-light-border dark:border-brand-gray rounded-lg shadow-xl p-8 w-full max-w-md animate-fade-in"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-black text-brand-lime mb-3">
+              Reset Password
+            </h2>
+            <p className="text-gray-400 text-sm">
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+          </div>
+
+          {/* Reset Form */}
+          <form onSubmit={handleForgotPassword} className="space-y-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-600 dark:text-gray-300 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                placeholder="Your email address"
+                className="w-full px-4 py-3 bg-brand-light-bg dark:bg-brand-ink border border-brand-light-border dark:border-brand-gray rounded-md focus:outline-none focus:ring-2 focus:ring-brand-lime"
+              />
+            </div>
+
+            {error && (
+              <p className="text-brand-red text-center font-medium text-sm">{error}</p>
+            )}
+
+            {resetMessage && (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                <p className="text-green-500 text-center font-medium text-sm">{resetMessage}</p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setError('');
+                  setResetMessage('');
+                }}
+                className="flex-1 bg-gray-600 text-white font-bold py-3 rounded-lg hover:bg-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex-1 bg-brand-lime text-black font-bold py-3 rounded-lg hover:bg-green-400 transition disabled:opacity-70"
+              >
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -81,9 +181,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3.5 text-gray-500 hover:text-brand-lime"
+                className="absolute right-3 top-3.5 text-gray-500 hover:text-brand-lime transition"
               >
-                {showPassword ? 'Hide' : 'Show'}
+                {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
               </button>
             </div>
           </div>
@@ -97,6 +197,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onClose }) => {
           >
             {isLoading ? 'Logging in...' : 'Log In'}
           </button>
+
+          {/* Forgot Password Link */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-brand-lime hover:underline text-sm font-medium"
+            >
+              Forgot Password?
+            </button>
+          </div>
         </form>
 
         {/* LOCKDOWN MESSAGE + WORKING BUTTON */}
