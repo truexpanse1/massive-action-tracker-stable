@@ -10,18 +10,42 @@ const ResetPasswordPage: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasValidToken, setHasValidToken] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have a valid session from the reset link
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError('Invalid or expired reset link. Please request a new password reset.');
+    // Supabase automatically handles the token from the URL hash
+    // We just need to check if we have a session after it processes
+    const checkAuth = async () => {
+      try {
+        // Wait a moment for Supabase to process the URL hash
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          setError('Failed to verify reset link. Please try again.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (session) {
+          setHasValidToken(true);
+          setIsLoading(false);
+        } else {
+          setError('Invalid or expired reset link. Please request a new password reset.');
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
+        setError('An error occurred. Please try again.');
+        setIsLoading(false);
       }
     };
-    checkSession();
+
+    checkAuth();
   }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -62,6 +86,17 @@ const ResetPasswordPage: React.FC = () => {
     }
   };
 
+  if (isLoading && !error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-brand-light-bg dark:bg-brand-ink">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-brand-lime mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Verifying reset link...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-light-bg dark:bg-brand-ink">
@@ -76,6 +111,32 @@ const ResetPasswordPage: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-300">
               Your password has been updated. Redirecting you to login...
             </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !hasValidToken) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-brand-light-bg dark:bg-brand-ink p-4">
+        <div className="bg-brand-light-card dark:bg-brand-navy border border-brand-light-border dark:border-brand-gray rounded-lg shadow-xl p-8 w-full max-w-md text-center">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-red-500 mb-2">Invalid Reset Link</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              {error}
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="bg-brand-lime text-black font-bold py-3 px-8 rounded-lg hover:bg-green-400 transition"
+            >
+              Back to Home
+            </button>
           </div>
         </div>
       </div>
