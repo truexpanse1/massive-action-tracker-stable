@@ -176,6 +176,7 @@ export interface DayData {
     talkTime: string; // Added for EOD Report
     eodSubmitted?: boolean;
     userId?: string;
+    lastRolloverDate?: string; // Track when rollover last ran (YYYY-MM-DD)
 }
 
 export const getInitialDayData = (): DayData => ({

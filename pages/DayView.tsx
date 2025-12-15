@@ -76,20 +76,16 @@ const DayView: React.FC<DayViewProps> = ({
       const yesterdayKey = getDateKey(yesterday);
       const yesterdayData = allData[yesterdayKey];
 
-      // Only rollover if:
-      // 1. Yesterday's data exists
-      // 2. Today's data doesn't already have rolled items (prevent duplicate rollovers)
+      // Only rollover if yesterday's data exists
       if (!yesterdayData) return;
+
+      // Check if we've already rolled over TODAY (using lastRolloverDate)
+      if (currentData.lastRolloverDate === currentDateKey) {
+        return; // Already rolled over today, skip
+      }
 
       const todayTopTargets = currentData.topTargets || [];
       const todayMassiveGoals = currentData.massiveGoals || [];
-
-      // Check if we've already rolled over (any item has rolledOver flag)
-      const alreadyRolledOver = 
-        todayTopTargets.some(g => g.rolledOver) || 
-        todayMassiveGoals.some(g => g.rolledOver);
-
-      if (alreadyRolledOver) return;
 
       // Find uncompleted targets from yesterday that haven't been rolled yet
       const uncompletedTargets = (yesterdayData.topTargets || [])
@@ -111,6 +107,7 @@ const DayView: React.FC<DayViewProps> = ({
         await saveDayData({
           topTargets: newTopTargets,
           massiveGoals: newMassiveGoals,
+          lastRolloverDate: currentDateKey, // Mark that we rolled over today
         });
       }
     };
