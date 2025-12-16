@@ -33,6 +33,9 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
   const [giftedCompanyName, setGiftedCompanyName] = useState('');
   const [giftedPassword, setGiftedPassword] = useState('');
   const [createGiftedLoading, setCreateGiftedLoading] = useState(false);
+  const [accountType, setAccountType] = useState<'team' | 'standalone'>('standalone');
+  const [billingType, setBillingType] = useState<'ghl' | 'stripe'>('ghl');
+  const [selectedPlan, setSelectedPlan] = useState<'solo' | 'team' | 'elite'>('solo');
 
   useEffect(() => {
     loadUserData();
@@ -146,33 +149,68 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
     setMessage('');
 
     try {
-      const response = await fetch('/.netlify/functions/create-gifted-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sponsorUserId: user.id,
+      if (accountType === 'team') {
+        // Create team member - add to existing company
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
           email: giftedEmail,
-          name: giftedName,
-          companyName: giftedCompanyName,
           password: giftedPassword,
-        }),
-      });
+          email_confirm: true,
+          user_metadata: { name: giftedName },
+        });
 
-      const data = await response.json();
+        if (authError) throw authError;
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create gifted account');
+        // Add user to current company
+        const { error: userError } = await supabase
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: giftedEmail,
+            name: giftedName,
+            role: 'Sales Rep',
+            company_id: company.id,
+            status: 'active',
+          });
+
+        if (userError) throw userError;
+
+        setMessage(`Team member ${giftedName} added successfully!`);
+      } else {
+        // Create standalone account
+        const response = await fetch('/.netlify/functions/create-gifted-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sponsorUserId: user.id,
+            email: giftedEmail,
+            name: giftedName,
+            companyName: giftedCompanyName,
+            password: giftedPassword,
+            billingType,
+            plan: selectedPlan,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create standalone account');
+        }
+
+        setMessage(`Standalone account created successfully for ${giftedEmail}`);
       }
 
-      setMessage(`Gifted account created successfully for ${giftedEmail}`);
       setShowCreateGifted(false);
       setGiftedEmail('');
       setGiftedName('');
       setGiftedCompanyName('');
       setGiftedPassword('');
+      setAccountType('standalone');
+      setBillingType('ghl');
+      setSelectedPlan('solo');
       await loadGiftedAccounts();
     } catch (err: any) {
-      console.error('Error creating gifted account:', err);
+      console.error('Error creating account:', err);
       setError(err.message);
     } finally {
       setCreateGiftedLoading(false);
@@ -338,20 +376,20 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
           </div>
         )}
 
-        {/* Gifted Accounts Management */}
+        {/* Account Management */}
         <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 mb-6">
           <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
-            Gifted Accounts
+            Account Management
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Create standalone MAT accounts for others. Their data is completely private. You manage billing separately in GHL.
+            Add team members or create standalone accounts for others.
           </p>
           
           <button
             onClick={() => setShowCreateGifted(true)}
             className="px-6 py-3 bg-brand-blue hover:bg-blue-700 text-white font-bold rounded-lg transition mb-6"
           >
-            Create Gifted Account
+            Add Account
           </button>
 
           {/* List of Gifted Accounts */}
@@ -449,67 +487,202 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
           </div>
         )}
 
-        {/* Create Gifted Account Modal */}
+        {/* Enhanced Add Account Modal */}
         {showCreateGifted && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowCreateGifted(false)}>
-            <div className="bg-brand-light-card dark:bg-brand-navy border border-brand-light-border dark:border-brand-gray rounded-lg shadow-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">Create Gifted Account</h3>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCreateGifted(false)}>
+            <div className="bg-brand-light-card dark:bg-brand-navy border border-brand-light-border dark:border-brand-gray rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-2xl font-bold text-brand-light-text dark:text-white mb-6">Add Account</h3>
               
-              <div className="space-y-4 mb-6">
+              <div className="space-y-6">
+                {/* Step 1: Account Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Full Name
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                    Account Type
                   </label>
-                  <input
-                    type="text"
-                    value={giftedName}
-                    onChange={(e) => setGiftedName(e.target.value)}
-                    placeholder="John Doe"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      onClick={() => setAccountType('team')}
+                      className={`p-4 rounded-lg border-2 transition ${
+                        accountType === 'team'
+                          ? 'border-brand-blue bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-brand-blue'
+                      }`}
+                    >
+                      <div className="text-left">
+                        <p className="font-bold text-brand-light-text dark:text-white mb-1">Team Member</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Joins your company • You see their data • Free</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setAccountType('standalone')}
+                      className={`p-4 rounded-lg border-2 transition ${
+                        accountType === 'standalone'
+                          ? 'border-brand-blue bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-brand-blue'
+                      }`}
+                    >
+                      <div className="text-left">
+                        <p className="font-bold text-brand-light-text dark:text-white mb-1">Standalone Account</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Own company • Private data • Paid</p>
+                      </div>
+                    </button>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={giftedEmail}
-                    onChange={(e) => setGiftedEmail(e.target.value)}
-                    placeholder="john@example.com"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
-                  />
-                </div>
+                {/* Step 2: Billing Type (only for standalone) */}
+                {accountType === 'standalone' && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                      Billing Method
+                    </label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setBillingType('ghl')}
+                        className={`p-4 rounded-lg border-2 transition ${
+                          billingType === 'ghl'
+                            ? 'border-brand-blue bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-brand-blue'
+                        }`}
+                      >
+                        <div className="text-left">
+                          <p className="font-bold text-brand-light-text dark:text-white mb-1">I'll Bill Them (GHL)</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">You manage billing in GoHighLevel</p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setBillingType('stripe')}
+                        className={`p-4 rounded-lg border-2 transition ${
+                          billingType === 'stripe'
+                            ? 'border-brand-blue bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-brand-blue'
+                        }`}
+                      >
+                        <div className="text-left">
+                          <p className="font-bold text-brand-light-text dark:text-white mb-1">They Pay Direct (Stripe)</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Automatic Stripe subscription</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    value={giftedCompanyName}
-                    onChange={(e) => setGiftedCompanyName(e.target.value)}
-                    placeholder="Acme Inc"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
-                  />
-                </div>
+                {/* Step 3: Plan Selection (only for standalone) */}
+                {accountType === 'standalone' && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                      Plan Tier
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <button
+                        onClick={() => setSelectedPlan('solo')}
+                        className={`p-4 rounded-lg border-2 transition ${
+                          selectedPlan === 'solo'
+                            ? 'border-brand-blue bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-brand-blue'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <p className="font-bold text-brand-light-text dark:text-white mb-1">Solo</p>
+                          <p className="text-lg font-bold text-brand-blue">$39</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">1 user</p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setSelectedPlan('team')}
+                        className={`p-4 rounded-lg border-2 transition ${
+                          selectedPlan === 'team'
+                            ? 'border-brand-blue bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-brand-blue'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <p className="font-bold text-brand-light-text dark:text-white mb-1">Team</p>
+                          <p className="text-lg font-bold text-brand-blue">$149</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">5 users</p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setSelectedPlan('elite')}
+                        className={`p-4 rounded-lg border-2 transition ${
+                          selectedPlan === 'elite'
+                            ? 'border-brand-blue bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-brand-blue'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <p className="font-bold text-brand-light-text dark:text-white mb-1">Elite</p>
+                          <p className="text-lg font-bold text-brand-blue">$399</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">10 users</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Password
+                {/* Step 4: User Details */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                    User Details
                   </label>
-                  <input
-                    type="password"
-                    value={giftedPassword}
-                    onChange={(e) => setGiftedPassword(e.target.value)}
-                    placeholder="Set their password"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
-                  />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        value={giftedName}
+                        onChange={(e) => setGiftedName(e.target.value)}
+                        placeholder="John Doe"
+                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={giftedEmail}
+                        onChange={(e) => setGiftedEmail(e.target.value)}
+                        placeholder="john@example.com"
+                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
+                      />
+                    </div>
+
+                    {accountType === 'standalone' && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          Company Name
+                        </label>
+                        <input
+                          type="text"
+                          value={giftedCompanyName}
+                          onChange={(e) => setGiftedCompanyName(e.target.value)}
+                          placeholder="Acme Inc"
+                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        value={giftedPassword}
+                        onChange={(e) => setGiftedPassword(e.target.value)}
+                        placeholder="Set their password"
+                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button
                   onClick={() => setShowCreateGifted(false)}
                   disabled={createGiftedLoading}
@@ -519,7 +692,7 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
                 </button>
                 <button
                   onClick={handleCreateGiftedAccount}
-                  disabled={createGiftedLoading || !giftedEmail || !giftedName || !giftedCompanyName || !giftedPassword}
+                  disabled={createGiftedLoading || !giftedEmail || !giftedName || !giftedPassword || (accountType === 'standalone' && !giftedCompanyName)}
                   className="flex-1 bg-brand-blue text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                 >
                   {createGiftedLoading ? 'Creating...' : 'Create Account'}

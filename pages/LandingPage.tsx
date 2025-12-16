@@ -583,9 +583,56 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================ */}
+      {/* COMMUNITY SECTION */}
+      {/* ============================================ */}
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="text-4xl md:text-5xl font-black mb-6">
+            Level Up with Massive Action Coaching Strategies
+          </h2>
+          <p className="text-xl md:text-2xl mb-4 text-blue-100">
+            Exclusive Training from TrueXpanse
+          </p>
+          <p className="text-lg md:text-xl mb-12 text-blue-200 max-w-3xl mx-auto">
+            Join our community to access advanced video tutorials, proven growth strategies, and elite-level coaching that will maximize your MAT results.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+              <div className="text-4xl mb-3">🎬</div>
+              <h3 className="text-xl font-bold mb-2">Video Tutorials</h3>
+              <p className="text-blue-100">Step-by-step training on mastering the MAT system</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+              <div className="text-4xl mb-3">📈</div>
+              <h3 className="text-xl font-bold mb-2">Growth Strategies</h3>
+              <p className="text-blue-100">Proven tactics to scale your sales results</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+              <div className="text-4xl mb-3">💪</div>
+              <h3 className="text-xl font-bold mb-2">Advanced Coaching</h3>
+              <p className="text-blue-100">Elite-level techniques from TrueXpanse</p>
+            </div>
+          </div>
+
+          <a
+            href="https://your-ghl-community-link.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-12 py-5 rounded-full bg-red-600 hover:bg-red-700 text-white font-black text-xl shadow-2xl transform hover:scale-105 transition-all duration-200"
+          >
+            Join the Community →
+          </a>
+          <p className="text-sm text-blue-200 mt-4">
+            Connect with other high-performers and accelerate your success
+          </p>
+        </div>
+      </section>
+
+      {/* ============================================ */}
       {/* PRICING SECTION */}
       {/* ============================================ */}
-      <section className="py-20 md:py-32 px-4 md:px-6 bg-gray-50">
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-center mb-16 text-gray-900">
             Choose Your Plan

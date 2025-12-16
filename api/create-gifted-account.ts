@@ -20,7 +20,7 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const { sponsorUserId, email, name, companyName, password } = JSON.parse(event.body || '{}');
+    const { sponsorUserId, email, name, companyName, password, billingType, plan } = JSON.parse(event.body || '{}');
 
     if (!sponsorUserId || !email || !name || !companyName || !password) {
       return {
@@ -28,6 +28,10 @@ export const handler: Handler = async (event) => {
         body: JSON.stringify({ error: 'Missing required fields' })
       };
     }
+
+    // Determine max_users based on plan
+    const maxUsers = plan === 'solo' ? 1 : plan === 'team' ? 5 : 10;
+    const subscriptionType = billingType === 'ghl' ? 'gifted' : plan;
 
     // Create the auth user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -54,11 +58,11 @@ export const handler: Handler = async (event) => {
       .from('companies')
       .insert({
         name: companyName,
-        max_users: 1,
-        subscription_: 'gifted',
-        sponsored_by_user_id: sponsorUserId,
-        is_gifted_account: true,
-        gifted_at: new Date().toISOString(),
+        max_users: maxUsers,
+        subscription_: subscriptionType,
+        sponsored_by_user_id: billingType === 'ghl' ? sponsorUserId : null,
+        is_gifted_account: billingType === 'ghl',
+        gifted_at: billingType === 'ghl' ? new Date().toISOString() : null,
         account_status: 'active',
       })
       .select()
