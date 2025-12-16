@@ -16,8 +16,8 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
   }
 });
 
-// Email notification function
-async function sendCancellationEmail(userEmail: string, userName: string, plan: string) {
+// Email notification function for cancellation requests
+async function sendCancellationRequestEmail(userEmail: string, userName: string, plan: string, companyName: string, subscriptionId: string) {
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -26,24 +26,34 @@ async function sendCancellationEmail(userEmail: string, userName: string, plan: 
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'TrueXpanse <notifications@truexpanse.com>',
+        from: 'TrueXpanse MAT <notifications@truexpanse.com>',
         to: ['don@truexpanse.com'],
-        subject: '🚨 Subscription Cancelled - TrueXpanse MAT',
+        subject: '🚨 Cancellation Request - TrueXpanse MAT',
         html: `
-          <h2>Subscription Cancelled</h2>
-          <p><strong>User:</strong> ${userName} (${userEmail})</p>
+          <h2>Subscription Cancellation Request</h2>
+          <p>A user has requested to cancel their subscription.</p>
+          <hr>
+          <p><strong>User:</strong> ${userName}</p>
+          <p><strong>Email:</strong> ${userEmail}</p>
+          <p><strong>Company:</strong> ${companyName}</p>
           <p><strong>Plan:</strong> ${plan}</p>
-          <p><strong>Cancelled at:</strong> ${new Date().toLocaleString()}</p>
-          <p>The user will have access until the end of their billing period.</p>
+          <p><strong>Stripe Subscription ID:</strong> ${subscriptionId}</p>
+          <p><strong>Requested at:</strong> ${new Date().toLocaleString()}</p>
+          <hr>
+          <p><strong>Action Required:</strong> Please log into Stripe and cancel this subscription manually.</p>
+          <p>Once cancelled in Stripe, the user's access will automatically expire at the end of their billing period.</p>
         `,
       }),
     });
 
     if (!response.ok) {
-      console.error('Failed to send cancellation email:', await response.text());
+      console.error('Failed to send cancellation request email:', await response.text());
+      return false;
     }
+    return true;
   } catch (error) {
-    console.error('Error sending cancellation email:', error);
+    console.error('Error sending cancellation request email:', error);
+    return false;
   }
 }
 
@@ -81,35 +91,40 @@ export const handler: Handler = async (event) => {
 
     const { data: companyData } = await supabaseAdmin
       .from('companies')
-      .select('plan')
+      .select('name, subscription_')
       .eq('id', userData.company_id)
       .single();
 
-    // Cancel the subscription in Stripe
-    const subscription = await stripe.subscriptions.cancel(subscriptionId);
+    // Send cancellation request email to Don
+    const emailSent = await sendCancellationRequestEmail(
+      userData.email,
+      userData.name,
+      companyData?.subscription_ || 'Starter',
+      companyData?.name || 'Unknown Company',
+      subscriptionId
+    );
 
-    // Update company record
+    if (!emailSent) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Failed to send cancellation request email' })
+      };
+    }
+
+    // Mark the cancellation request in the database
     await supabaseAdmin
       .from('companies')
       .update({
-        stripe_subscription_id: null,
+        cancellation_requested_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', userData.company_id);
-
-    // Send cancellation notification email
-    await sendCancellationEmail(
-      userData.email,
-      userData.name,
-      companyData?.plan || 'Unknown'
-    );
 
     return {
       statusCode: 200,
       body: JSON.stringify({ 
         success: true, 
-        message: 'Subscription cancelled successfully',
-        subscription 
+        message: 'Cancellation request sent successfully. You will receive confirmation once processed.'
       })
     };
 

@@ -165,6 +165,42 @@ const App: React.FC = () => {
           .eq('id', session.user.id)
           .single();
         if (profileError) throw profileError;
+
+        // Check subscription status via company
+        const { data: companyData, error: companyError } = await supabase
+          .from('companies')
+          .select('stripe_subscription_id, subscription_')
+          .eq('id', userProfile.company_id)
+          .single();
+
+        if (companyError) {
+          console.error('Error fetching company data:', companyError);
+        }
+
+        // If company has a Stripe subscription ID, verify it's still active
+        if (companyData?.stripe_subscription_id) {
+          try {
+            const response = await fetch('/.netlify/functions/check-subscription-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ subscriptionId: companyData.stripe_subscription_id })
+            });
+            
+            const result = await response.json();
+            
+            // If subscription is not active, log them out
+            if (!result.isActive) {
+              await supabase.auth.signOut();
+              setFetchError('Your subscription has expired. Please contact support to renew access.');
+              setIsLoading(false);
+              return;
+            }
+          } catch (error) {
+            console.error('Error checking subscription status:', error);
+            // Continue loading - don't block on subscription check failure
+          }
+        }
+
         setUser(userProfile);
 
         const userIdToFetch = userProfile.role === 'Manager' ? null : userProfile.id;
@@ -260,10 +296,10 @@ const App: React.FC = () => {
             }))
           );
         if (usersRes.data) setUsers(usersRes.data as any[]);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching application data:', error);
         setFetchError(
-          'Failed to load application data. This might be a temporary network issue.'
+          error.message || 'Failed to load application data. This might be a temporary network issue.'
         );
       } finally {
         setIsLoading(false);
