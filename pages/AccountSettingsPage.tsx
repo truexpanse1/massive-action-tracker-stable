@@ -210,7 +210,7 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
               Subscription & Billing
             </h2>
             
-            <div className="mb-6">
+            <div className="mb-4">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Plan</p>
               <p className="text-2xl font-bold text-brand-blue capitalize">
                 {company.subscription_ || 'Starter'}
@@ -220,17 +220,17 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
               </p>
             </div>
 
-            {/* Upgrade Button */}
-            <button
-              onClick={() => window.open('https://buy.stripe.com/your-upgrade-link', '_blank')}
-              className="w-full px-6 py-4 bg-brand-blue hover:bg-blue-700 text-white font-bold rounded-lg transition mb-4 text-lg"
-            >
-              🚀 Upgrade Plan
-            </button>
-
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-              Upgrade to unlock more users, advanced features, and priority support.
-            </p>
+            {/* Active Subscription Info */}
+            {company?.stripe_subscription_id && (
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
+                <p className="text-sm text-green-700 dark:text-green-300 font-medium">
+                  ✓ Active Subscription
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  Your subscription will automatically renew. You can cancel anytime.
+                </p>
+              </div>
+            )}
 
             {/* Cancel Link in Small Print */}
             {company?.stripe_subscription_id && (
