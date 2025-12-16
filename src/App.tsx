@@ -282,7 +282,12 @@ const App: React.FC = () => {
     }
   }, [showConfetti]);
 
-  const handleLogout = () => supabase.auth.signOut();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    window.location.href = '/';
+  };
 
   const handleUpsertDayData = async (dateKey: string, data: DayData) => {
     if (!user) return;
