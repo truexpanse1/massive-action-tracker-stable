@@ -21,9 +21,22 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberPassword, setNewMemberPassword] = useState('');
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [giftedAccounts, setGiftedAccounts] = useState<any[]>([]);
+  const [showCreateGifted, setShowCreateGifted] = useState(false);
+  const [giftedEmail, setGiftedEmail] = useState('');
+  const [giftedName, setGiftedName] = useState('');
+  const [giftedCompanyName, setGiftedCompanyName] = useState('');
+  const [giftedPassword, setGiftedPassword] = useState('');
+  const [createGiftedLoading, setCreateGiftedLoading] = useState(false);
 
   useEffect(() => {
     loadUserData();
+    loadGiftedAccounts();
   }, []);
 
   const loadUserData = async () => {
@@ -99,6 +112,89 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
       setError(err.message);
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  const loadGiftedAccounts = async () => {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
+      // Get all companies sponsored by this user
+      const { data: gifted } = await supabase
+        .from('companies')
+        .select(`
+          id,
+          name,
+          is_gifted_account,
+          gifted_at,
+          account_status,
+          users!inner(id, email, name)
+        `)
+        .eq('sponsored_by_user_id', authUser.id)
+        .eq('is_gifted_account', true);
+
+      setGiftedAccounts(gifted || []);
+    } catch (err) {
+      console.error('Error loading gifted accounts:', err);
+    }
+  };
+
+  const handleCreateGiftedAccount = async () => {
+    setCreateGiftedLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const response = await fetch('/.netlify/functions/create-gifted-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sponsorUserId: user.id,
+          email: giftedEmail,
+          name: giftedName,
+          companyName: giftedCompanyName,
+          password: giftedPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create gifted account');
+      }
+
+      setMessage(`Gifted account created successfully for ${giftedEmail}`);
+      setShowCreateGifted(false);
+      setGiftedEmail('');
+      setGiftedName('');
+      setGiftedCompanyName('');
+      setGiftedPassword('');
+      await loadGiftedAccounts();
+    } catch (err: any) {
+      console.error('Error creating gifted account:', err);
+      setError(err.message);
+    } finally {
+      setCreateGiftedLoading(false);
+    }
+  };
+
+  const handleToggleGiftedAccount = async (companyId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+    
+    try {
+      const { error: updateError } = await supabase
+        .from('companies')
+        .update({ account_status: newStatus })
+        .eq('id', companyId);
+
+      if (updateError) throw updateError;
+
+      setMessage(`Account ${newStatus === 'active' ? 'activated' : 'disabled'} successfully`);
+      await loadGiftedAccounts();
+    } catch (err: any) {
+      console.error('Error toggling account:', err);
+      setError(err.message);
     }
   };
 
@@ -242,6 +338,73 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
           </div>
         )}
 
+        {/* Gifted Accounts Management */}
+        <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 mb-6">
+          <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
+            Gifted Accounts
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Create standalone MAT accounts for others. Their data is completely private. You manage billing separately in GHL.
+          </p>
+          
+          <button
+            onClick={() => setShowCreateGifted(true)}
+            className="px-6 py-3 bg-brand-blue hover:bg-blue-700 text-white font-bold rounded-lg transition mb-6"
+          >
+            Create Gifted Account
+          </button>
+
+          {/* List of Gifted Accounts */}
+          {giftedAccounts.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">
+                Your Gifted Accounts ({giftedAccounts.length})
+              </h3>
+              <div className="space-y-3">
+                {giftedAccounts.map((account) => (
+                  <div
+                    key={account.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-brand-ink rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <div>
+                      <p className="font-medium text-brand-light-text dark:text-white">
+                        {account.users[0]?.name || 'Unknown'}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {account.users[0]?.email || 'No email'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        Company: {account.name} • Created: {new Date(account.gifted_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          account.account_status === 'active'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        }`}
+                      >
+                        {account.account_status === 'active' ? 'Active' : 'Disabled'}
+                      </span>
+                      <button
+                        onClick={() => handleToggleGiftedAccount(account.id, account.account_status)}
+                        className={`px-4 py-2 rounded-lg font-bold text-sm transition ${
+                          account.account_status === 'active'
+                            ? 'bg-red-600 hover:bg-red-700 text-white'
+                            : 'bg-green-600 hover:bg-green-700 text-white'
+                        }`}
+                      >
+                        {account.account_status === 'active' ? 'Disable' : 'Activate'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Password Management */}
         <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6">
           <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
@@ -280,6 +443,86 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
                   className="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition disabled:opacity-70"
                 >
                   {cancelLoading ? 'Cancelling...' : 'Yes, Cancel'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create Gifted Account Modal */}
+        {showCreateGifted && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowCreateGifted(false)}>
+            <div className="bg-brand-light-card dark:bg-brand-navy border border-brand-light-border dark:border-brand-gray rounded-lg shadow-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">Create Gifted Account</h3>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={giftedName}
+                    onChange={(e) => setGiftedName(e.target.value)}
+                    placeholder="John Doe"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={giftedEmail}
+                    onChange={(e) => setGiftedEmail(e.target.value)}
+                    placeholder="john@example.com"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    value={giftedCompanyName}
+                    onChange={(e) => setGiftedCompanyName(e.target.value)}
+                    placeholder="Acme Inc"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={giftedPassword}
+                    onChange={(e) => setGiftedPassword(e.target.value)}
+                    placeholder="Set their password"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:border-blue-500 focus:ring-0 transition"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCreateGifted(false)}
+                  disabled={createGiftedLoading}
+                  className="flex-1 bg-gray-500 text-white font-bold py-3 rounded-lg hover:bg-gray-600 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateGiftedAccount}
+                  disabled={createGiftedLoading || !giftedEmail || !giftedName || !giftedCompanyName || !giftedPassword}
+                  className="flex-1 bg-brand-blue text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {createGiftedLoading ? 'Creating...' : 'Create Account'}
                 </button>
               </div>
             </div>

@@ -169,12 +169,20 @@ const App: React.FC = () => {
         // Check subscription status via company
         const { data: companyData, error: companyError } = await supabase
           .from('companies')
-          .select('stripe_subscription_id, subscription_')
+          .select('stripe_subscription_id, subscription_, account_status')
           .eq('id', userProfile.company_id)
           .single();
 
         if (companyError) {
           console.error('Error fetching company data:', companyError);
+        }
+
+        // Check if account is disabled (for gifted accounts)
+        if (companyData?.account_status === 'disabled') {
+          await supabase.auth.signOut();
+          setFetchError('Your account has been disabled. Please contact your account sponsor.');
+          setIsLoading(false);
+          return;
         }
 
         // If company has a Stripe subscription ID, verify it's still active
