@@ -165,7 +165,7 @@ export const handler: Handler = async (event) => {
         .insert({
           name: companyName,
           owner_id: userId,
-          plan: planName,
+          subscription_tier: planName,
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: session.subscription as string,
         })

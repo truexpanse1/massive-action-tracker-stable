@@ -7,6 +7,7 @@ interface AccountSettingsPageProps {
 
 const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) => {
   const [user, setUser] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string>('');
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -54,12 +55,16 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
 
       setUser(authUser);
 
-      // Get user's company data
+      // Get user's company and role data
       const { data: userData } = await supabase
         .from('users')
-        .select('company_id')
+        .select('company_id, role')
         .eq('id', authUser.id)
         .single();
+
+      if (userData) {
+        setUserRole(userData.role || 'Sales Rep');
+      }
 
       if (userData?.company_id) {
         const { data: companyData } = await supabase
@@ -341,7 +346,7 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
             <div className="mb-4">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Plan</p>
               <p className="text-2xl font-bold text-brand-blue capitalize">
-                {company.subscription_ || 'Starter'}
+                {company.subscription_tier || 'Starter'}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 {company.max_users} user{company.max_users > 1 ? 's' : ''} maximum
@@ -370,7 +375,8 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
           </div>
         )}
 
-        {/* Account Management */}
+        {/* Account Management - Only for Admin and Manager */}
+        {(userRole === 'Admin' || userRole === 'Manager') && (
         <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 mb-6">
           <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
             Account Management
@@ -436,6 +442,7 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
             </div>
           )}
         </div>
+        )}
 
         {/* Password Management */}
         <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6">

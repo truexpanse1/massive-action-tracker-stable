@@ -12,6 +12,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
 });
 
 export const handler: Handler = async (event) => {
+  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -22,22 +23,59 @@ export const handler: Handler = async (event) => {
   try {
     const { sponsorUserId, email, name, companyName, password, billingType, plan } = JSON.parse(event.body || '{}');
 
+    // Validate required fields
     if (!sponsorUserId || !email || !name || !companyName || !password) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing required fields' })
+        body: JSON.stringify({ 
+          error: 'Missing required fields',
+          required: ['sponsorUserId', 'email', 'name', 'companyName', 'password']
+        })
+      };
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Invalid email format' })
+      };
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Password must be at least 6 characters' })
+      };
+    }
+
+    // Check if email already exists
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('email')
+      .eq('email', email)
+      .single();
+
+    if (existingUser) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Email already exists' })
       };
     }
 
     // Determine max_users based on plan
     const maxUsers = plan === 'solo' ? 1 : plan === 'team' ? 5 : 10;
-    const subscriptionType = billingType === 'ghl' ? 'gifted' : plan;
+    const subscriptionTier = billingType === 'ghl' ? 'gifted' : plan;
+
+    console.log(`Creating gifted account: ${email}, billing: ${billingType}, plan: ${plan}`);
 
     // Create the auth user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm email
+      email_confirm: true,
       user_metadata: {
         name,
       }
@@ -47,11 +85,15 @@ export const handler: Handler = async (event) => {
       console.error('Error creating auth user:', authError);
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: authError.message })
+        body: JSON.stringify({ 
+          error: 'Failed to create authentication user',
+          details: authError.message 
+        })
       };
     }
 
     const newUserId = authData.user.id;
+    console.log(`Auth user created with ID: ${newUserId}`);
 
     // Create the company
     const { data: companyData, error: companyError } = await supabaseAdmin
@@ -59,7 +101,7 @@ export const handler: Handler = async (event) => {
       .insert({
         name: companyName,
         max_users: maxUsers,
-        subscription_tier: subscriptionType,
+        subscription_tier: subscriptionTier,
         sponsored_by_user_id: billingType === 'ghl' ? sponsorUserId : null,
         is_gifted_account: billingType === 'ghl',
         gifted_at: billingType === 'ghl' ? new Date().toISOString() : null,
@@ -70,13 +112,21 @@ export const handler: Handler = async (event) => {
 
     if (companyError) {
       console.error('Error creating company:', companyError);
+      
       // Rollback: delete the auth user
+      console.log(`Rolling back - deleting auth user: ${newUserId}`);
       await supabaseAdmin.auth.admin.deleteUser(newUserId);
+      
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: companyError.message })
+        body: JSON.stringify({ 
+          error: 'Failed to create company',
+          details: companyError.message 
+        })
       };
     }
+
+    console.log(`Company created with ID: ${companyData.id}`);
 
     // Create the user record
     const { error: userError } = await supabaseAdmin
@@ -85,21 +135,31 @@ export const handler: Handler = async (event) => {
         id: newUserId,
         email,
         name,
-        role: 'Sales Rep',
+        role: 'Admin', // Gifted account owner is admin of their own company
         company_id: companyData.id,
         status: 'active',
       });
 
     if (userError) {
       console.error('Error creating user record:', userError);
+      
       // Rollback: delete company and auth user
+      console.log(`Rolling back - deleting company: ${companyData.id}`);
       await supabaseAdmin.from('companies').delete().eq('id', companyData.id);
+      
+      console.log(`Rolling back - deleting auth user: ${newUserId}`);
       await supabaseAdmin.auth.admin.deleteUser(newUserId);
+      
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: userError.message })
+        body: JSON.stringify({ 
+          error: 'Failed to create user record',
+          details: userError.message 
+        })
       };
     }
+
+    console.log(`Gifted account created successfully: ${email}`);
 
     return {
       statusCode: 200,
@@ -108,14 +168,20 @@ export const handler: Handler = async (event) => {
         message: 'Gifted account created successfully',
         userId: newUserId,
         companyId: companyData.id,
+        email,
+        name,
+        companyName
       })
     };
 
   } catch (error: any) {
-    console.error('Error creating gifted account:', error);
+    console.error('Unexpected error creating gifted account:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message 
+      })
     };
   }
 };
