@@ -204,20 +204,48 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
         </div>
 
         {/* Subscription Management */}
-        {company?.stripe_subscription_id && (
+        {company && (
           <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 mb-6">
             <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
-              Subscription Management
+              Subscription & Billing
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              You have an active subscription. If you cancel, you'll continue to have access until the end of your current billing period.
-            </p>
+            
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Plan</p>
+              <p className="text-2xl font-bold text-brand-blue capitalize">
+                {company.subscription_ || 'Starter'}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {company.max_users} user{company.max_users > 1 ? 's' : ''} maximum
+              </p>
+            </div>
+
+            {/* Upgrade Button */}
             <button
-              onClick={() => setShowCancelConfirm(true)}
-              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition"
+              onClick={() => window.open('https://buy.stripe.com/your-upgrade-link', '_blank')}
+              className="w-full px-6 py-4 bg-brand-blue hover:bg-blue-700 text-white font-bold rounded-lg transition mb-4 text-lg"
             >
-              Cancel Subscription
+              🚀 Upgrade Plan
             </button>
+
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+              Upgrade to unlock more users, advanced features, and priority support.
+            </p>
+
+            {/* Cancel Link in Small Print */}
+            {company?.stripe_subscription_id && (
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
+                  Need to cancel?{' '}
+                  <button
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-400 underline"
+                  >
+                    Cancel subscription
+                  </button>
+                </p>
+              </div>
+            )}
           </div>
         )}
 
