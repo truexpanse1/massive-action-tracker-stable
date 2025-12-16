@@ -151,28 +151,22 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
     try {
       if (accountType === 'team') {
         // Create team member - add to existing company
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: giftedEmail,
-          password: giftedPassword,
-          email_confirm: true,
-          user_metadata: { name: giftedName },
-        });
-
-        if (authError) throw authError;
-
-        // Add user to current company
-        const { error: userError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
+        const response = await fetch('/.netlify/functions/create-team-member', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            companyId: company.id,
             email: giftedEmail,
             name: giftedName,
-            role: 'Sales Rep',
-            company_id: company.id,
-            status: 'active',
-          });
+            password: giftedPassword,
+          }),
+        });
 
-        if (userError) throw userError;
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create team member');
+        }
 
         setMessage(`Team member ${giftedName} added successfully!`);
       } else {
