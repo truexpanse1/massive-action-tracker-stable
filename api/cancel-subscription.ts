@@ -91,7 +91,7 @@ export const handler: Handler = async (event) => {
 
     const { data: companyData } = await supabaseAdmin
       .from('companies')
-      .select('name, subscription_')
+      .select('name, subscription_tier')
       .eq('id', userData.company_id)
       .single();
 
@@ -99,7 +99,7 @@ export const handler: Handler = async (event) => {
     const emailSent = await sendCancellationRequestEmail(
       userData.email,
       userData.name,
-      companyData?.subscription_ || 'Starter',
+      companyData?.subscription_tier || 'Starter',
       companyData?.name || 'Unknown Company',
       subscriptionId
     );
