@@ -82,10 +82,10 @@ const DayView: React.FC<DayViewProps> = ({
     }
 
     const uncompletedTargets = (yesterdayData.topTargets || [])
-      .filter(g => !g.completed && !g.rolledOver);
+      .filter(g => !g.completed && !g.rolledOver && g.text && g.text.trim() !== '');
     
     const uncompletedGoals = (yesterdayData.massiveGoals || [])
-      .filter(g => !g.completed && !g.id.includes('-rolled'));
+      .filter(g => !g.completed && !g.id.includes('-rolled') && g.text && g.text.trim() !== '');
 
     return { targets: uncompletedTargets, goals: uncompletedGoals };
   };
