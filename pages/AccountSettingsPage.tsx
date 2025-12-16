@@ -63,7 +63,11 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
         .single();
 
       if (userData) {
+        console.log('AccountSettings - Loaded user role:', userData.role);
         setUserRole(userData.role || 'Sales Rep');
+      } else {
+        console.log('AccountSettings - No userData found, defaulting to Sales Rep');
+        setUserRole('Sales Rep');
       }
 
       if (userData?.company_id) {
@@ -376,7 +380,10 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
         )}
 
         {/* Account Management - Only for Admin and Manager */}
-        {(userRole === 'Admin' || userRole === 'Manager') && (
+        {(() => {
+          console.log('AccountSettings - Rendering check - userRole:', userRole, 'Show button:', userRole === 'Admin' || userRole === 'Manager');
+          return (userRole === 'Admin' || userRole === 'Manager');
+        })() && (
         <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 mb-6">
           <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
             Account Management
