@@ -59,7 +59,7 @@ export const handler: Handler = async (event) => {
       .insert({
         name: companyName,
         max_users: maxUsers,
-        subscription_: subscriptionType,
+        subscription_tier: subscriptionType,
         sponsored_by_user_id: billingType === 'ghl' ? sponsorUserId : null,
         is_gifted_account: billingType === 'ghl',
         gifted_at: billingType === 'ghl' ? new Date().toISOString() : null,
