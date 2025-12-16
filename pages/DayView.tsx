@@ -221,7 +221,6 @@ const DayView: React.FC<DayViewProps> = ({
       setIsAiChallengeLoading(false);
     }
   };
-
   // ---------- Goals (Top 6 + Massive) ----------
   const handleGoalChange = async (
     type: 'topTargets' | 'massiveGoals',
@@ -230,16 +229,39 @@ const DayView: React.FC<DayViewProps> = ({
   ) => {
     const goals = (currentData[type] || []) as Goal[];
     const newGoals = goals.map((g) =>
-      g.id === updatedGoal.id
-        ? { ...updatedGoal, completed: isCompletion }
-        : g
+      g.id === updatedGoal.id ? updatedGoal : g
+    );
+    await saveDayData({ [type]: newGoals });
+  };
+
+  // ---------- Move Target to Tomorrow ----------
+  const handleMoveToTomorrow = async (type: 'topTargets' | 'massiveGoals', goal: Goal) => {
+    // Get tomorrow's date
+    const tomorrow = new Date(selectedDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowKey = getDateKey(tomorrow);
+    const tomorrowData = allData[tomorrowKey] || getInitialDayData();
+
+    // Update the goal with forward tracking
+    const forwardedGoal = {
+      ...goal,
+      id: `${goal.id}-fwd-${tomorrowKey}`,
+      forwarded_from_date: currentDateKey,
+      forward_count: ((goal as any).forward_count || 0) + 1,
+      last_forwarded_at: new Date().toISOString(),
+    };
+
+    // Add to top of tomorrow's list
+    const tomorrowGoals = [forwardedGoal, ...(tomorrowData[type] || [])].slice(0, 6);
+
+    // Mark as forwarded on today's list (gray it out)
+    const todayGoals = (currentData[type] || []).map((g) =>
+      g.id === goal.id ? { ...g, completed: false, forwarded: true } : g
     );
 
-    await saveDayData({ [type]: newGoals } as Partial<DayData>);
-
-    if (isCompletion && updatedGoal.text?.trim()) {
-      onAddWin(currentDateKey, `Target Completed: ${updatedGoal.text}`);
-    }
+    // Save both days
+    await saveDayData({ [type]: todayGoals });
+    await onDataChange(tomorrowKey, { ...tomorrowData, [type]: tomorrowGoals });
   };
 
   // ---------- Event Add / Edit / Delete ----------
@@ -495,6 +517,8 @@ const DayView: React.FC<DayViewProps> = ({
             onGoalChange={(goal, isCompletion) =>
               handleGoalChange('topTargets', goal, isCompletion)
             }
+            onMoveToTomorrow={(goal) => handleMoveToTomorrow('topTargets', goal)}
+            showForwardTip={true}
           />
           <GoalsBlock
             title="Massive Action Goals"
@@ -502,8 +526,10 @@ const DayView: React.FC<DayViewProps> = ({
             onGoalChange={(goal, isCompletion) =>
               handleGoalChange('massiveGoals', goal, isCompletion)
             }
+            onMoveToTomorrow={(goal) => handleMoveToTomorrow('massiveGoals', goal)}
             highlight
             iconType="target"
+            showForwardTip={true}
           />
           {/* DAILY REFLECTION */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
