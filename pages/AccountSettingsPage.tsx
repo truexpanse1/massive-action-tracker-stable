@@ -218,31 +218,24 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 {company.max_users} user{company.max_users > 1 ? 's' : ''} maximum
               </p>
+              {company?.stripe_subscription_id && (
+                <button
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="text-xs text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-400 underline mt-1"
+                >
+                  Cancellation
+                </button>
+              )}
             </div>
 
             {/* Active Subscription Info */}
             {company?.stripe_subscription_id && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <p className="text-sm text-green-700 dark:text-green-300 font-medium">
                   ✓ Active Subscription
                 </p>
                 <p className="text-xs text-green-600 dark:text-green-400 mt-1">
                   Your subscription will automatically renew. You can cancel anytime.
-                </p>
-              </div>
-            )}
-
-            {/* Cancel Link in Small Print */}
-            {company?.stripe_subscription_id && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
-                  Need to cancel?{' '}
-                  <button
-                    onClick={() => setShowCancelConfirm(true)}
-                    className="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-400 underline"
-                  >
-                    Cancel subscription
-                  </button>
                 </p>
               </div>
             )}
