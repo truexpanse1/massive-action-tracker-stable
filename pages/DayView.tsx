@@ -243,18 +243,73 @@ const DayView: React.FC<DayViewProps> = ({
   };
 
   // ---------- Event Add / Edit / Delete ----------
-  const handleEventSaved = async (savedEvent: CalendarEvent) => {
-    const existingEvents = currentData.events || [];
+  const handleEventSaved = async (
+    savedEvent: CalendarEvent,
+    originalDateKey: string | null,
+    newDateKey: string
+  ) => {
     const normalized: CalendarEvent = {
       ...savedEvent,
       conducted: savedEvent.conducted ?? false,
     };
 
-    const updatedEvents = editingEvent
-      ? existingEvents.map((e) => (e.id === savedEvent.id ? normalized : e))
-      : [...existingEvents, normalized];
+    // If editing an existing event, just update it on the target date
+    if (editingEvent) {
+      const targetDateKey = newDateKey;
+      const targetData = allData[targetDateKey] || getInitialDayData();
+      const updatedEvents = (targetData.events || []).map((e) =>
+        e.id === savedEvent.id ? normalized : e
+      );
+      const merged: DayData = {
+        ...getInitialDayData(),
+        ...targetData,
+        events: updatedEvents,
+      };
+      await onDataChange(targetDateKey, merged);
+    } else {
+      // Creating a new event
+      if (savedEvent.isRecurring && savedEvent.groupId) {
+        // Parse the number of weeks from groupId (format: "timestamp-weeks")
+        const parts = savedEvent.groupId.split('-');
+        const repeatWeeks = parseInt(parts[parts.length - 1], 10) || 1;
 
-    await saveDayData({ events: updatedEvents });
+        // Create recurring events for each week
+        for (let week = 0; week < repeatWeeks; week++) {
+          const eventDate = new Date(newDateKey);
+          eventDate.setDate(eventDate.getDate() + week * 7);
+          const eventDateKey = getDateKey(eventDate);
+
+          // Create a unique ID for each occurrence
+          const occurrenceId = `${savedEvent.id}-week${week}`;
+          const occurrenceEvent: CalendarEvent = {
+            ...normalized,
+            id: occurrenceId,
+          };
+
+          // Get or create day data for this date
+          const targetData = allData[eventDateKey] || getInitialDayData();
+          const updatedEvents = [...(targetData.events || []), occurrenceEvent];
+          const merged: DayData = {
+            ...getInitialDayData(),
+            ...targetData,
+            events: updatedEvents,
+          };
+          await onDataChange(eventDateKey, merged);
+        }
+      } else {
+        // Non-recurring event, just add to the specified date
+        const targetDateKey = newDateKey;
+        const targetData = allData[targetDateKey] || getInitialDayData();
+        const updatedEvents = [...(targetData.events || []), normalized];
+        const merged: DayData = {
+          ...getInitialDayData(),
+          ...targetData,
+          events: updatedEvents,
+        };
+        await onDataChange(targetDateKey, merged);
+      }
+    }
+
     setIsEventModalOpen(false);
     setEditingEvent(null);
   };
