@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
                  <NavItem onClick={() => handleSetView('coaching')} active={currentView === 'coaching'}>Coaching</NavItem>
               </Dropdown>
               
-              {userRole === 'Manager' && (
+              {(userRole === 'Admin' || userRole === 'Manager') && (
                 <Dropdown title="Leadership" isOpen={openDropdown === 'leadership'} onToggle={() => handleToggle('leadership')}>
                     <NavItem onClick={() => handleSetView('team-control')} active={currentView === 'team-control'}>Team Control Panel</NavItem>
                     <NavItem onClick={() => handleSetView('performance-dashboard')} active={currentView === 'performance-dashboard'}>Performance Dashboard</NavItem>
@@ -170,7 +170,7 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
             </button>
 
             {/* Leadership Section (Manager only) */}
-            {userRole === 'Manager' && (
+            {(userRole === 'Admin' || userRole === 'Manager') && (
               <>
                 <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mt-3">Leadership</div>
                 <button onClick={() => { handleSetView('team-control'); setMobileMenuOpen(false); }} className={`block w-full text-left px-4 py-2 text-sm rounded-md ${currentView === 'team-control' ? 'bg-brand-red text-white' : 'text-gray-700 dark:text-gray-300'}`}>
