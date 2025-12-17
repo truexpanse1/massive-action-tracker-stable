@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DayData, Transaction, getInitialDayData, formatCurrency, Contact } from '../types';
 import Calendar from '../components/Calendar';
+import EODPerformanceChart from '../components/EODPerformanceChart';
 
 // --- PROPS INTERFACE ---
 interface EODReportPageProps {
@@ -104,6 +105,7 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
     };
 
     return (
+        <div className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Left Column (Calendar & Submit) */}
             <div className="lg:col-span-1 space-y-8">
@@ -154,6 +156,15 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
                     </Column>
                 </div>
             </div>
+        </div>
+
+        {/* Performance Chart Section */}
+        <EODPerformanceChart
+            allData={allData}
+            transactions={transactions}
+            hotLeads={hotLeads}
+            userId={userId}
+        />
         </div>
     );
 };
