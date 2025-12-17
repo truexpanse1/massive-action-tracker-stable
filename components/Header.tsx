@@ -93,7 +93,6 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
               </Dropdown>
               <Dropdown title="Marketing" isOpen={openDropdown === 'marketing'} onToggle={() => handleToggle('marketing')}>
                  <NavItem onClick={() => handleSetView('ai-images')} active={currentView === 'ai-images'}>AI Images</NavItem>
-                 <NavItem onClick={() => handleSetView('ai-images-pro')} active={currentView === 'ai-images-pro'}>🌟 AI Images Pro</NavItem>
                  <NavItem onClick={() => handleSetView('ai-content')} active={currentView === 'ai-content'}>AI Content</NavItem>
                  <NavItem onClick={() => handleSetView('coaching')} active={currentView === 'coaching'}>Coaching</NavItem>
               </Dropdown>
@@ -161,7 +160,7 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
             {/* Marketing Section */}
             <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mt-3">Marketing</div>
             <button onClick={() => { handleSetView('ai-images'); setMobileMenuOpen(false); }} className={`block w-full text-left px-4 py-2 text-sm rounded-md ${currentView === 'ai-images' ? 'bg-brand-red text-white' : 'text-gray-700 dark:text-gray-300'}`}>
-              AI Images Pro
+              AI Images
             </button>
             <button onClick={() => { handleSetView('ai-content'); setMobileMenuOpen(false); }} className={`block w-full text-left px-4 py-2 text-sm rounded-md ${currentView === 'ai-content' ? 'bg-brand-red text-white' : 'text-gray-700 dark:text-gray-300'}`}>
               AI Content
