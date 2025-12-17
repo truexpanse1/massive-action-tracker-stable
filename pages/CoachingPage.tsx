@@ -20,8 +20,8 @@ const CoachingPage: React.FC<CoachingPageProps> = ({ savedQuotes, onSaveQuote, o
     }
   };
 
-  // GHL Community Link - Massive Action Strategies (Public Invite)
-  const communityLink = "https://truexpanse.app.clientclub.net/communities/groups/massive-action-strategies/home?invite=694259007b5269985133ec5a";
+  // GHL Community Link - Massive Action Nation (Public Invite)
+  const communityLink = "https://truexpanse.app.clientclub.net/communities/groups/massive-action-nation/home?invite=69425e3b7f5c2d0a19dceed7";
 
   return (
     <div className="space-y-8">
