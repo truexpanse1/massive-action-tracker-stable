@@ -21,7 +21,7 @@ const CoachingPage: React.FC<CoachingPageProps> = ({ savedQuotes, onSaveQuote, o
   };
 
   // GHL Community Link - Massive Action Nation (Public Invite)
-  const communityLink = "https://truexpanse.app.clientclub.net/communities/groups/massive-action-nation/home?invite=69425e3b7f5c2d0a19dceed7";
+  const communityLink = "https://truexpanse.app.clientclub.net/communities/groups/massive-action-nation/home?invite=6942bb7b7b52699851bdbb0f";
 
   return (
     <div className="space-y-8">

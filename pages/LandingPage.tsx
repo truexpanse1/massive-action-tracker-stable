@@ -616,7 +616,7 @@ export default function LandingPage() {
           </div>
 
           <a
-            href="https://your-ghl-community-link.com"
+            href="https://truexpanse.app.clientclub.net/communities/groups/massive-action-nation/home?invite=6942bb7b7b52699851bdbb0f"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block px-12 py-5 rounded-full bg-red-600 hover:bg-red-700 text-white font-black text-xl shadow-2xl transform hover:scale-105 transition-all duration-200"
