@@ -20,8 +20,8 @@ const CoachingPage: React.FC<CoachingPageProps> = ({ savedQuotes, onSaveQuote, o
     }
   };
 
-  // Replace with your actual GHL community link
-  const communityLink = "https://your-ghl-community-link.com";
+  // GHL Community Link - Massive Action Strategies
+  const communityLink = "https://truexpanse.app.clientclub.net/communities/groups/massive-action-strategies/home";
 
   return (
     <div className="space-y-8">
