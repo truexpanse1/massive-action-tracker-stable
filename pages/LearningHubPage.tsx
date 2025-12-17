@@ -24,10 +24,10 @@ const LearningHubPage: React.FC = () => {
     },
     {
       id: '2',
-      title: '10 Things You Must Work On Every Day',
+      title: 'How to Take Charge of Your Life',
       author: 'Jim Rohn',
-      youtubeId: 'ZPou6asM4II',
-      commentary: "True success isn't achieved through one massive leap but through consistent, small improvements. Jim breaks down the daily habits that separate high achievers from everyone else. This is the foundation of what MAT helps you track every single day.",
+      youtubeId: 'pUz06GHWWuM',
+      commentary: "Jim Rohn's masterclass on personal responsibility and taking control of your destiny. This is the blueprint for massive action—understanding that you are 100% responsible for your results. If you want to change your life, this is where it starts.",
       dateAdded: 'December 17, 2025'
     },
     {
