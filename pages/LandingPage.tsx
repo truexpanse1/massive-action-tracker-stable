@@ -441,12 +441,20 @@ export default function LandingPage() {
           <div className="text-2xl md:text-3xl font-black tracking-tighter text-gray-900">
             TRUE<span className="text-red-600">X</span>PANSE
           </div>
-          <button
-            onClick={openLoginModal}
-            className="px-6 md:px-8 py-2 md:py-3 rounded-full border-2 border-gray-400 hover:border-gray-600 font-semibold text-sm md:text-base transition text-gray-900 whitespace-nowrap"
-          >
-            Login
-          </button>
+          <div className="flex items-center gap-3 md:gap-4">
+            <a
+              href="/learning"
+              className="px-4 md:px-6 py-2 md:py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm md:text-base transition whitespace-nowrap"
+            >
+              🎯 MAT Wisdom
+            </a>
+            <button
+              onClick={openLoginModal}
+              className="px-6 md:px-8 py-2 md:py-3 rounded-full border-2 border-gray-400 hover:border-gray-600 font-semibold text-sm md:text-base transition text-gray-900 whitespace-nowrap"
+            >
+              Login
+            </button>
+          </div>
         </div>
       </header>
 
