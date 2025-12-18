@@ -509,27 +509,9 @@ const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ all
                 
                 const dayRevenue = userTransactions.reduce((sum, t) => sum + t.amount, 0);
                 const userContacts = dayData?.prospectingContacts?.filter(c => c.userId === rep.id) || [];
-let dayAppts = userContacts.filter(c => c.prospecting.SA).length;
-let dayCalls = userContacts.filter(c => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM).length;
-let dayLeads = userContacts.filter(c => c.name).length;
-
-// Add realistic dummy data if actual data is sparse
-// This creates a more impressive demo with varied patterns
-const dayOfWeek = d.getDay();
-const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-// Generate dummy data for each metric independently if it's 0
-if (dayAppts === 0) {
-    dayAppts = isWeekend ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3) + 1;
-}
-if (dayCalls === 0) {
-    dayCalls = isWeekend ? Math.floor(Math.random() * 5) : Math.floor(Math.random() * 15) + 10;
-}
-if (dayLeads === 0) {
-    dayLeads = isWeekend ? Math.floor(Math.random() * 3) : Math.floor(Math.random() * 5) + 2;
-}
-
-
+                const dayAppts = userContacts.filter(c => c.prospecting.SA).length;
+                const dayCalls = userContacts.filter(c => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM).length;
+                const dayLeads = userContacts.filter(c => c.name).length;
 
                 rawData[rep.id].revenue.push(dayRevenue);
                 rawData[rep.id].appts.push(dayAppts);
