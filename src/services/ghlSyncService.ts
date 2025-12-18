@@ -33,6 +33,8 @@ interface Activity {
  * Get GHL integration for a company
  */
 async function getGHLIntegration(companyId: string) {
+  console.log('🔍 Looking for GHL integration for company_id:', companyId);
+  
   const { data, error } = await supabase
     .from('ghl_integrations')
     .select('*')
@@ -40,10 +42,14 @@ async function getGHLIntegration(companyId: string) {
     .eq('is_active', true)
     .single();
 
+  console.log('🔍 GHL integration query result:', { data, error });
+
   if (error || !data) {
+    console.error('❌ GHL integration not found. Error:', error);
     throw new Error('GHL integration not found or inactive');
   }
 
+  console.log('✅ Found GHL integration:', data);
   return data;
 }
 
