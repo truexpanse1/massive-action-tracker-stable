@@ -70,13 +70,14 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
     const dailyKpis = useMemo(() => {
         // Activity
         const callsMade = (currentData.prospectingContacts || []).filter(c => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM).length;
-        const emails = (currentData.prospectingContacts || []).filter(c => c.prospecting.EP).length;
+        const proposalsSent = (currentData.prospectingContacts || []).filter(c => c.prospecting.EP).length;
         const texts = (currentData.prospectingContacts || []).filter(c => c.prospecting.ST).length;
+        const totalContacts = (currentData.prospectingContacts || []).length;
 
         // Pipeline
         const newLeads = hotLeads.filter(l => l.dateAdded && l.dateAdded.startsWith(currentDateKey)).length;
         const demosHeld = (currentData.events || []).filter(e => e.type === 'Appointment' && e.conducted).length;
-        const quotesSent = emails;
+        const quotesSent = proposalsSent; // Same as proposals sent
         const apptsSet = (currentData.prospectingContacts || []).filter(c => c.prospecting.SA).length;
         
         // Results
@@ -86,10 +87,16 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
         const avgDeal = closedDeals > 0 ? revenueCollected / closedDeals : 0;
         const acv = todaysTransactions.filter(t => t.isRecurring).reduce((sum, t) => sum + t.amount * 12, 0);
 
+        // Conversion Rates
+        const callToApptRate = callsMade > 0 ? ((apptsSet / callsMade) * 100).toFixed(1) : '0';
+        const leadToApptRate = newLeads > 0 ? ((apptsSet / newLeads) * 100).toFixed(1) : '0';
+        const demoToCloseRate = demosHeld > 0 ? ((closedDeals / demosHeld) * 100).toFixed(1) : '0';
+
         return {
-            callsMade, emails, texts,
+            callsMade, proposalsSent, texts, totalContacts,
             newLeads, demosHeld, quotesSent, apptsSet,
-            closedDeals, revenueCollected, avgDeal, acv
+            closedDeals, revenueCollected, avgDeal, acv,
+            callToApptRate, leadToApptRate, demoToCloseRate
         };
     }, [currentData, hotLeads, transactions, currentDateKey]);
 
@@ -132,15 +139,9 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <Column title="Activity" subtitle="Input">
                         <KPI_Card label="Calls Made" value={dailyKpis.callsMade} />
-                        <KPI_Card label="Emails" value={dailyKpis.emails} />
-                        <KPI_Card label="Texts" value={dailyKpis.texts} />
-                        <KPI_Card 
-                          label="Talk Time" 
-                          value={talkTime} 
-                          isInput 
-                          onInputChange={setTalkTime}
-                          disabled={isSubmitted}
-                        />
+                        <KPI_Card label="Proposals Sent" value={dailyKpis.proposalsSent} />
+                        <KPI_Card label="Texts Sent" value={dailyKpis.texts} />
+                        <KPI_Card label="Total Contacts" value={dailyKpis.totalContacts} />
                     </Column>
                     <Column title="Pipeline" subtitle="Progress">
                         <KPI_Card label="New Leads" value={dailyKpis.newLeads} />
@@ -151,8 +152,8 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
                      <Column title="Results" subtitle="Outcome">
                         <KPI_Card label="Closed Deals" value={dailyKpis.closedDeals} />
                         <KPI_Card label="Revenue Collected" value={formatCurrency(dailyKpis.revenueCollected)} />
-                        <KPI_Card label="Avg. Deal" value={formatCurrency(dailyKpis.avgDeal)} />
-                        <KPI_Card label="ACV" value={formatCurrency(dailyKpis.acv)} />
+                        <KPI_Card label="Call → Appt Rate" value={`${dailyKpis.callToApptRate}%`} />
+                        <KPI_Card label="Demo → Close Rate" value={`${dailyKpis.demoToCloseRate}%`} />
                     </Column>
                 </div>
             </div>
