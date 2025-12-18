@@ -464,7 +464,11 @@ const App: React.FC = () => {
   };
 
   const handleSaveNewClient = async (clientData: NewClient) => {
-    if (!user) return;
+    console.log('📥 handleSaveNewClient called with:', clientData);
+    if (!user) {
+      console.log('⚠️ No user, returning early');
+      return;
+    }
     const payload = {
       name: clientData.name,
       company: clientData.company,
