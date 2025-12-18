@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { syncClientToGHL } from './services/ghlSyncService';
 
 import {
   View,
@@ -487,7 +488,7 @@ const App: React.FC = () => {
         .insert(payload)
         .select()
         .single();
-      if (data)
+      if (data) {
         setNewClients((prev) => [
           ...prev,
           {
@@ -503,7 +504,13 @@ const App: React.FC = () => {
             userId: data.user_id,
           },
         ]);
-      else console.error(error);
+        
+        // Sync to GoHighLevel (non-blocking)
+        syncClientToGHL(String(data.id)).catch((err) => {
+          console.error('GHL sync failed:', err);
+          // Sync failure doesn't prevent client creation
+        });
+      } else console.error(error);
     } else {
       const { data, error } = await supabase
         .from('clients')
@@ -511,7 +518,7 @@ const App: React.FC = () => {
         .eq('id', clientData.id)
         .select()
         .single();
-      if (data)
+      if (data) {
         setNewClients((prev) =>
           prev.map((c) =>
             c.id === clientData.id
@@ -530,7 +537,12 @@ const App: React.FC = () => {
               : c
           )
         );
-      else console.error(error);
+        
+        // Sync to GoHighLevel (non-blocking)
+        syncClientToGHL(String(data.id)).catch((err) => {
+          console.error('GHL sync failed:', err);
+        });
+      } else console.error(error);
     }
   };
 
