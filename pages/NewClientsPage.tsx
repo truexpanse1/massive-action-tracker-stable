@@ -141,10 +141,12 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
   };
 
   const handleSaveClient = (clientData: NewClient) => {
+    console.log('📦 NewClientsPage handleSaveClient called with:', clientData);
     const payload: NewClient = String(clientData.id).startsWith('manual-')
       ? { ...clientData, userId: loggedInUser.id }
       : clientData;
 
+    console.log('📦 Calling onSaveClient with payload:', payload);
     onSaveClient(payload);
     setIsModalOpen(false);
     setEditingClient(null);
