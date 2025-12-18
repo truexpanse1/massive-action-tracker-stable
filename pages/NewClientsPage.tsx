@@ -199,6 +199,10 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
 
   return (
     <>
+      {/* TEST BANNER */}
+      <div style={{background: 'red', color: 'white', padding: '10px', textAlign: 'center', fontWeight: 'bold', fontSize: '20px'}}>
+        🚨 GHL SYNC CODE IS DEPLOYED - Build Time: {new Date().toLocaleTimeString()} 🚨
+      </div>
       <AddClientModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
