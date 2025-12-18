@@ -292,7 +292,7 @@ const GHLIntegrationPage: React.FC<GHLIntegrationPageProps> = ({
             </button>
             <button
               onClick={saveIntegration}
-              disabled={isSaving || !apiKey || !locationId}
+              disabled={isSaving || (!apiKey && !integration) || !locationId}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? 'Saving...' : integration ? 'Update Integration' : 'Save Integration'}
