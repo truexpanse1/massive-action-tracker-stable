@@ -68,13 +68,19 @@ const GHLIntegrationPage: React.FC<GHLIntegrationPageProps> = ({
       return;
     }
 
+    const testLocationId = locationId || integration?.ghl_location_id;
+    if (!testLocationId) {
+      setMessage({ type: 'error', text: 'Please enter a Location ID first' });
+      return;
+    }
+
     setIsTestingConnection(true);
     setMessage(null);
 
     try {
-      // Test the connection by making a simple API call
+      // Test the connection by fetching the specific location
       const testKey = apiKey || integration?.ghl_api_key;
-      const response = await fetch('https://services.leadconnectorhq.com/locations/', {
+      const response = await fetch(`https://services.leadconnectorhq.com/locations/${testLocationId}`, {
         headers: {
           'Authorization': `Bearer ${testKey}`,
           'Version': '2021-07-28',
@@ -83,15 +89,23 @@ const GHLIntegrationPage: React.FC<GHLIntegrationPageProps> = ({
 
       if (response.ok) {
         const data = await response.json();
+        const locationName = data.location?.name || 'Unknown';
         setMessage({ 
           type: 'success', 
-          text: `✅ Connection successful! Found ${data.locations?.length || 0} location(s).` 
+          text: `✅ Connection successful! Connected to location: ${locationName}` 
         });
       } else {
-        setMessage({ type: 'error', text: '❌ Invalid API key or connection failed' });
+        const errorData = await response.json().catch(() => ({}));
+        setMessage({ 
+          type: 'error', 
+          text: `❌ Connection failed: ${errorData.message || 'Invalid API key or Location ID'}` 
+        });
       }
-    } catch (error) {
-      setMessage({ type: 'error', text: '❌ Connection test failed' });
+    } catch (error: any) {
+      setMessage({ 
+        type: 'error', 
+        text: `❌ Connection test failed: ${error.message || 'Network error'}` 
+      });
     } finally {
       setIsTestingConnection(false);
     }
@@ -105,6 +119,11 @@ const GHLIntegrationPage: React.FC<GHLIntegrationPageProps> = ({
 
     if (!apiKey) {
       setMessage({ type: 'error', text: 'API key is required' });
+      return;
+    }
+
+    if (!locationId) {
+      setMessage({ type: 'error', text: 'Location ID is required' });
       return;
     }
 
@@ -246,7 +265,7 @@ const GHLIntegrationPage: React.FC<GHLIntegrationPageProps> = ({
         {/* Location ID Input */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Sub-Account Location ID (Optional)
+            Sub-Account Location ID <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -273,7 +292,7 @@ const GHLIntegrationPage: React.FC<GHLIntegrationPageProps> = ({
             </button>
             <button
               onClick={saveIntegration}
-              disabled={isSaving || !apiKey}
+              disabled={isSaving || !apiKey || !locationId}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? 'Saving...' : integration ? 'Update Integration' : 'Save Integration'}
