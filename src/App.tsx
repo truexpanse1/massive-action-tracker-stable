@@ -506,10 +506,15 @@ const App: React.FC = () => {
         ]);
         
         // Sync to GoHighLevel (non-blocking)
-        syncClientToGHL(String(data.id)).catch((err) => {
-          console.error('GHL sync failed:', err);
-          // Sync failure doesn't prevent client creation
-        });
+        console.log('🔄 Attempting to sync client to GHL:', data.id);
+        syncClientToGHL(String(data.id))
+          .then((ghlContactId) => {
+            console.log('✅ Client synced to GHL successfully! GHL Contact ID:', ghlContactId);
+          })
+          .catch((err) => {
+            console.error('❌ GHL sync failed:', err);
+            // Sync failure doesn't prevent client creation
+          });
       } else console.error(error);
     } else {
       const { data, error } = await supabase
@@ -539,9 +544,14 @@ const App: React.FC = () => {
         );
         
         // Sync to GoHighLevel (non-blocking)
-        syncClientToGHL(String(data.id)).catch((err) => {
-          console.error('GHL sync failed:', err);
-        });
+        console.log('🔄 Attempting to sync client to GHL:', data.id);
+        syncClientToGHL(String(data.id))
+          .then((ghlContactId) => {
+            console.log('✅ Client synced to GHL successfully! GHL Contact ID:', ghlContactId);
+          })
+          .catch((err) => {
+            console.error('❌ GHL sync failed:', err);
+          });
       } else console.error(error);
     }
   };
