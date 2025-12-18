@@ -34,6 +34,7 @@ import TeamControlPage from '../pages/TeamControlPage';
 import PerformanceDashboardPage from '../pages/PerformanceDashboardPage';
 import EODReportPage from '../pages/EODReportPage';
 import AccountSettingsPage from '../pages/AccountSettingsPage';
+import GHLIntegrationPage from '../pages/GHLIntegrationPage';
 
 // Components
 import ChatIcon from '../components/ChatIcon';
@@ -954,6 +955,14 @@ const App: React.FC = () => {
         );
       case 'account-settings':
         return <AccountSettingsPage />;
+      case 'ghl-integration':
+        return (
+          <GHLIntegrationPage
+            userId={user.id}
+            companyId={user.company_id || ''}
+            userRole={user.role}
+          />
+        );
       default:
         return <div>View not found</div>;
     }
