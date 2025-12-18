@@ -4,6 +4,7 @@ import Calendar from '../components/Calendar';
 import NewClientKPIs from '../components/NewClientKPIs';
 import AddClientModal from '../components/AddClientModal';
 import ClientCSVImporter from '../components/ClientCSVImporter';
+import { syncClientToGHL } from '../src/services/ghlSyncService';
 
 interface NewClientsPageProps {
   newClients: NewClient[];
@@ -140,14 +141,31 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
     setIsModalOpen(true);
   };
 
-  const handleSaveClient = (clientData: NewClient) => {
+  const handleSaveClient = async (clientData: NewClient) => {
     console.log('📦 NewClientsPage handleSaveClient called with:', clientData);
     const payload: NewClient = String(clientData.id).startsWith('manual-')
       ? { ...clientData, userId: loggedInUser.id }
       : clientData;
 
     console.log('📦 Calling onSaveClient with payload:', payload);
-    onSaveClient(payload);
+    await onSaveClient(payload);
+    
+    // Sync to GHL after saving
+    console.log('🔄 About to sync to GHL...');
+    try {
+      // Get the client ID from the saved client (it should be in newClients after onSaveClient completes)
+      // For now, we'll trigger sync after a short delay to ensure DB save completes
+      setTimeout(async () => {
+        const savedClients = document.querySelectorAll('[class*="ClientCard"]');
+        console.log('🔍 Found clients:', savedClients.length);
+        // We'll need to get the actual client ID from the database
+        // For testing, let's just log that we got here
+        console.log('✅ Sync trigger point reached!');
+      }, 1000);
+    } catch (error) {
+      console.error('❌ GHL sync error:', error);
+    }
+    
     setIsModalOpen(false);
     setEditingClient(null);
   };
