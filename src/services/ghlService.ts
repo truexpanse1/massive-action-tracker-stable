@@ -383,8 +383,11 @@ class GHLService {
    * Get invoice by ID
    */
   async getInvoice(invoiceId: string): Promise<{ invoice: GHLInvoice }> {
+    if (!this.locationId) {
+      throw new Error('Location ID is required to fetch invoices');
+    }
     return this.makeRequest<{ invoice: GHLInvoice }>(
-      `/invoices/${invoiceId}`
+      `/locations/${this.locationId}/invoices/${invoiceId}`
     );
   }
 
