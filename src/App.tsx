@@ -514,16 +514,20 @@ const App: React.FC = () => {
           },
         ]);
         
-        // Sync to GoHighLevel (non-blocking)
-        console.log('🔄 Attempting to sync client to GHL:', data.id);
-        syncClientToGHL(String(data.id))
-          .then((ghlContactId) => {
-            console.log('✅ Client synced to GHL successfully! GHL Contact ID:', ghlContactId);
-          })
-          .catch((err) => {
-            console.error('❌ GHL sync failed:', err);
-            // Sync failure doesn't prevent client creation
-          });
+        // Sync to GoHighLevel (non-blocking) - but skip if already from GHL
+        if (!data.ghl_contact_id) {
+          console.log('🔄 Attempting to sync client to GHL:', data.id);
+          syncClientToGHL(String(data.id))
+            .then((ghlContactId) => {
+              console.log('✅ Client synced to GHL successfully! GHL Contact ID:', ghlContactId);
+            })
+            .catch((err) => {
+              console.error('❌ GHL sync failed:', err);
+              // Sync failure doesn't prevent client creation
+            });
+        } else {
+          console.log('⏭️  Skipping GHL sync - contact imported from GHL (ID:', data.ghl_contact_id, ')');
+        }
       } else {
         console.error('❌ Failed to insert client:', error);
         throw error;
@@ -555,15 +559,19 @@ const App: React.FC = () => {
           )
         );
         
-        // Sync to GoHighLevel (non-blocking)
-        console.log('🔄 Attempting to sync client to GHL:', data.id);
-        syncClientToGHL(String(data.id))
-          .then((ghlContactId) => {
-            console.log('✅ Client synced to GHL successfully! GHL Contact ID:', ghlContactId);
-          })
-          .catch((err) => {
-            console.error('❌ GHL sync failed:', err);
-          });
+        // Sync to GoHighLevel (non-blocking) - but skip if already from GHL
+        if (!data.ghl_contact_id) {
+          console.log('🔄 Attempting to sync client to GHL:', data.id);
+          syncClientToGHL(String(data.id))
+            .then((ghlContactId) => {
+              console.log('✅ Client synced to GHL successfully! GHL Contact ID:', ghlContactId);
+            })
+            .catch((err) => {
+              console.error('❌ GHL sync failed:', err);
+            });
+        } else {
+          console.log('⏭️  Skipping GHL sync - contact imported from GHL (ID:', data.ghl_contact_id, ')');
+        }
       } else {
         console.error('❌ Failed to insert client:', error);
         throw error;

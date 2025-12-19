@@ -231,18 +231,40 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       // Import all contacts
       const ghlContacts = await ghlService.importAllContacts();
 
+      // Debug: Log first contact to see structure
+      if (ghlContacts.length > 0) {
+        console.log('📋 Sample GHL Contact Structure:', JSON.stringify(ghlContacts[0], null, 2));
+      }
+
       setImportProgress(`Found ${ghlContacts.length} contacts. Importing to MAT...`);
 
       // Convert GHL contacts to MAT clients
       let imported = 0;
       for (const ghlContact of ghlContacts) {
+        // Extract contact data from GHL
+        const fullName = ghlContact.name || `${ghlContact.firstName || ''} ${ghlContact.lastName || ''}`.trim() || 'Unnamed Contact';
+        
+        // GHL stores address in multiple possible fields
+        const address = (ghlContact as any).address1 || 
+                       (ghlContact as any).address || 
+                       ghlContact.customFields?.address || 
+                       '';
+        
+        const city = (ghlContact as any).city || ghlContact.customFields?.city || '';
+        const state = (ghlContact as any).state || ghlContact.customFields?.state || '';
+        const zip = (ghlContact as any).postalCode || (ghlContact as any).zip || ghlContact.customFields?.zip || '';
+        const company = (ghlContact as any).companyName || ghlContact.customFields?.company || '';
+        
         const newClient: NewClient = {
           id: `ghl-${ghlContact.id}-${Date.now()}`,
-          name: ghlContact.name || `${ghlContact.firstName || ''} ${ghlContact.lastName || ''}`.trim() || 'Unnamed Contact',
-          company: ghlContact.customFields?.company || '',
+          name: fullName,
+          company: company,
           phone: ghlContact.phone || '',
           email: ghlContact.email || '',
-          address: ghlContact.customFields?.address || '',
+          address: address,
+          city: city,
+          state: state,
+          zip: zip,
           salesProcessLength: '',
           monthlyContractValue: 0,
           initialAmountCollected: 0,
