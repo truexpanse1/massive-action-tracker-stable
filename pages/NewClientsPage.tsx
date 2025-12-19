@@ -240,13 +240,24 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       
       while (hasMore) {
         try {
-          // Fetch only PAID invoices from GHL
-          const result = await ghlService.getInvoices(limit, offset, 'paid');
+          // Fetch ALL invoices from GHL (no status filter)
+          const result = await ghlService.getInvoices(limit, offset);
           const invoices = result.invoices || [];
           
-          allInvoices = allInvoices.concat(invoices);
+          // Log first invoice to see structure
+          if (offset === 0 && invoices.length > 0) {
+            console.log('🔍 Sample invoice structure:', JSON.stringify(invoices[0], null, 2));
+          }
           
-          console.log(`📦 Fetched ${invoices.length} paid invoices (offset ${offset})`);
+          // Filter for revenue-generating invoices (paid, sent, partially paid)
+          const revenueInvoices = invoices.filter(inv => {
+            const status = (inv.status || '').toLowerCase();
+            return status === 'paid' || status === 'sent' || status === 'partially paid' || status === 'partiallypaid';
+          });
+          
+          allInvoices = allInvoices.concat(revenueInvoices);
+          
+          console.log(`📦 Fetched ${invoices.length} total invoices, ${revenueInvoices.length} with revenue (offset ${offset})`);
           
           // Check if there are more invoices
           if (invoices.length < limit) {
@@ -260,10 +271,14 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         }
       }
       
-      console.log(`📊 Total paid invoices found: ${allInvoices.length}`);
+      console.log(`📊 Total revenue invoices found: ${allInvoices.length}`);
+      
+      // Log unique statuses found
+      const uniqueStatuses = new Set(allInvoices.map(inv => inv.status));
+      console.log(`🏷️ Invoice statuses found:`, Array.from(uniqueStatuses));
       
       if (allInvoices.length === 0) {
-        throw new Error('No paid invoices found in GoHighLevel. Make sure you have invoices marked as "paid" to import. Check your GHL Payments > Invoices page.');
+        throw new Error('No revenue invoices found in GoHighLevel. Make sure you have invoices marked as "paid" or "sent". Check your GHL Payments > Invoices page.');
       }
       
       // Group invoices by contact ID
