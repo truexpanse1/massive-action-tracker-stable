@@ -218,7 +218,7 @@ const App: React.FC = () => {
         let dayDataQuery = supabase.from('day_data').select('*');
         let hotLeadsQuery = supabase.from('hot_leads').select('*');
         let transactionsQuery = supabase.from('transactions').select('*');
-        let clientsQuery = supabase.from('clients').select('*');
+        let clientsQuery = supabase.from('clients').select('*').eq('company_id', userProfile.company_id);
         let quotesQuery = supabase.from('quotes').select('*');
 
         if (userIdToFetch) {
@@ -469,7 +469,7 @@ const App: React.FC = () => {
       console.log('⚠️ No user, returning early');
       return;
     }
-    const payload = {
+    const payload: any = {
       name: clientData.name,
       company: clientData.company,
       phone: clientData.phone,
@@ -486,6 +486,11 @@ const App: React.FC = () => {
       user_id: clientData.userId,
       company_id: user.company_id,
     };
+    
+    // Add GHL contact ID if present (for imported contacts)
+    if (clientData.ghl_contact_id) {
+      payload.ghl_contact_id = clientData.ghl_contact_id;
+    }
     if (String(clientData.id).startsWith('manual-') || String(clientData.id).startsWith('ghl-')) {
       const { data, error } = await supabase
         .from('clients')
@@ -519,7 +524,10 @@ const App: React.FC = () => {
             console.error('❌ GHL sync failed:', err);
             // Sync failure doesn't prevent client creation
           });
-      } else console.error(error);
+      } else {
+        console.error('❌ Failed to insert client:', error);
+        throw error;
+      }
     } else {
       const { data, error } = await supabase
         .from('clients')
@@ -556,7 +564,10 @@ const App: React.FC = () => {
           .catch((err) => {
             console.error('❌ GHL sync failed:', err);
           });
-      } else console.error(error);
+      } else {
+        console.error('❌ Failed to insert client:', error);
+        throw error;
+      }
     }
   };
 
