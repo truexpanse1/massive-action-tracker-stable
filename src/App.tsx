@@ -486,7 +486,7 @@ const App: React.FC = () => {
       user_id: clientData.userId,
       company_id: user.company_id,
     };
-    if (String(clientData.id).startsWith('manual-')) {
+    if (String(clientData.id).startsWith('manual-') || String(clientData.id).startsWith('ghl-')) {
       const { data, error } = await supabase
         .from('clients')
         .insert(payload)
