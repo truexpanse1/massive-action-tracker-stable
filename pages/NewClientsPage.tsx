@@ -349,12 +349,12 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           ghl_contact_id: ghlContact.id, // Store GHL ID for future sync
         } as NewClient;
 
-        // Debug: Log all field values to identify undefined
-        console.log('🔍 Client fields:', {
-          userId: loggedInUser.id,
+        // Debug: Log ALL fields to identify undefined
+        console.log('🔍 Full client object being saved:', JSON.stringify(newClient, null, 2));
+        console.log('🔍 loggedInUser:', {
+          id: loggedInUser.id,
           companyId: loggedInUser.companyId,
-          monthlyContractValue: newClient.monthlyContractValue,
-          initialAmountCollected: newClient.initialAmountCollected,
+          role: loggedInUser.role,
         });
 
         // Save client and wait for it to be added to state
