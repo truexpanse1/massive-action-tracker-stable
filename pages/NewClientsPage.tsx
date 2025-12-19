@@ -7,6 +7,7 @@ import ClientCSVImporter from '../components/ClientCSVImporter';
 import { syncClientToGHL } from '../src/services/ghlSyncService';
 import { supabase } from '../src/services/supabaseClient';
 import { createGHLService } from '../src/services/ghlService';
+import { categorizeProduct } from '../src/utils/productCategorizer';
 
 interface NewClientsPageProps {
   newClients: NewClient[];
@@ -294,17 +295,27 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
             const wonOpps = opportunities.filter(opp => opp.status === 'won');
             
             for (const opp of wonOpps) {
+              // Categorize the product automatically
+              const rawProductName = opp.name || 'Deal';
+              const categorizedProduct = categorizeProduct(rawProductName);
+              
               const transaction: Transaction = {
                 id: `ghl-opp-${opp.id}-${Date.now()}`,
                 date: new Date().toISOString().split('T')[0], // Use today's date or opp close date if available
                 clientName: fullName,
-                product: opp.name || 'Deal',
+                product: categorizedProduct,
                 amount: opp.monetaryValue || 0,
                 isRecurring: false,
                 userId: loggedInUser.id,
               };
               
+              console.log(`📦 Categorized "${rawProductName}" → ${categorizedProduct}`);
+              
               await onSaveTransaction(transaction);
+            }
+            
+            if (wonOpps.length > 0) {
+              console.log(`✅ Imported ${wonOpps.length} won deal(s) for ${fullName}`);
             }
           } catch (oppError) {
             console.log('⚠️ Could not fetch opportunities for contact:', ghlContact.id, oppError);
