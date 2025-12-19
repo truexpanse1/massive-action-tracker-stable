@@ -301,12 +301,14 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       
       // Import each transaction directly - no client creation!
       for (const txn of allTransactions) {
-        // Get customer name from transaction
-        const customerName = txn.customerName || txn.name || 'Unknown Customer';
+        // Get customer name from transaction (GHL uses 'contactName')
+        const customerName = txn.contactName || txn.name || 'Unknown Customer';
         
-        // Use transaction name/description to determine product
-        let productName = txn.name || txn.description || 'Payment';
-        let transactionAmount = txn.amount || 0;
+        // Use entitySourceName for product (e.g., "New Recurring Invoice")
+        let productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
+        
+        // GHL amounts are in CENTS - convert to dollars
+        let transactionAmount = txn.amount ? txn.amount / 100 : 0;
         
         const categorizedProduct = categorizeProduct(productName);
         
