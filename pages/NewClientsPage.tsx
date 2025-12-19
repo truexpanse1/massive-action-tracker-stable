@@ -330,8 +330,8 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         const zip = (ghlContact as any).postalCode || (ghlContact as any).zip || ghlContact.customFields?.zip || '';
         const company = (ghlContact as any).companyName || ghlContact.customFields?.company || '';
         
+        // Don't pass ID - let database auto-generate
         const newClient: NewClient = {
-          id: `ghl-${ghlContact.id}-${Date.now()}`,
           name: fullName,
           company: company,
           phone: ghlContact.phone || '',
@@ -347,10 +347,14 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           userId: loggedInUser.id,
           companyId: loggedInUser.companyId,
           ghl_contact_id: ghlContact.id, // Store GHL ID for future sync
-        };
+        } as NewClient;
 
+        // Save client and wait for it to be added to state
         await onSaveClient(newClient);
         imported++;
+        
+        // Small delay to ensure client is in state before adding transactions
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         // Import all successful transactions
         for (const txn of transactions) {
