@@ -307,6 +307,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           name: txn.name,
           contactId: txn.contactId,
           amount: txn.amount,
+          amount_received: txn.amount_received,
           entitySourceName: txn.entitySourceName
         });
         
@@ -317,8 +318,9 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         // Use entitySourceName for product (e.g., "New Recurring Invoice")
         let productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
         
-        // GHL amounts are already in DOLLARS (not cents)
-        let transactionAmount = txn.amount || 0;
+        // GHL uses amount_received in CENTS - convert to dollars
+        // Note: txn.amount is a summary field, txn.amount_received is the actual captured amount
+        let transactionAmount = txn.amount_received ? txn.amount_received / 100 : 0;
         
         const categorizedProduct = categorizeProduct(productName);
         
