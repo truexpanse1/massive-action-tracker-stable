@@ -227,63 +227,85 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         throw new Error('GHL integration not found. Please configure in Settings → GHL Integration.');
       }
 
-      setImportProgress('Fetching contacts from GoHighLevel...');
+      setImportProgress('Fetching paid invoices from GoHighLevel...');
 
       // Create GHL service
       const ghlService = createGHLService(integration.ghl_api_key, integration.ghl_location_id);
 
-      // Import all contacts
-      const ghlContacts = await ghlService.importAllContacts();
-
-      // Debug: Log first contact to see structure
-      if (ghlContacts.length > 0) {
-        console.log('📋 Sample GHL Contact Structure:', JSON.stringify(ghlContacts[0], null, 2));
-      }
-
-      setImportProgress(`Found ${ghlContacts.length} contacts. Importing to MAT...`);
-
-      // Convert GHL contacts to MAT clients (ONLY if they have WON deals)
-      let imported = 0;
-      let skipped = 0;
+      // NEW APPROACH: Fetch ALL paid invoices first
+      let allInvoices: any[] = [];
+      let offset = 0;
+      const limit = 100;
+      let hasMore = true;
       
-      for (const ghlContact of ghlContacts) {
-        // Extract contact data from GHL
-        const fullName = ghlContact.name || `${ghlContact.firstName || ''} ${ghlContact.lastName || ''}`.trim() || 'Unnamed Contact';
-        
-        // First, check if this contact has any WON opportunities OR paid invoices
-        let wonOpps: any[] = [];
-        let paidInvoices: any[] = [];
-        
-        if (onSaveTransaction && ghlContact.id) {
-          // Check opportunities
-          try {
-            const oppResult = await ghlService.getContactOpportunities(ghlContact.id);
-            const opportunities = oppResult.opportunities || [];
-            wonOpps = opportunities.filter(opp => opp.status === 'won');
-          } catch (oppError) {
-            console.log('⚠️ Could not fetch opportunities for contact:', ghlContact.id, oppError);
-          }
+      while (hasMore) {
+        try {
+          const result = await ghlService.getInvoices(limit, offset);
+          const invoices = result.invoices || [];
           
-          // Check invoices
-          try {
-            const invoiceResult = await ghlService.getContactInvoices(ghlContact.id);
-            const invoices = invoiceResult.invoices || [];
-            // Only import paid or sent invoices (actual revenue)
-            paidInvoices = invoices.filter(inv => 
-              inv.status === 'paid' || inv.status === 'sent'
-            );
-          } catch (invError) {
-            console.log('⚠️ Could not fetch invoices for contact:', ghlContact.id, invError);
+          // Only keep PAID invoices
+          const paidInvoices = invoices.filter(inv => inv.status === 'paid');
+          allInvoices = allInvoices.concat(paidInvoices);
+          
+          console.log(`📦 Fetched ${paidInvoices.length} paid invoices (offset ${offset})`);
+          
+          // Check if there are more invoices
+          if (invoices.length < limit) {
+            hasMore = false;
+          } else {
+            offset += limit;
           }
+        } catch (error) {
+          console.error('⚠️ Error fetching invoices:', error);
+          hasMore = false;
         }
-        
-        // Skip contacts without WON deals OR invoices (they're just leads, not clients)
-        if (wonOpps.length === 0 && paidInvoices.length === 0) {
-          skipped++;
+      }
+      
+      console.log(`📊 Total paid invoices found: ${allInvoices.length}`);
+      
+      if (allInvoices.length === 0) {
+        throw new Error('No paid invoices found in GoHighLevel. Make sure you have paid invoices to import.');
+      }
+      
+      // Group invoices by contact ID
+      const invoicesByContact = new Map<string, any[]>();
+      for (const invoice of allInvoices) {
+        if (invoice.contactId) {
+          if (!invoicesByContact.has(invoice.contactId)) {
+            invoicesByContact.set(invoice.contactId, []);
+          }
+          invoicesByContact.get(invoice.contactId)!.push(invoice);
+        }
+      }
+      
+      console.log(`👥 Unique customers with paid invoices: ${invoicesByContact.size}`);
+      
+      setImportProgress(`Found ${invoicesByContact.size} paying customers. Importing to MAT...`);
+
+      // Now import each customer with their invoices
+      let imported = 0;
+      let totalTransactions = 0;
+      
+      for (const [contactId, invoices] of invoicesByContact.entries()) {
+        // Fetch contact details from GHL
+        let ghlContact: any = null;
+        try {
+          const contactResult = await ghlService.getContact(contactId);
+          ghlContact = contactResult.contact;
+        } catch (error) {
+          console.log(`⚠️ Could not fetch contact ${contactId}:`, error);
           continue;
         }
         
-        // This contact has purchases - create them as a client!
+        if (!ghlContact) {
+          console.log(`⚠️ Contact ${contactId} not found, skipping`);
+          continue;
+        }
+        
+        // Extract contact data
+        const fullName = ghlContact.name || `${ghlContact.firstName || ''} ${ghlContact.lastName || ''}`.trim() || 'Unnamed Contact';
+        
+        // This customer has paid invoices - create them as a client!
         const address = (ghlContact as any).address1 || 
                        (ghlContact as any).address || 
                        ghlContact.customFields?.address || 
@@ -316,29 +338,8 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         await onSaveClient(newClient);
         imported++;
         
-        // Import their won opportunities as transactions
-        for (const opp of wonOpps) {
-          // Categorize the product automatically
-          const rawProductName = opp.name || 'Deal';
-          const categorizedProduct = categorizeProduct(rawProductName);
-          
-          const transaction: Transaction = {
-            id: `ghl-opp-${opp.id}-${Date.now()}`,
-            date: new Date().toISOString().split('T')[0],
-            clientName: fullName,
-            product: categorizedProduct,
-            amount: opp.monetaryValue || 0,
-            isRecurring: false,
-            userId: loggedInUser.id,
-          };
-          
-          console.log(`📦 Categorized "${rawProductName}" → ${categorizedProduct}`);
-          
-          await onSaveTransaction(transaction);
-        }
-        
-        // Import invoice transactions
-        for (const invoice of paidInvoices) {
+        // Import all paid invoices as transactions
+        for (const invoice of invoices) {
           // Use invoice items to determine product, or fall back to invoice title
           let productName = 'Service';
           let invoiceAmount = invoice.total || invoice.amountPaid || 0;
@@ -367,21 +368,21 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
             userId: loggedInUser.id,
           };
           
-          console.log(`💵 Invoice: "${productName}" → ${categorizedProduct} ($${invoiceAmount})`);
+          console.log(`💵 Invoice #${invoice.id}: "${productName}" → ${categorizedProduct} ($${invoiceAmount})`);
           
           await onSaveTransaction(transaction);
+          totalTransactions++;
         }
         
-        const totalTransactions = wonOpps.length + paidInvoices.length;
-        console.log(`✅ Imported ${fullName} with ${totalTransactions} transaction(s) (${wonOpps.length} deals, ${paidInvoices.length} invoices)`);
+        console.log(`✅ Imported ${fullName} with ${invoices.length} paid invoice(s)`);
         
         if (imported % 10 === 0) {
-          setImportProgress(`Imported ${imported} clients with purchases...`);
+          setImportProgress(`Imported ${imported} of ${invoicesByContact.size} paying customers...`);
         }
       }
 
-      setImportSuccess(`✅ Successfully imported ${imported} paying clients from GoHighLevel! (${skipped} leads skipped)`);
-      console.log(`📊 Import Summary: ${imported} clients imported, ${skipped} leads skipped (no purchases)`);
+      setImportSuccess(`✅ Successfully imported ${imported} paying customers with ${totalTransactions} transactions from GoHighLevel!`);
+      console.log(`📊 Import Summary: ${imported} customers imported, ${totalTransactions} transactions created`);
       setTimeout(() => setImportSuccess(null), 10000);
     } catch (error: any) {
       console.error('GHL Import Error:', error);
