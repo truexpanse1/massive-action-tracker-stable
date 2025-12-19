@@ -213,47 +213,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
           <NewClientKPIs newClients={newClients} />
 
-          <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
-            <h3 className="text-sm font-bold text-brand-red uppercase mb-3">
-              Filter by Sales Rep
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedRepId('all')}
-                className={`text-xs font-bold py-1 px-3 rounded-full transition-colors ${
-                  selectedRepId === 'all'
-                    ? 'bg-brand-blue text-white'
-                    : 'bg-gray-200 dark:bg-brand-gray text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                All Reps
-              </button>
 
-              {salesReps.map((rep) => {
-                const firstName =
-                  (rep.name || '').trim().split(' ')[0] || 'Rep';
-                const chipColor = userColorMap[rep.id] || '#6b7280';
-
-                return (
-                  <button
-                    key={rep.id}
-                    onClick={() => setSelectedRepId(rep.id)}
-                    className={`flex items-center gap-2 text-xs font-bold py-1 px-3 rounded-full transition-colors ${
-                      selectedRepId === rep.id
-                        ? 'bg-brand-blue text-white'
-                        : 'bg-gray-2 00 dark:bg-brand-gray text-gray-700 dark:text-gray-300'
-                    }`}
-                  >
-                    <span
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: chipColor }}
-                    ></span>
-                    {firstName}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         {/* RIGHT COLUMN */}
