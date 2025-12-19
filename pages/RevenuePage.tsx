@@ -452,11 +452,37 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
                 <h1 className="text-2xl font-bold text-brand-light-text dark:text-white">Revenue Center</h1>
-                <div className="flex items-center bg-brand-light-bg dark:bg-brand-ink p-1 rounded-lg border border-brand-light-border dark:border-brand-gray">
-                    <button onClick={() => setViewMode('daily')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'daily' ? 'bg-brand-blue text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand-light-text dark:hover:text-white'}`}>Daily Entry</button>
-                    <button onClick={() => setViewMode('analysis')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'analysis' ? 'bg-brand-blue text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand-light-text dark:hover:text-white'}`}>Analysis</button>
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={handleImportFromGHL}
+                        disabled={isImportingFromGHL}
+                        className="bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isImportingFromGHL ? '⏳ Importing...' : '📥 Import from GHL'}
+                    </button>
+                    <div className="flex items-center bg-brand-light-bg dark:bg-brand-ink p-1 rounded-lg border border-brand-light-border dark:border-brand-gray">
+                        <button onClick={() => setViewMode('daily')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'daily' ? 'bg-brand-blue text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand-light-text dark:hover:text-white'}`}>Daily Entry</button>
+                        <button onClick={() => setViewMode('analysis')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'analysis' ? 'bg-brand-blue text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand-light-text dark:hover:text-white'}`}>Analysis</button>
+                    </div>
                 </div>
             </div>
+            
+            {/* Import Progress/Status Messages */}
+            {importProgress && (
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 border border-blue-500 rounded-lg text-blue-700 dark:text-blue-300 text-sm">
+                    ⏳ {importProgress}
+                </div>
+            )}
+            {importSuccess && (
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 border border-green-500 rounded-lg text-green-700 dark:text-green-300 text-sm">
+                    {importSuccess}
+                </div>
+            )}
+            {importError && (
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-500 rounded-lg text-red-700 dark:text-red-300 text-sm">
+                    ❌ {importError}
+                </div>
+            )}
 
             {viewMode === 'daily' ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">

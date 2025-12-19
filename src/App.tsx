@@ -953,6 +953,8 @@ const App: React.FC = () => {
             onDateChange={setSelectedDate}
             initialState={revenuePageInitialState}
             onInitialStateConsumed={() => setRevenuePageInitialState(null)}
+            loggedInUser={user}
+            companyId={user.company_id || ''}
           />
         );
       case 'ai-images':
