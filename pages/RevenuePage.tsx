@@ -282,6 +282,15 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             ? new Date(txn.createdAt).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0];
           
+          // Detect recurring transactions
+          const isRecurring = txn.entitySourceName?.toLowerCase().includes('recurring') || 
+                             txn.entitySourceName?.toLowerCase().includes('subscription') ||
+                             productName?.toLowerCase().includes('recurring') ||
+                             productName?.toLowerCase().includes('monthly') ||
+                             productName?.toLowerCase().includes('weekly');
+          
+          console.log(`💳 ${customerName}: ${productName} - $${transactionAmount} ${isRecurring ? '(RECURRING)' : '(ONE-TIME)'}`);
+          
           // Check if transaction already exists
           const { data: existingTransaction } = await supabase
             .from('transactions')
@@ -301,7 +310,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
               client_name: customerName,
               product: categorizedProduct,
               amount: transactionAmount,
-              is_recurring: false,
+              is_recurring: isRecurring,
               user_id: loggedInUser.id,
               company_id: companyId,
               ghl_transaction_id: txn.id,
