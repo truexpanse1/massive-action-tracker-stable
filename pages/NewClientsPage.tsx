@@ -227,12 +227,21 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         throw new Error('GHL integration not found. Please configure in Settings → GHL Integration.');
       }
 
-      setImportProgress('Fetching paid invoices from GoHighLevel...');
+      setImportProgress('Fetching contacts from GoHighLevel...');
 
-      // Create GHL service
       const ghlService = createGHLService(integration.ghl_api_key, integration.ghl_location_id);
 
-      // NEW APPROACH: Fetch ALL successful transactions
+      // Fetch ALL contacts from GHL
+      const allContacts = await ghlService.importAllContacts();
+      console.log(`👥 Found ${allContacts.length} contacts in GHL`);
+
+      if (allContacts.length === 0) {
+        throw new Error('No contacts found in GoHighLevel.');
+      }
+
+      setImportProgress(`Found ${allContacts.length} contacts. Fetching transaction data...`);
+
+      // Fetch ALL successful transactions to calculate financial metrics
       let allTransactions: any[] = [];
       let offset = 0;
       const limit = 100;
@@ -271,131 +280,124 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         }
       }
       
-      console.log(`📊 Total successful transactions found: ${allTransactions.length}`);
-      
-      // Log unique statuses found
-      const uniqueStatuses = new Set(allTransactions.map(txn => txn.status));
-      console.log(`🏷️ Transaction statuses found:`, Array.from(uniqueStatuses));
-      
-      if (allTransactions.length === 0) {
-        throw new Error('No successful transactions found in GoHighLevel. Make sure you have completed payments. Check your GHL Payments > Transactions page.');
-      }
-      
-      // Group transactions by contact ID
-      const transactionsByContact = new Map<string, any[]>();
-      for (const transaction of allTransactions) {
-        if (transaction.contactId) {
-          if (!transactionsByContact.has(transaction.contactId)) {
-            transactionsByContact.set(transaction.contactId, []);
-          }
-          transactionsByContact.get(transaction.contactId)!.push(transaction);
-        }
-      }
-      
-      console.log(`👥 Unique customers with transactions: ${transactionsByContact.size}`);
-      
-      setImportProgress(`Found ${allTransactions.length} transactions. Checking for duplicates...`);
+      console.log(`💰 Found ${allTransactions.length} successful transactions`);
 
-      // Import transactions directly - no client creation needed!
-      let totalTransactionsImported = 0;
-      let duplicatesSkipped = 0;
-      
-      // Import each transaction directly - no client creation!
+      // Group transactions by contactId
+      const transactionsByContact = new Map<string, any[]>();
       for (const txn of allTransactions) {
-        // Debug: Log the transaction object to see what fields are available
-        console.log('🔍 Transaction fields:', {
-          contactName: txn.contactName,
-          name: txn.name,
-          contactId: txn.contactId,
-          amount: txn.amount,
-          amount_received: txn.amount_received,
-          entitySourceName: txn.entitySourceName
-        });
-        
-        // Get customer name from transaction (GHL uses 'contactName')
-        const customerName = txn.contactName || txn.name || 'Unknown Customer';
-        console.log('👤 Extracted customer name:', customerName);
-        
-        // Try to fetch invoice details to get actual product name
-        let productName = 'Payment';
-        if (txn.entityType === 'invoice' && txn.entityId) {
-          try {
-            const invoiceResponse = await ghlService.getInvoice(txn.entityId);
-            const invoice = invoiceResponse.invoice;
-            
-            // Extract first line item name
-            if (invoice.items && invoice.items.length > 0 && invoice.items[0].name) {
-              productName = invoice.items[0].name;
-              console.log(`📝 Invoice ${txn.entityId}: "${productName}"`);
-            } else {
-              productName = txn.entitySourceName || 'Payment';
-            }
-          } catch (error) {
-            console.warn(`⚠️ Could not fetch invoice ${txn.entityId}:`, error);
-            productName = txn.entitySourceName || 'Payment';
+        if (txn.contactId) {
+          if (!transactionsByContact.has(txn.contactId)) {
+            transactionsByContact.set(txn.contactId, []);
           }
-        } else {
-          productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
+          transactionsByContact.get(txn.contactId)!.push(txn);
         }
-        
-        // GHL API is inconsistent with amount fields:
-        // - Some transactions have amount_received (in CENTS) - need to divide by 100
-        // - Some transactions only have amount (in DOLLARS) - use as-is
-        let transactionAmount = txn.amount_received 
-          ? txn.amount_received / 100 
-          : (txn.amount || 0);
-        
-        const categorizedProduct = categorizeProduct(productName);
-        
-        // Use transaction date
-        const transactionDate = txn.createdAt 
-          ? new Date(txn.createdAt).toISOString().split('T')[0]
-          : new Date().toISOString().split('T')[0];
-        
-        // Detect recurring transactions
-        const isRecurring = txn.entitySourceName?.toLowerCase().includes('recurring') || 
-                           txn.entitySourceName?.toLowerCase().includes('subscription') ||
-                           productName?.toLowerCase().includes('recurring') ||
-                           productName?.toLowerCase().includes('monthly') ||
-                           productName?.toLowerCase().includes('weekly');
-        
-        // Check if transaction already exists
-        const { data: existingTransaction } = await supabase
-          .from('transactions')
-          .select('id')
-          .eq('ghl_transaction_id', txn.id)
-          .single();
-        
-        if (existingTransaction) {
-          duplicatesSkipped++;
-          continue; // Skip this transaction
-        }
-        
-        // Direct database insert - bypass React state management!
-        console.log(`💵 ${customerName}: "${productName}" → ${categorizedProduct} ($${transactionAmount}) ${isRecurring ? '(RECURRING)' : '(ONE-TIME)'}`);
-        
-        // Insert directly into Supabase transactions table
-        const { error: insertError } = await supabase
-          .from('transactions')
-          .insert({
-            date: transactionDate,
-            client_name: customerName,
-            product: categorizedProduct,
-            amount: transactionAmount,
-            is_recurring: isRecurring,
-            user_id: loggedInUser.id,
-            company_id: companyId,
-            ghl_transaction_id: txn.id,
-          });
-        
-        if (insertError) {
-          console.error(`❌ Failed to insert transaction for ${customerName}:`, insertError);
-          throw new Error(`Database insert failed: ${insertError.message}`);
-        }
-        totalTransactionsImported++;
-        
-        if (totalTransactionsImported % 20 === 0) {
-          setImportProgress(`Imported ${totalTransactionsImported} of ${allTransactions.length} transactions...`);
+      }
+
+      setImportProgress(`Processing ${allContacts.length} contacts...`);
+
+      let clientsImported = 0;
+      let clientsSkipped = 0;
+
+      for (const contact of allContacts) {
+        try {
+          // Skip contacts without basic info
+          if (!contact.id) {
+            clientsSkipped++;
+            continue;
+          }
+
+          // Check if client already exists
+          const { data: existingClient } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('ghl_contact_id', contact.id)
+            .eq('company_id', companyId)
+            .single();
+
+          if (existingClient) {
+            clientsSkipped++;
+            continue;
+          }
+
+          // Get transactions for this contact
+          const contactTransactions = transactionsByContact.get(contact.id) || [];
+          
+          // Calculate financial metrics
+          let totalRevenue = 0;
+          let recurringRevenue = 0;
+          let oneTimeRevenue = 0;
+          let firstTransactionDate: Date | null = null;
+
+          for (const txn of contactTransactions) {
+            const amount = txn.amount_received ? txn.amount_received / 100 : (txn.amount || 0);
+            totalRevenue += amount;
+
+            const isRecurring = txn.entitySourceName?.toLowerCase().includes('recurring') || 
+                               txn.entitySourceName?.toLowerCase().includes('subscription');
+            
+            if (isRecurring) {
+              recurringRevenue += amount;
+            } else {
+              oneTimeRevenue += amount;
+            }
+
+            const txnDate = new Date(txn.createdAt);
+            if (!firstTransactionDate || txnDate < firstTransactionDate) {
+              firstTransactionDate = txnDate;
+            }
+          }
+
+          // Calculate MCV (Monthly Contract Value) - use recurring revenue
+          const mcv = recurringRevenue;
+
+          // Calculate ACV (Annual Contract Value) - MCV * 12
+          const acv = mcv * 12;
+
+          // Prepare client data
+          const clientName = contact.name || 
+                            `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 
+                            'Unknown Contact';
+
+          const closeDate = firstTransactionDate 
+            ? firstTransactionDate.toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0];
+
+          // Insert client into database
+          const { error: insertError } = await supabase
+            .from('clients')
+            .insert({
+              name: clientName,
+              company: contact.companyName || '',
+              phone: contact.phone || '',
+              email: contact.email || '',
+              address: contact.address1 || '',
+              city: contact.city || '',
+              state: contact.state || '',
+              zip: contact.postalCode || '',
+              sales_process_length: '0',
+              monthly_contract_value: mcv,
+              initial_amount_collected: oneTimeRevenue,
+              close_date: closeDate,
+              stage: contactTransactions.length > 0 ? 'Closed' : 'New',
+              user_id: loggedInUser.id,
+              company_id: companyId,
+              ghl_contact_id: contact.id,
+            });
+
+          if (insertError) {
+            console.error(`❌ Failed to insert client ${clientName}:`, insertError);
+          } else {
+            clientsImported++;
+            console.log(`✅ Imported client: ${clientName} (MCV: $${mcv}, ACV: $${acv}, Total: $${totalRevenue})`);
+          }
+
+          if (clientsImported % 10 === 0) {
+            setImportProgress(`Imported ${clientsImported} of ${allContacts.length} clients...`);
+          }
+
+        } catch (error) {
+          console.error(`Error processing contact ${contact.id}:`, error);
+          clientsSkipped++;
         }
       }
 
@@ -404,17 +406,21 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         .from('ghl_integrations')
         .update({ last_sync_at: new Date().toISOString() })
         .eq('company_id', companyId);
-      
-      const summaryMessage = duplicatesSkipped > 0
-        ? `✅ Imported ${totalTransactionsImported} new transactions! (Skipped ${duplicatesSkipped} duplicates)`
-        : `✅ Successfully imported ${totalTransactionsImported} transactions!`;
-      
+
+      const summaryMessage = clientsSkipped > 0
+        ? `✅ Imported ${clientsImported} new clients! (Skipped ${clientsSkipped} duplicates/invalid)`
+        : `✅ Successfully imported ${clientsImported} clients!`;
+
       setImportSuccess(summaryMessage);
-      console.log(`📊 Import Summary: ${totalTransactionsImported} new transactions, ${duplicatesSkipped} duplicates skipped`);
-      setTimeout(() => setImportSuccess(null), 10000);
+      console.log(`📊 Import Summary: ${clientsImported} new clients, ${clientsSkipped} skipped`);
+      
+      // Reload page to show new clients
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error: any) {
-      console.error('GHL Import Error:', error);
-      setImportError(error.message || 'Failed to import contacts from GoHighLevel');
+      console.error('GHL Client Import Error:', error);
+      setImportError(error.message || 'Failed to import clients from GoHighLevel');
     } finally {
       setIsImportingFromGHL(false);
       setImportProgress('');
