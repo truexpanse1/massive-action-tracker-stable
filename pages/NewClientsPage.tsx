@@ -317,8 +317,8 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         // Use entitySourceName for product (e.g., "New Recurring Invoice")
         let productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
         
-        // GHL amounts are in CENTS - convert to dollars
-        let transactionAmount = txn.amount ? txn.amount / 100 : 0;
+        // GHL amounts are already in DOLLARS (not cents)
+        let transactionAmount = txn.amount || 0;
         
         const categorizedProduct = categorizeProduct(productName);
         
@@ -329,6 +329,9 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         
         // Direct database insert - bypass React state management!
         console.log(`💵 ${customerName}: "${productName}" → ${categorizedProduct} ($${transactionAmount})`);
+        
+        // Log what we're about to insert
+        console.log('📝 About to insert:', { date: transactionDate, client_name: customerName, product: categorizedProduct, amount: transactionAmount });
         
         // Insert directly into Supabase transactions table
         const { error: insertError } = await supabase
