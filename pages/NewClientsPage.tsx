@@ -294,114 +294,49 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       
       console.log(`👥 Unique customers with transactions: ${transactionsByContact.size}`);
       
-      setImportProgress(`Found ${transactionsByContact.size} paying customers. Importing to MAT...`);
+      setImportProgress(`Found ${allTransactions.length} transactions. Importing to MAT...`);
 
-      // Now import each customer with their transactions
-      let imported = 0;
+      // Import transactions directly - no client creation needed!
       let totalTransactionsImported = 0;
       
-      for (const [contactId, transactions] of transactionsByContact.entries()) {
-        // Fetch contact details from GHL
-        let ghlContact: any = null;
-        try {
-          const contactResult = await ghlService.getContact(contactId);
-          ghlContact = contactResult.contact;
-        } catch (error) {
-          console.log(`⚠️ Could not fetch contact ${contactId}:`, error);
-          continue;
-        }
+      // Import each transaction directly - no client creation!
+      for (const txn of allTransactions) {
+        // Get customer name from transaction
+        const customerName = txn.customerName || txn.name || 'Unknown Customer';
         
-        if (!ghlContact) {
-          console.log(`⚠️ Contact ${contactId} not found, skipping`);
-          continue;
-        }
+        // Use transaction name/description to determine product
+        let productName = txn.name || txn.description || 'Payment';
+        let transactionAmount = txn.amount || 0;
         
-        // Extract contact data
-        const fullName = ghlContact.name || `${ghlContact.firstName || ''} ${ghlContact.lastName || ''}`.trim() || 'Unnamed Contact';
+        const categorizedProduct = categorizeProduct(productName);
         
-        // This customer has successful transactions - create them as a client!
-        const address = (ghlContact as any).address1 || 
-                       (ghlContact as any).address || 
-                       ghlContact.customFields?.address || 
-                       '';
+        // Use transaction date
+        const transactionDate = txn.createdAt 
+          ? new Date(txn.createdAt).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0];
         
-        const city = (ghlContact as any).city || ghlContact.customFields?.city || '';
-        const state = (ghlContact as any).state || ghlContact.customFields?.state || '';
-        const zip = (ghlContact as any).postalCode || (ghlContact as any).zip || ghlContact.customFields?.zip || '';
-        const company = (ghlContact as any).companyName || ghlContact.customFields?.company || '';
-        
-        // Don't pass ID - let database auto-generate
-        const newClient: NewClient = {
-          name: fullName,
-          company: company,
-          phone: ghlContact.phone || '',
-          email: ghlContact.email || '',
-          address: address,
-          city: city,
-          state: state,
-          zip: zip,
-          salesProcessLength: '',
-          monthlyContractValue: 0,
-          initialAmountCollected: 0,
-          closeDate: new Date().toISOString().split('T')[0],
+        // Create MAT transaction (no ID - database auto-generates)
+        const matTransaction: Transaction = {
+          date: transactionDate,
+          clientName: customerName,
+          product: categorizedProduct,
+          amount: transactionAmount,
+          isRecurring: false,
           userId: loggedInUser.id,
-          companyId: loggedInUser.companyId,
-          ghl_contact_id: ghlContact.id, // Store GHL ID for future sync
-        } as NewClient;
-
-        // Debug: Log ALL fields to identify undefined
-        console.log('🔍 Full client object being saved:', JSON.stringify(newClient, null, 2));
-        console.log('🔍 loggedInUser:', {
-          id: loggedInUser.id,
-          companyId: loggedInUser.companyId,
-          role: loggedInUser.role,
-        });
-
-        // Save client and wait for it to be added to state
-        await onSaveClient(newClient);
-        imported++;
+        } as Transaction;
         
-        // Small delay to ensure client is in state before adding transactions
-        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log(`💵 ${customerName}: "${productName}" → ${categorizedProduct} ($${transactionAmount})`);
         
-        // Import all successful transactions
-        for (const txn of transactions) {
-          // Use transaction name/description to determine product
-          let productName = txn.name || txn.description || 'Payment';
-          let transactionAmount = txn.amount || 0;
-          
-          const categorizedProduct = categorizeProduct(productName);
-          
-          // Use transaction date
-          const transactionDate = txn.createdAt 
-            ? new Date(txn.createdAt).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0];
-          
-          // Don't pass ID - let database auto-generate integer ID
-          const matTransaction: Transaction = {
-            date: transactionDate,
-            clientName: fullName,
-            product: categorizedProduct,
-            amount: transactionAmount,
-            isRecurring: false,
-            userId: loggedInUser.id,
-          } as Transaction;
-          
-          console.log(`💵 Transaction #${txn.id}: "${productName}" → ${categorizedProduct} ($${transactionAmount})`);
-          
-          await onSaveTransaction(matTransaction);
-          totalTransactionsImported++;
-        }
+        await onSaveTransaction(matTransaction);
+        totalTransactionsImported++;
         
-        console.log(`✅ Imported ${fullName} with ${transactions.length} transaction(s)`);
-        
-        if (imported % 10 === 0) {
-          setImportProgress(`Imported ${imported} of ${transactionsByContact.size} paying customers...`);
+        if (totalTransactionsImported % 20 === 0) {
+          setImportProgress(`Imported ${totalTransactionsImported} of ${allTransactions.length} transactions...`);
         }
       }
 
-      setImportSuccess(`✅ Successfully imported ${imported} paying customers with ${totalTransactionsImported} transactions from GoHighLevel!`);
-      console.log(`📊 Import Summary: ${imported} customers imported, ${totalTransactionsImported} transactions created`);
+      setImportSuccess(`✅ Successfully imported ${totalTransactionsImported} transactions from GoHighLevel!`);
+      console.log(`📊 Import Summary: ${totalTransactionsImported} transactions created from ${transactionsByContact.size} unique customers`);
       setTimeout(() => setImportSuccess(null), 10000);
     } catch (error: any) {
       console.error('GHL Import Error:', error);
