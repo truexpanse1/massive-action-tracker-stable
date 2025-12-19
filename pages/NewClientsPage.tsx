@@ -250,9 +250,12 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         // Extract contact data from GHL
         const fullName = ghlContact.name || `${ghlContact.firstName || ''} ${ghlContact.lastName || ''}`.trim() || 'Unnamed Contact';
         
-        // First, check if this contact has any WON opportunities
+        // First, check if this contact has any WON opportunities OR paid invoices
         let wonOpps: any[] = [];
+        let paidInvoices: any[] = [];
+        
         if (onSaveTransaction && ghlContact.id) {
+          // Check opportunities
           try {
             const oppResult = await ghlService.getContactOpportunities(ghlContact.id);
             const opportunities = oppResult.opportunities || [];
@@ -260,10 +263,22 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           } catch (oppError) {
             console.log('⚠️ Could not fetch opportunities for contact:', ghlContact.id, oppError);
           }
+          
+          // Check invoices
+          try {
+            const invoiceResult = await ghlService.getContactInvoices(ghlContact.id);
+            const invoices = invoiceResult.invoices || [];
+            // Only import paid or sent invoices (actual revenue)
+            paidInvoices = invoices.filter(inv => 
+              inv.status === 'paid' || inv.status === 'sent'
+            );
+          } catch (invError) {
+            console.log('⚠️ Could not fetch invoices for contact:', ghlContact.id, invError);
+          }
         }
         
-        // Skip contacts without WON deals (they're just leads, not clients)
-        if (wonOpps.length === 0) {
+        // Skip contacts without WON deals OR invoices (they're just leads, not clients)
+        if (wonOpps.length === 0 && paidInvoices.length === 0) {
           skipped++;
           continue;
         }
@@ -322,7 +337,43 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           await onSaveTransaction(transaction);
         }
         
-        console.log(`✅ Imported ${fullName} with ${wonOpps.length} purchase(s)`);
+        // Import invoice transactions
+        for (const invoice of paidInvoices) {
+          // Use invoice items to determine product, or fall back to invoice title
+          let productName = 'Service';
+          let invoiceAmount = invoice.total || invoice.amountPaid || 0;
+          
+          // If invoice has line items, use the first item's name
+          if (invoice.items && invoice.items.length > 0) {
+            productName = invoice.items[0].name || invoice.items[0].description || 'Service';
+          } else if (invoice.title || invoice.name) {
+            productName = invoice.title || invoice.name || 'Service';
+          }
+          
+          const categorizedProduct = categorizeProduct(productName);
+          
+          // Use invoice date if available, otherwise today
+          const invoiceDate = invoice.invoiceDate 
+            ? new Date(invoice.invoiceDate).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0];
+          
+          const transaction: Transaction = {
+            id: `ghl-inv-${invoice.id}-${Date.now()}`,
+            date: invoiceDate,
+            clientName: fullName,
+            product: categorizedProduct,
+            amount: invoiceAmount,
+            isRecurring: false,
+            userId: loggedInUser.id,
+          };
+          
+          console.log(`💵 Invoice: "${productName}" → ${categorizedProduct} ($${invoiceAmount})`);
+          
+          await onSaveTransaction(transaction);
+        }
+        
+        const totalTransactions = wonOpps.length + paidInvoices.length;
+        console.log(`✅ Imported ${fullName} with ${totalTransactions} transaction(s) (${wonOpps.length} deals, ${paidInvoices.length} invoices)`);
         
         if (imported % 10 === 0) {
           setImportProgress(`Imported ${imported} clients with purchases...`);

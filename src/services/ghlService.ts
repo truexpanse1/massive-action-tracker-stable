@@ -44,6 +44,27 @@ export interface GHLOpportunity {
   pipelineStageId: string;
 }
 
+export interface GHLInvoice {
+  id?: string;
+  contactId?: string;
+  name?: string;
+  title?: string;
+  businessName?: string;
+  currency?: string;
+  status?: string; // draft, sent, paid, void
+  total?: number;
+  amountDue?: number;
+  amountPaid?: number;
+  invoiceDate?: string;
+  dueDate?: string;
+  items?: Array<{
+    name?: string;
+    description?: string;
+    price?: number;
+    qty?: number;
+  }>;
+}
+
 class GHLService {
   private apiKey: string;
   private locationId?: string;
@@ -306,6 +327,37 @@ class GHLService {
       endpoint += `&status=${status}`;
     }
     return this.makeRequest<{ opportunities: GHLOpportunity[] }>(endpoint);
+  }
+
+  /**
+   * INVOICES
+   */
+
+  /**
+   * Get invoices for a contact
+   */
+  async getContactInvoices(contactId: string): Promise<{ invoices: GHLInvoice[] }> {
+    return this.makeRequest<{ invoices: GHLInvoice[] }>(
+      `/invoices/?altId=${contactId}&altType=contact`
+    );
+  }
+
+  /**
+   * Get all invoices for location
+   */
+  async getInvoices(limit: number = 100, offset: number = 0): Promise<{ invoices: GHLInvoice[], total: number }> {
+    return this.makeRequest<{ invoices: GHLInvoice[], total: number }>(
+      `/invoices/?locationId=${this.locationId}&limit=${limit}&offset=${offset}`
+    );
+  }
+
+  /**
+   * Get invoice by ID
+   */
+  async getInvoice(invoiceId: string): Promise<{ invoice: GHLInvoice }> {
+    return this.makeRequest<{ invoice: GHLInvoice }>(
+      `/invoices/${invoiceId}`
+    );
   }
 
   /**
