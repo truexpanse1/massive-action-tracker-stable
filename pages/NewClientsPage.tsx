@@ -5,6 +5,8 @@ import NewClientKPIs from '../components/NewClientKPIs';
 import AddClientModal from '../components/AddClientModal';
 import ClientCSVImporter from '../components/ClientCSVImporter';
 import { syncClientToGHL } from '../src/services/ghlSyncService';
+import { supabase } from '../src/services/supabaseClient';
+import { createGHLService } from '../src/services/ghlService';
 
 interface NewClientsPageProps {
   newClients: NewClient[];
@@ -75,6 +77,12 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
   const [editingClient, setEditingClient] = useState<NewClient | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRepId, setSelectedRepId] = useState<string>('all');
+  
+  // GHL Import states
+  const [isImportingFromGHL, setIsImportingFromGHL] = useState(false);
+  const [importProgress, setImportProgress] = useState<string>('');
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
   const userColors = [
     '#2F81F7',
@@ -187,14 +195,78 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           !isNaN(new Date(client.closeDate).getTime())
             ? client.closeDate
             : new Date().toISOString().split('T')[0],
-        stage: client.stage || 'Job Completed',
         userId: loggedInUser.id,
+        companyId: loggedInUser.companyId,
       };
-
       onSaveClient(newClient);
     });
+  };
 
-    alert(`Successfully imported ${importedData.length} new clients.`);
+  const handleImportFromGHL = async () => {
+    setIsImportingFromGHL(true);
+    setImportProgress('Connecting to GoHighLevel...');
+    setImportError(null);
+    setImportSuccess(null);
+
+    try {
+      // Get GHL integration
+      const { data: integration, error: integrationError } = await supabase
+        .from('ghl_integrations')
+        .select('*')
+        .eq('company_id', loggedInUser.companyId)
+        .eq('is_active', true)
+        .single();
+
+      if (integrationError || !integration) {
+        throw new Error('GHL integration not found. Please configure in Settings → GHL Integration.');
+      }
+
+      setImportProgress('Fetching contacts from GoHighLevel...');
+
+      // Create GHL service
+      const ghlService = createGHLService(integration.ghl_api_key, integration.ghl_location_id);
+
+      // Import all contacts
+      const ghlContacts = await ghlService.importAllContacts();
+
+      setImportProgress(`Found ${ghlContacts.length} contacts. Importing to MAT...`);
+
+      // Convert GHL contacts to MAT clients
+      let imported = 0;
+      for (const ghlContact of ghlContacts) {
+        const newClient: NewClient = {
+          id: `ghl-${ghlContact.id}-${Date.now()}`,
+          name: ghlContact.name || `${ghlContact.firstName || ''} ${ghlContact.lastName || ''}`.trim() || 'Unnamed Contact',
+          company: ghlContact.customFields?.company || '',
+          phone: ghlContact.phone || '',
+          email: ghlContact.email || '',
+          address: ghlContact.customFields?.address || '',
+          salesProcessLength: '',
+          monthlyContractValue: 0,
+          initialAmountCollected: 0,
+          closeDate: new Date().toISOString().split('T')[0],
+          userId: loggedInUser.id,
+          companyId: loggedInUser.companyId,
+          ghl_contact_id: ghlContact.id, // Store GHL ID for future sync
+        };
+
+        await onSaveClient(newClient);
+        imported++;
+        
+        if (imported % 10 === 0) {
+          setImportProgress(`Imported ${imported} of ${ghlContacts.length} contacts...`);
+        }
+      }
+
+      setImportSuccess(`✅ Successfully imported ${imported} contacts from GoHighLevel!`);
+      setTimeout(() => setImportSuccess(null), 10000);
+    } catch (error: any) {
+      console.error('GHL Import Error:', error);
+      setImportError(error.message || 'Failed to import contacts from GoHighLevel');
+    } finally {
+      setIsImportingFromGHL(false);
+      setImportProgress('');
+    }
   };
 
   return (
@@ -224,6 +296,13 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
                 New Clients
               </h1>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={handleImportFromGHL}
+                  disabled={isImportingFromGHL}
+                  className="bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isImportingFromGHL ? '⏳ Importing...' : '📥 Import from GHL'}
+                </button>
                 <ClientCSVImporter onImport={handleCSVImport} />
                 <button
                   onClick={handleOpenModalForNew}
@@ -233,6 +312,23 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* Import Progress/Status Messages */}
+            {importProgress && (
+              <div className="mb-4 p-3 bg-blue-100 dark:bg-blue-900/30 border border-blue-500 rounded-lg text-blue-700 dark:text-blue-300 text-sm">
+                ⏳ {importProgress}
+              </div>
+            )}
+            {importSuccess && (
+              <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-500 rounded-lg text-green-700 dark:text-green-300 text-sm">
+                {importSuccess}
+              </div>
+            )}
+            {importError && (
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-500 rounded-lg text-red-700 dark:text-red-300 text-sm">
+                ❌ {importError}
+              </div>
+            )}
 
             {/* Search */}
             <div className="mb-4">

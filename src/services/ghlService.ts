@@ -150,6 +150,39 @@ class GHLService {
   }
 
   /**
+   * Get all contacts for a location (with pagination)
+   */
+  async getAllContacts(limit: number = 100, startAfterId?: string): Promise<{ contacts: GHLContact[]; meta: { total: number; nextStartAfterId?: string } }> {
+    let endpoint = `/contacts/?locationId=${this.locationId}&limit=${limit}`;
+    if (startAfterId) {
+      endpoint += `&startAfterId=${startAfterId}`;
+    }
+    return this.makeRequest<{ contacts: GHLContact[]; meta: { total: number; nextStartAfterId?: string } }>(endpoint);
+  }
+
+  /**
+   * Import all contacts from GHL (handles pagination automatically)
+   */
+  async importAllContacts(): Promise<GHLContact[]> {
+    const allContacts: GHLContact[] = [];
+    let startAfterId: string | undefined;
+    let hasMore = true;
+
+    while (hasMore) {
+      const response = await this.getAllContacts(100, startAfterId);
+      allContacts.push(...response.contacts);
+      
+      if (response.meta.nextStartAfterId) {
+        startAfterId = response.meta.nextStartAfterId;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    return allContacts;
+  }
+
+  /**
    * NOTES / ACTIVITIES
    */
 
