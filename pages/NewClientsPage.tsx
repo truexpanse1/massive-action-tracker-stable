@@ -242,13 +242,33 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
 
       setImportProgress(`Found ${ghlContacts.length} contacts. Importing to MAT...`);
 
-      // Convert GHL contacts to MAT clients
+      // Convert GHL contacts to MAT clients (ONLY if they have WON deals)
       let imported = 0;
+      let skipped = 0;
+      
       for (const ghlContact of ghlContacts) {
         // Extract contact data from GHL
         const fullName = ghlContact.name || `${ghlContact.firstName || ''} ${ghlContact.lastName || ''}`.trim() || 'Unnamed Contact';
         
-        // GHL stores address in multiple possible fields
+        // First, check if this contact has any WON opportunities
+        let wonOpps: any[] = [];
+        if (onSaveTransaction && ghlContact.id) {
+          try {
+            const oppResult = await ghlService.getContactOpportunities(ghlContact.id);
+            const opportunities = oppResult.opportunities || [];
+            wonOpps = opportunities.filter(opp => opp.status === 'won');
+          } catch (oppError) {
+            console.log('⚠️ Could not fetch opportunities for contact:', ghlContact.id, oppError);
+          }
+        }
+        
+        // Skip contacts without WON deals (they're just leads, not clients)
+        if (wonOpps.length === 0) {
+          skipped++;
+          continue;
+        }
+        
+        // This contact has purchases - create them as a client!
         const address = (ghlContact as any).address1 || 
                        (ghlContact as any).address || 
                        ghlContact.customFields?.address || 
@@ -281,50 +301,36 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         await onSaveClient(newClient);
         imported++;
         
-        if (imported % 10 === 0) {
-          setImportProgress(`Imported ${imported} of ${ghlContacts.length} contacts...`);
+        // Import their won opportunities as transactions
+        for (const opp of wonOpps) {
+          // Categorize the product automatically
+          const rawProductName = opp.name || 'Deal';
+          const categorizedProduct = categorizeProduct(rawProductName);
+          
+          const transaction: Transaction = {
+            id: `ghl-opp-${opp.id}-${Date.now()}`,
+            date: new Date().toISOString().split('T')[0],
+            clientName: fullName,
+            product: categorizedProduct,
+            amount: opp.monetaryValue || 0,
+            isRecurring: false,
+            userId: loggedInUser.id,
+          };
+          
+          console.log(`📦 Categorized "${rawProductName}" → ${categorizedProduct}`);
+          
+          await onSaveTransaction(transaction);
         }
-
-        // Import opportunities (deals) for this contact
-        if (onSaveTransaction && ghlContact.id) {
-          try {
-            const oppResult = await ghlService.getContactOpportunities(ghlContact.id);
-            const opportunities = oppResult.opportunities || [];
-            
-            // Only import WON opportunities as transactions
-            const wonOpps = opportunities.filter(opp => opp.status === 'won');
-            
-            for (const opp of wonOpps) {
-              // Categorize the product automatically
-              const rawProductName = opp.name || 'Deal';
-              const categorizedProduct = categorizeProduct(rawProductName);
-              
-              const transaction: Transaction = {
-                id: `ghl-opp-${opp.id}-${Date.now()}`,
-                date: new Date().toISOString().split('T')[0], // Use today's date or opp close date if available
-                clientName: fullName,
-                product: categorizedProduct,
-                amount: opp.monetaryValue || 0,
-                isRecurring: false,
-                userId: loggedInUser.id,
-              };
-              
-              console.log(`📦 Categorized "${rawProductName}" → ${categorizedProduct}`);
-              
-              await onSaveTransaction(transaction);
-            }
-            
-            if (wonOpps.length > 0) {
-              console.log(`✅ Imported ${wonOpps.length} won deal(s) for ${fullName}`);
-            }
-          } catch (oppError) {
-            console.log('⚠️ Could not fetch opportunities for contact:', ghlContact.id, oppError);
-            // Don't fail the whole import if opportunities fail
-          }
+        
+        console.log(`✅ Imported ${fullName} with ${wonOpps.length} purchase(s)`);
+        
+        if (imported % 10 === 0) {
+          setImportProgress(`Imported ${imported} clients with purchases...`);
         }
       }
 
-      setImportSuccess(`✅ Successfully imported ${imported} contacts from GoHighLevel!`);
+      setImportSuccess(`✅ Successfully imported ${imported} paying clients from GoHighLevel! (${skipped} leads skipped)`);
+      console.log(`📊 Import Summary: ${imported} clients imported, ${skipped} leads skipped (no purchases)`);
       setTimeout(() => setImportSuccess(null), 10000);
     } catch (error: any) {
       console.error('GHL Import Error:', error);
