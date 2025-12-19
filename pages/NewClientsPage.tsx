@@ -16,6 +16,7 @@ interface NewClientsPageProps {
   loggedInUser: User;
   users: User[];
   transactions?: Transaction[];
+  companyId: string;
 }
 
 interface ClientCardProps {
@@ -72,6 +73,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
   loggedInUser,
   users,
   transactions = [],
+  companyId,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<NewClient | null>(null);
@@ -213,7 +215,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       const { data: integration, error: integrationError } = await supabase
         .from('ghl_integrations')
         .select('*')
-        .eq('company_id', loggedInUser.companyId)
+        .eq('company_id', companyId)
         .eq('is_active', true)
         .single();
 

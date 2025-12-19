@@ -920,6 +920,7 @@ const App: React.FC = () => {
             loggedInUser={user}
             users={users}
             transactions={transactions}
+            companyId={companyId}
           />
         );
       case 'revenue':
