@@ -318,9 +318,12 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         // Use entitySourceName for product (e.g., "New Recurring Invoice")
         let productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
         
-        // GHL uses amount_received in CENTS - convert to dollars
-        // Note: txn.amount is a summary field, txn.amount_received is the actual captured amount
-        let transactionAmount = txn.amount_received ? txn.amount_received / 100 : 0;
+        // GHL API is inconsistent with amount fields:
+        // - Some transactions have amount_received (in CENTS) - need to divide by 100
+        // - Some transactions only have amount (in DOLLARS) - use as-is
+        let transactionAmount = txn.amount_received 
+          ? txn.amount_received / 100 
+          : (txn.amount || 0);
         
         const categorizedProduct = categorizeProduct(productName);
         
