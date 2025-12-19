@@ -315,8 +315,27 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         const customerName = txn.contactName || txn.name || 'Unknown Customer';
         console.log('👤 Extracted customer name:', customerName);
         
-        // Use entitySourceName for product (e.g., "New Recurring Invoice")
-        let productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
+        // Try to fetch invoice details to get actual product name
+        let productName = 'Payment';
+        if (txn.entityType === 'invoice' && txn.entityId) {
+          try {
+            const invoiceResponse = await ghlService.getInvoice(txn.entityId);
+            const invoice = invoiceResponse.invoice;
+            
+            // Extract first line item name
+            if (invoice.items && invoice.items.length > 0 && invoice.items[0].name) {
+              productName = invoice.items[0].name;
+              console.log(`📝 Invoice ${txn.entityId}: "${productName}"`);
+            } else {
+              productName = txn.entitySourceName || 'Payment';
+            }
+          } catch (error) {
+            console.warn(`⚠️ Could not fetch invoice ${txn.entityId}:`, error);
+            productName = txn.entitySourceName || 'Payment';
+          }
+        } else {
+          productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
+        }
         
         // GHL API is inconsistent with amount fields:
         // - Some transactions have amount_received (in CENTS) - need to divide by 100

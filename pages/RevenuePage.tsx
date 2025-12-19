@@ -1,7 +1,10 @@
 
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Transaction, formatCurrency } from '../types';
+import { Transaction, User, formatCurrency } from '../types';
+import { supabase } from '../src/services/supabaseClient';
+import { createGHLService } from '../src/services/ghlService';
+import { categorizeProduct } from '../src/utils/productCategorizer';
 import Calendar from '../components/Calendar';
 import IndustrySelector from '../components/IndustrySelector';
 import RevenueAIEvaluator from '../components/RevenueAIEvaluator';
@@ -17,9 +20,11 @@ interface RevenuePageProps {
   onDateChange: (date: Date) => void;
   initialState: { viewMode: 'daily' | 'analysis', dateRange?: { start: string, end: string }} | null;
   onInitialStateConsumed: () => void;
+  loggedInUser: User;
+  companyId: string;
 }
 
-const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransaction, onDeleteTransaction, selectedDate, onDateChange, initialState, onInitialStateConsumed }) => {
+const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransaction, onDeleteTransaction, selectedDate, onDateChange, initialState, onInitialStateConsumed, loggedInUser, companyId }) => {
     const [viewMode, setViewMode] = useState<'daily' | 'analysis'>('daily');
     
     const [clientName, setClientName] = useState('');
@@ -30,6 +35,12 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
     const [userProducts, setUserProducts] = useState<string[]>(() => Array.from(new Set(transactions.map(t => t.product))));
     const [analyzedProduct, setAnalyzedProduct] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // GHL Import states
+    const [isImportingFromGHL, setIsImportingFromGHL] = useState(false);
+    const [importProgress, setImportProgress] = useState<string>('');
+    const [importError, setImportError] = useState<string | null>(null);
+    const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
 
     const today = new Date().toISOString().split('T')[0];
@@ -167,6 +178,133 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
 
     const handleEdit = (transaction: Transaction) => { setEditingId(transaction.id); setClientName(transaction.clientName); setProduct(transaction.product); setAmount(transaction.amount.toString()); setIsRecurring(transaction.isRecurring); };
     const handleDelete = (id: string) => { if (window.confirm('Are you sure you want to delete this transaction?')) onDeleteTransaction(id); };
+    
+    const handleImportFromGHL = async () => {
+      setIsImportingFromGHL(true);
+      setImportProgress('Connecting to GoHighLevel...');
+      setImportError(null);
+      setImportSuccess(null);
+
+      try {
+        const { data: integration, error: integrationError } = await supabase
+          .from('ghl_integrations')
+          .select('*')
+          .eq('company_id', companyId)
+          .eq('is_active', true)
+          .single();
+
+        if (integrationError || !integration) {
+          throw new Error('GHL integration not found. Please configure in Settings → GHL Integration.');
+        }
+
+        setImportProgress('Fetching transactions from GoHighLevel...');
+        const ghlService = createGHLService(integration.ghl_api_key, integration.ghl_location_id);
+
+        let allTransactions: any[] = [];
+        let offset = 0;
+        const limit = 100;
+        let hasMore = true;
+        
+        while (hasMore) {
+          try {
+            const result = await ghlService.getTransactions(limit, offset, { paymentMode: 'live' });
+            const transactions = result.data || [];
+            
+            const successfulTransactions = transactions.filter(txn => {
+              const status = (txn.status || '').toLowerCase();
+              return status === 'succeeded' || status === 'success';
+            });
+            
+            allTransactions.push(...successfulTransactions);
+            
+            if (transactions.length < limit) {
+              hasMore = false;
+            } else {
+              offset += limit;
+            }
+          } catch (error) {
+            console.error('⚠️ Error fetching transactions:', error);
+            hasMore = false;
+          }
+        }
+        
+        if (allTransactions.length === 0) {
+          throw new Error('No successful transactions found in GoHighLevel.');
+        }
+        
+        setImportProgress(`Found ${allTransactions.length} transactions. Importing...`);
+
+        let totalTransactionsImported = 0;
+        
+        for (const txn of allTransactions) {
+          const customerName = txn.contactName || txn.name || 'Unknown Customer';
+          
+          // Try to fetch invoice details to get actual product name
+          let productName = 'Payment';
+          if (txn.entityType === 'invoice' && txn.entityId) {
+            try {
+              const invoiceResponse = await ghlService.getInvoice(txn.entityId);
+              const invoice = invoiceResponse.invoice;
+              
+              // Extract first line item name
+              if (invoice.items && invoice.items.length > 0 && invoice.items[0].name) {
+                productName = invoice.items[0].name;
+                console.log(`📝 Invoice ${txn.entityId}: "${productName}"`);
+              } else {
+                productName = txn.entitySourceName || 'Payment';
+              }
+            } catch (error) {
+              console.warn(`⚠️ Could not fetch invoice ${txn.entityId}:`, error);
+              productName = txn.entitySourceName || 'Payment';
+            }
+          } else {
+            productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
+          }
+          let transactionAmount = txn.amount_received 
+            ? txn.amount_received / 100 
+            : (txn.amount || 0);
+          
+          const categorizedProduct = categorizeProduct(productName);
+          const transactionDate = txn.createdAt 
+            ? new Date(txn.createdAt).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0];
+          
+          const { error: insertError } = await supabase
+            .from('transactions')
+            .insert({
+              date: transactionDate,
+              client_name: customerName,
+              product: categorizedProduct,
+              amount: transactionAmount,
+              is_recurring: false,
+              user_id: loggedInUser.id,
+              company_id: companyId,
+            });
+          
+          if (insertError) {
+            console.error(`❌ Failed to insert transaction:`, insertError);
+            throw new Error(`Database insert failed: ${insertError.message}`);
+          }
+          totalTransactionsImported++;
+          
+          if (totalTransactionsImported % 20 === 0) {
+            setImportProgress(`Imported ${totalTransactionsImported} of ${allTransactions.length}...`);
+          }
+        }
+
+        setImportSuccess(`✅ Successfully imported ${totalTransactionsImported} transactions!`);
+        setTimeout(() => setImportSuccess(null), 10000);
+        
+        // Refresh the page to show new transactions
+        window.location.reload();
+      } catch (error: any) {
+        console.error('GHL Import Error:', error);
+        setImportError(error.message || 'Failed to import from GoHighLevel');
+      } finally {
+        setIsImportingFromGHL(false);
+        setImportProgress('');
+      }
+    };
     const handleProductSelect = (productName: string) => { setProduct(productName); document.getElementById('clientNameInput')?.focus(); }
     
      const LineChart: React.FC<{data: {date: string, revenue: number}[]}> = ({data}) => {
