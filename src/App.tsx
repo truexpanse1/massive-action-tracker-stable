@@ -920,7 +920,7 @@ const App: React.FC = () => {
             loggedInUser={user}
             users={users}
             transactions={transactions}
-            companyId={companyId}
+            companyId={user.company_id || ''}
           />
         );
       case 'revenue':
