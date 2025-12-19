@@ -240,14 +240,13 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       
       while (hasMore) {
         try {
-          const result = await ghlService.getInvoices(limit, offset);
+          // Fetch only PAID invoices from GHL
+          const result = await ghlService.getInvoices(limit, offset, 'paid');
           const invoices = result.invoices || [];
           
-          // Only keep PAID invoices
-          const paidInvoices = invoices.filter(inv => inv.status === 'paid');
-          allInvoices = allInvoices.concat(paidInvoices);
+          allInvoices = allInvoices.concat(invoices);
           
-          console.log(`📦 Fetched ${paidInvoices.length} paid invoices (offset ${offset})`);
+          console.log(`📦 Fetched ${invoices.length} paid invoices (offset ${offset})`);
           
           // Check if there are more invoices
           if (invoices.length < limit) {
@@ -264,7 +263,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       console.log(`📊 Total paid invoices found: ${allInvoices.length}`);
       
       if (allInvoices.length === 0) {
-        throw new Error('No paid invoices found in GoHighLevel. Make sure you have paid invoices to import.');
+        throw new Error('No paid invoices found in GoHighLevel. Make sure you have invoices marked as "paid" to import. Check your GHL Payments > Invoices page.');
       }
       
       // Group invoices by contact ID

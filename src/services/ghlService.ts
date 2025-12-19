@@ -345,9 +345,22 @@ class GHLService {
   /**
    * Get all invoices for location
    */
-  async getInvoices(limit: number = 100, offset: number = 0): Promise<{ invoices: GHLInvoice[], total: number }> {
+  async getInvoices(limit: number = 100, offset: number = 0, status?: string): Promise<{ invoices: GHLInvoice[], total: number }> {
+    // Build query parameters according to GHL API v2 spec
+    const params = new URLSearchParams({
+      altId: this.locationId,
+      altType: 'location',
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+    
+    // Add optional status filter
+    if (status) {
+      params.append('status', status);
+    }
+    
     return this.makeRequest<{ invoices: GHLInvoice[], total: number }>(
-      `/invoices/?locationId=${this.locationId}&limit=${limit}&offset=${offset}`
+      `/invoices/?${params.toString()}`
     );
   }
 
