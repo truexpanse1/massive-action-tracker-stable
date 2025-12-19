@@ -349,6 +349,14 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           ghl_contact_id: ghlContact.id, // Store GHL ID for future sync
         } as NewClient;
 
+        // Debug: Log all field values to identify undefined
+        console.log('🔍 Client fields:', {
+          userId: loggedInUser.id,
+          companyId: loggedInUser.companyId,
+          monthlyContractValue: newClient.monthlyContractValue,
+          initialAmountCollected: newClient.initialAmountCollected,
+        });
+
         // Save client and wait for it to be added to state
         await onSaveClient(newClient);
         imported++;
