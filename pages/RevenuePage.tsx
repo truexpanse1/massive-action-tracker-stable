@@ -232,48 +232,82 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
           throw new Error('No successful transactions found in GoHighLevel.');
         }
         
-        setImportProgress(`Found ${allTransactions.length} transactions. Checking for duplicates...`);
+        setImportProgress(`Found ${allTransactions.length} transactions. Analyzing product names...`);
 
+        // SMART FALLBACK: Group transactions by contactId and fetch product names once per contact
+        const transactionsByContact = new Map<string, any[]>();
+        for (const txn of allTransactions) {
+          if (txn.contactId) {
+            if (!transactionsByContact.has(txn.contactId)) {
+              transactionsByContact.set(txn.contactId, []);
+            }
+            transactionsByContact.get(txn.contactId)!.push(txn);
+          }
+        }
+
+        console.log(`👥 Grouped transactions by ${transactionsByContact.size} unique contacts`);
+
+        // For each contact, find their product name from first invoice
+        const contactProductNames = new Map<string, string>();
+        let contactIndex = 0;
+
+        for (const [contactId, contactTransactions] of transactionsByContact) {
+          contactIndex++;
+          setImportProgress(`Analyzing products for contact ${contactIndex} of ${transactionsByContact.size}...`);
+          
+          // Sort by date to find the earliest transaction
+          const sortedTransactions = contactTransactions.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateA - dateB;
+          });
+          
+          // Try to find a transaction with an invoice
+          let productName = 'Payment'; // Default fallback
+          
+          for (const txn of sortedTransactions) {
+            if (txn.entityType === 'invoice' && txn.entityId) {
+              try {
+                console.log(`📥 Fetching invoice ${txn.entityId} for contact ${contactId}...`);
+                const invoiceResponse = await ghlService.getInvoice(txn.entityId);
+                const invoice = invoiceResponse.invoice;
+                
+                if (invoice.items && invoice.items.length > 0 && invoice.items[0].name) {
+                  productName = invoice.items[0].name;
+                  console.log(`✅ Found product for contact ${contactId}: "${productName}"`);
+                  break; // Found it, stop looking
+                }
+              } catch (error) {
+                console.warn(`⚠️ Could not fetch invoice ${txn.entityId}`);
+              }
+            }
+          }
+          
+          // If no invoice found, use entitySourceName from first transaction
+          if (productName === 'Payment' && sortedTransactions.length > 0) {
+            productName = sortedTransactions[0].entitySourceName || 
+                          sortedTransactions[0].name || 
+                          sortedTransactions[0].description || 
+                          'Payment';
+          }
+          
+          contactProductNames.set(contactId, productName);
+        }
+
+        console.log(`📦 Mapped product names for ${contactProductNames.size} contacts`);
+        setImportProgress(`Importing ${allTransactions.length} transactions...`);
+
+        // Import all transactions with the correct product names
         let totalTransactionsImported = 0;
         let duplicatesSkipped = 0;
-        
+
         for (const txn of allTransactions) {
           const customerName = txn.contactName || txn.name || 'Unknown Customer';
           
-          // Try to fetch invoice details to get actual product name
-          let productName = 'Payment';
-          console.log(`🔍 Transaction ${txn.id}: entityType=${txn.entityType}, entityId=${txn.entityId}`);
+          // Get product name for this contact (already fetched above)
+          const productName = contactProductNames.get(txn.contactId) || 'Payment';
           
-          if (txn.entityType === 'invoice' && txn.entityId) {
-            try {
-              console.log(`📥 Fetching invoice ${txn.entityId}...`);
-              const invoiceResponse = await ghlService.getInvoice(txn.entityId);
-              console.log(`📄 Invoice response:`, JSON.stringify(invoiceResponse, null, 2));
-              const invoice = invoiceResponse.invoice;
-              
-              // Extract first line item name
-              if (invoice.items && invoice.items.length > 0) {
-                console.log(`📦 Invoice items:`, JSON.stringify(invoice.items, null, 2));
-                if (invoice.items[0].name) {
-                  productName = invoice.items[0].name;
-                  console.log(`✅ Product name from invoice: "${productName}"`);
-                } else {
-                  console.warn(`⚠️ Invoice item has no name field`);
-                  productName = txn.entitySourceName || 'Payment';
-                }
-              } else {
-                console.warn(`⚠️ Invoice has no items: ${JSON.stringify(invoice)}`);
-                productName = txn.entitySourceName || 'Payment';
-              }
-            } catch (error) {
-              console.error(`❌ Failed to fetch invoice ${txn.entityId}:`, error);
-              productName = txn.entitySourceName || 'Payment';
-            }
-          } else {
-            console.log(`ℹ️ Not an invoice transaction, using entitySourceName: ${txn.entitySourceName}`);
-            productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
-          }
-          let transactionAmount = txn.amount_received 
+          const transactionAmount = txn.amount_received 
             ? txn.amount_received / 100 
             : (txn.amount || 0);
           
@@ -289,8 +323,6 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                              productName?.toLowerCase().includes('monthly') ||
                              productName?.toLowerCase().includes('weekly');
           
-          console.log(`💳 ${customerName}: ${productName} - $${transactionAmount} ${isRecurring ? '(RECURRING)' : '(ONE-TIME)'}`);
-          
           // Check if transaction already exists
           const { data: existingTransaction } = await supabase
             .from('transactions')
@@ -300,8 +332,11 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
           
           if (existingTransaction) {
             duplicatesSkipped++;
-            continue; // Skip this transaction
+            continue;
           }
+          
+          // Insert transaction
+          console.log(`💵 ${customerName}: "${productName}" → ${categorizedProduct} ($${transactionAmount}) ${isRecurring ? '(RECURRING)' : '(ONE-TIME)'}`);
           
           const { error: insertError } = await supabase
             .from('transactions')
@@ -317,13 +352,14 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             });
           
           if (insertError) {
-            console.error(`❌ Failed to insert transaction:`, insertError);
+            console.error(`❌ Failed to insert transaction for ${customerName}:`, insertError);
             throw new Error(`Database insert failed: ${insertError.message}`);
           }
+          
           totalTransactionsImported++;
           
           if (totalTransactionsImported % 20 === 0) {
-            setImportProgress(`Imported ${totalTransactionsImported} of ${allTransactions.length}...`);
+            setImportProgress(`Imported ${totalTransactionsImported} of ${allTransactions.length} transactions...`);
           }
         }
 
