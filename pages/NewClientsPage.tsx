@@ -315,19 +315,26 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           ? new Date(txn.createdAt).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0];
         
-        // Create MAT transaction (no ID - database auto-generates)
-        const matTransaction: Transaction = {
-          date: transactionDate,
-          clientName: customerName,
-          product: categorizedProduct,
-          amount: transactionAmount,
-          isRecurring: false,
-          userId: loggedInUser.id,
-        } as Transaction;
-        
+        // Direct database insert - bypass React state management!
         console.log(`💵 ${customerName}: "${productName}" → ${categorizedProduct} ($${transactionAmount})`);
         
-        await onSaveTransaction(matTransaction);
+        // Insert directly into Supabase transactions table
+        const { error: insertError } = await supabase
+          .from('transactions')
+          .insert({
+            date: transactionDate,
+            client_name: customerName,
+            product: categorizedProduct,
+            amount: transactionAmount,
+            is_recurring: false,
+            user_id: loggedInUser.id,
+            company_id: companyId,
+          });
+        
+        if (insertError) {
+          console.error(`❌ Failed to insert transaction for ${customerName}:`, insertError);
+          throw new Error(`Database insert failed: ${insertError.message}`);
+        }
         totalTransactionsImported++;
         
         if (totalTransactionsImported % 20 === 0) {
