@@ -301,8 +301,18 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       
       // Import each transaction directly - no client creation!
       for (const txn of allTransactions) {
+        // Debug: Log the transaction object to see what fields are available
+        console.log('🔍 Transaction fields:', {
+          contactName: txn.contactName,
+          name: txn.name,
+          contactId: txn.contactId,
+          amount: txn.amount,
+          entitySourceName: txn.entitySourceName
+        });
+        
         // Get customer name from transaction (GHL uses 'contactName')
         const customerName = txn.contactName || txn.name || 'Unknown Customer';
+        console.log('👤 Extracted customer name:', customerName);
         
         // Use entitySourceName for product (e.g., "New Recurring Invoice")
         let productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
