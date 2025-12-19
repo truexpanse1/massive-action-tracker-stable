@@ -288,6 +288,81 @@ class GHLService {
   async deleteWebhook(webhookId: string): Promise<void> {
     await this.makeRequest(`/webhooks/${webhookId}`, 'DELETE');
   }
+
+  /**
+   * MEDIA LIBRARY
+   */
+
+  /**
+   * Upload file to GHL Media Library
+   */
+  async uploadMedia(file: File | Blob, fileName: string, folder?: string): Promise<{ fileId: string; url: string }> {
+    const formData = new FormData();
+    formData.append('file', file, fileName);
+    
+    if (folder) {
+      formData.append('folder', folder);
+    }
+
+    const url = `${GHL_API_BASE_URL}/medias/upload-file`;
+    
+    const headers: HeadersInit = {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'Version': '2021-07-28',
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`GHL Media Upload Error (${response.status}): ${errorText}`);
+      }
+
+      const data = await response.json();
+      return {
+        fileId: data.fileId || data.id,
+        url: data.url || data.fileUrl,
+      };
+    } catch (error) {
+      console.error('GHL Media Upload Failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Upload file from URL to GHL Media Library
+   */
+  async uploadMediaFromUrl(imageUrl: string, fileName: string, folder?: string): Promise<{ fileId: string; url: string }> {
+    // Fetch the image
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    
+    // Upload to GHL
+    return this.uploadMedia(blob, fileName, folder);
+  }
+
+  /**
+   * Get media files from library
+   */
+  async getMediaFiles(folder?: string): Promise<{ files: any[] }> {
+    let endpoint = `/medias/?locationId=${this.locationId}`;
+    if (folder) {
+      endpoint += `&folder=${encodeURIComponent(folder)}`;
+    }
+    return this.makeRequest<{ files: any[] }>(endpoint);
+  }
+
+  /**
+   * Delete media file
+   */
+  async deleteMedia(fileId: string): Promise<void> {
+    await this.makeRequest(`/medias/${fileId}`, 'DELETE');
+  }
 }
 
 /**

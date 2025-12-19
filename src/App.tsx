@@ -935,7 +935,7 @@ const App: React.FC = () => {
           />
         );
       case 'ai-images':
-        return <AIImagesPageEnhanced />;
+        return <AIImagesPageEnhanced companyId={companyId} userId={userId} />;
       case 'ai-content':
         return <AIContentPage />;
       case 'coaching':

@@ -8,8 +8,15 @@ import {
   styleOptions,
   colorThemes,
 } from '../lib/imageTemplates';
+import { supabase } from '../src/services/supabaseClient';
+import { createGHLService } from '../src/services/ghlService';
 
-const AIImagesPageEnhanced: React.FC = () => {
+interface AIImagesPageEnhancedProps {
+  companyId: string;
+  userId: string;
+}
+
+const AIImagesPageEnhanced: React.FC<AIImagesPageEnhancedProps> = ({ companyId, userId }) => {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -31,6 +38,11 @@ const AIImagesPageEnhanced: React.FC = () => {
   const [editedImage, setEditedImage] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // GHL Media save states
+  const [isSavingToGHL, setIsSavingToGHL] = useState(false);
+  const [ghlSaveSuccess, setGhlSaveSuccess] = useState<string | null>(null);
+  const [ghlSaveError, setGhlSaveError] = useState<string | null>(null);
 
   const handleTemplateSelect = (templatePrompt: string, templateAspectRatio: string) => {
     let enhancedPrompt = templatePrompt;
@@ -127,9 +139,43 @@ const AIImagesPageEnhanced: React.FC = () => {
     const link = document.createElement('a');
     link.href = imageUrl;
     link.download = filename;
-    document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+  };
+
+  const handleSaveToGHL = async (imageUrl: string, filename: string) => {
+    setIsSavingToGHL(true);
+    setGhlSaveSuccess(null);
+    setGhlSaveError(null);
+
+    try {
+      // Get GHL integration
+      const { data: integration, error: integrationError } = await supabase
+        .from('ghl_integrations')
+        .select('*')
+        .eq('company_id', companyId)
+        .eq('is_active', true)
+        .single();
+
+      if (integrationError || !integration) {
+        throw new Error('GHL integration not found or inactive. Please configure in Settings.');
+      }
+
+      // Create GHL service
+      const ghlService = createGHLService(integration.ghl_api_key, integration.ghl_location_id);
+
+      // Upload image to GHL Media
+      const result = await ghlService.uploadMediaFromUrl(imageUrl, filename, 'mat-ai-images');
+
+      setGhlSaveSuccess(`Saved to GHL Media! File ID: ${result.fileId}`);
+      
+      // Auto-clear success message after 5 seconds
+      setTimeout(() => setGhlSaveSuccess(null), 5000);
+    } catch (error: any) {
+      console.error('Error saving to GHL:', error);
+      setGhlSaveError(error.message || 'Failed to save to GHL Media');
+    } finally {
+      setIsSavingToGHL(false);
+    }
   };
 
   return (
@@ -396,14 +442,33 @@ const AIImagesPageEnhanced: React.FC = () => {
                 Your Generated Image
               </h2>
               {generatedImage && (
-                <button
-                  onClick={() => handleDownload(generatedImage, 'marketing-asset.png')}
-                  className="bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm"
-                >
-                  ⬇️ Download
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleDownload(generatedImage, 'marketing-asset.png')}
+                    className="bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    ⬇️ Download
+                  </button>
+                  <button
+                    onClick={() => handleSaveToGHL(generatedImage, `mat-image-${Date.now()}.png`)}
+                    disabled={isSavingToGHL}
+                    className="bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSavingToGHL ? '⏳ Saving...' : '📤 Save to GHL'}
+                  </button>
+                </div>
               )}
             </div>
+            {ghlSaveSuccess && (
+              <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-500 rounded-lg text-green-700 dark:text-green-300 text-sm">
+                ✅ {ghlSaveSuccess}
+              </div>
+            )}
+            {ghlSaveError && (
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-500 rounded-lg text-red-700 dark:text-red-300 text-sm">
+                ❌ {ghlSaveError}
+              </div>
+            )}
             {isLoading ? (
               <div className="flex flex-col items-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-red mb-4"></div>
@@ -489,12 +554,21 @@ const AIImagesPageEnhanced: React.FC = () => {
                       alt={editPrompt}
                       className="max-w-full max-h-[200px] rounded-lg"
                     />
-                    <button
-                      onClick={() => handleDownload(editedImage, 'edited-asset.png')}
-                      className="w-full bg-brand-lime text-brand-ink font-bold py-1 px-3 rounded-md hover:bg-green-400 transition text-xs"
-                    >
-                      ⬇️ Download Edited
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleDownload(editedImage, 'edited-asset.png')}
+                        className="flex-1 bg-brand-blue text-white font-bold py-1 px-3 rounded-md hover:bg-blue-700 transition text-xs"
+                      >
+                        ⬇️ Download
+                      </button>
+                      <button
+                        onClick={() => handleSaveToGHL(editedImage, `mat-edited-${Date.now()}.png`)}
+                        disabled={isSavingToGHL}
+                        className="flex-1 bg-brand-lime text-brand-ink font-bold py-1 px-3 rounded-md hover:bg-green-400 transition text-xs disabled:opacity-50"
+                      >
+                        {isSavingToGHL ? '⏳' : '📤 GHL'}
+                      </button>
+                    </div>
                   </div>
                 ) : !imageToEdit ? (
                   <p className="text-gray-500 text-center text-sm">
