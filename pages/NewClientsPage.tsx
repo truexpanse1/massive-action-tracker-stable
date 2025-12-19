@@ -85,6 +85,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
   const [importProgress, setImportProgress] = useState<string>('');
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   const userColors = [
     '#2F81F7',
@@ -293,6 +294,35 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
     }
   };
 
+  const handleDeleteAllClients = async () => {
+    if (!window.confirm('⚠️ Are you sure you want to DELETE ALL CLIENTS? This cannot be undone!')) {
+      return;
+    }
+
+    setIsDeletingAll(true);
+    setImportError(null);
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('company_id', companyId);
+
+      if (error) throw error;
+
+      setImportSuccess('✅ All clients deleted successfully!');
+      setTimeout(() => setImportSuccess(null), 5000);
+      
+      // Reload page to refresh the list
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Delete All Error:', error);
+      setImportError(error.message || 'Failed to delete clients');
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
   return (
     <>
       <AddClientModal
@@ -320,6 +350,15 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
                 New Clients
               </h1>
               <div className="flex items-center gap-2">
+                {newClients.length > 0 && (
+                  <button
+                    onClick={handleDeleteAllClients}
+                    disabled={isDeletingAll}
+                    className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDeletingAll ? '⏳ Deleting...' : '🗑️ Delete All'}
+                  </button>
+                )}
                 <button
                   onClick={handleImportFromGHL}
                   disabled={isImportingFromGHL}
