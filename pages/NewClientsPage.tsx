@@ -294,10 +294,11 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       
       console.log(`👥 Unique customers with transactions: ${transactionsByContact.size}`);
       
-      setImportProgress(`Found ${allTransactions.length} transactions. Importing to MAT...`);
+      setImportProgress(`Found ${allTransactions.length} transactions. Checking for duplicates...`);
 
       // Import transactions directly - no client creation needed!
       let totalTransactionsImported = 0;
+      let duplicatesSkipped = 0;
       
       // Import each transaction directly - no client creation!
       for (const txn of allTransactions) {
@@ -351,11 +352,20 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           ? new Date(txn.createdAt).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0];
         
+        // Check if transaction already exists
+        const { data: existingTransaction } = await supabase
+          .from('transactions')
+          .select('id')
+          .eq('ghl_transaction_id', txn.id)
+          .single();
+        
+        if (existingTransaction) {
+          duplicatesSkipped++;
+          continue; // Skip this transaction
+        }
+        
         // Direct database insert - bypass React state management!
         console.log(`💵 ${customerName}: "${productName}" → ${categorizedProduct} ($${transactionAmount})`);
-        
-        // Log what we're about to insert
-        console.log('📝 About to insert:', { date: transactionDate, client_name: customerName, product: categorizedProduct, amount: transactionAmount });
         
         // Insert directly into Supabase transactions table
         const { error: insertError } = await supabase
@@ -368,6 +378,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
             is_recurring: false,
             user_id: loggedInUser.id,
             company_id: companyId,
+            ghl_transaction_id: txn.id,
           });
         
         if (insertError) {
@@ -381,8 +392,18 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         }
       }
 
-      setImportSuccess(`✅ Successfully imported ${totalTransactionsImported} transactions from GoHighLevel!`);
-      console.log(`📊 Import Summary: ${totalTransactionsImported} transactions created from ${transactionsByContact.size} unique customers`);
+      // Update last sync timestamp
+      await supabase
+        .from('ghl_integrations')
+        .update({ last_sync_at: new Date().toISOString() })
+        .eq('company_id', companyId);
+      
+      const summaryMessage = duplicatesSkipped > 0
+        ? `✅ Imported ${totalTransactionsImported} new transactions! (Skipped ${duplicatesSkipped} duplicates)`
+        : `✅ Successfully imported ${totalTransactionsImported} transactions!`;
+      
+      setImportSuccess(summaryMessage);
+      console.log(`📊 Import Summary: ${totalTransactionsImported} new transactions, ${duplicatesSkipped} duplicates skipped`);
       setTimeout(() => setImportSuccess(null), 10000);
     } catch (error: any) {
       console.error('GHL Import Error:', error);

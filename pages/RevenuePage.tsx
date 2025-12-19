@@ -232,9 +232,10 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
           throw new Error('No successful transactions found in GoHighLevel.');
         }
         
-        setImportProgress(`Found ${allTransactions.length} transactions. Importing...`);
+        setImportProgress(`Found ${allTransactions.length} transactions. Checking for duplicates...`);
 
         let totalTransactionsImported = 0;
+        let duplicatesSkipped = 0;
         
         for (const txn of allTransactions) {
           const customerName = txn.contactName || txn.name || 'Unknown Customer';
@@ -269,6 +270,18 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             ? new Date(txn.createdAt).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0];
           
+          // Check if transaction already exists
+          const { data: existingTransaction } = await supabase
+            .from('transactions')
+            .select('id')
+            .eq('ghl_transaction_id', txn.id)
+            .single();
+          
+          if (existingTransaction) {
+            duplicatesSkipped++;
+            continue; // Skip this transaction
+          }
+          
           const { error: insertError } = await supabase
             .from('transactions')
             .insert({
@@ -279,6 +292,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
               is_recurring: false,
               user_id: loggedInUser.id,
               company_id: companyId,
+              ghl_transaction_id: txn.id,
             });
           
           if (insertError) {
@@ -292,7 +306,17 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
           }
         }
 
-        setImportSuccess(`✅ Successfully imported ${totalTransactionsImported} transactions!`);
+        // Update last sync timestamp
+        await supabase
+          .from('ghl_integrations')
+          .update({ last_sync_at: new Date().toISOString() })
+          .eq('company_id', companyId);
+        
+        const summaryMessage = duplicatesSkipped > 0
+          ? `✅ Imported ${totalTransactionsImported} new transactions! (Skipped ${duplicatesSkipped} duplicates)`
+          : `✅ Successfully imported ${totalTransactionsImported} transactions!`;
+        
+        setImportSuccess(summaryMessage);
         setTimeout(() => setImportSuccess(null), 10000);
         
         // Refresh the page to show new transactions
