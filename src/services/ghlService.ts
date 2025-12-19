@@ -65,6 +65,21 @@ export interface GHLInvoice {
   }>;
 }
 
+export interface GHLTransaction {
+  id?: string;
+  contactId?: string;
+  amount?: number;
+  status?: string; // succeeded, failed, pending
+  createdAt?: string;
+  name?: string;
+  description?: string;
+  entitySourceType?: string;
+  entitySourceSubType?: string;
+  subscriptionId?: string;
+  entityId?: string;
+  paymentMode?: string; // live, test
+}
+
 class GHLService {
   private apiKey: string;
   private locationId?: string;
@@ -370,6 +385,54 @@ class GHLService {
   async getInvoice(invoiceId: string): Promise<{ invoice: GHLInvoice }> {
     return this.makeRequest<{ invoice: GHLInvoice }>(
       `/invoices/${invoiceId}`
+    );
+  }
+
+  /**
+   * TRANSACTIONS
+   */
+
+  /**
+   * Get all transactions for location
+   */
+  async getTransactions(
+    limit: number = 100, 
+    offset: number = 0, 
+    options?: {
+      paymentMode?: string;
+      startAt?: string;
+      endAt?: string;
+      contactId?: string;
+      search?: string;
+    }
+  ): Promise<{ data: GHLTransaction[], totalCount: number }> {
+    // Build query parameters according to GHL API v2 spec
+    const params = new URLSearchParams({
+      altId: this.locationId,
+      altType: 'location',
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+    
+    // Add optional filters
+    if (options?.paymentMode) {
+      params.append('paymentMode', options.paymentMode);
+    }
+    if (options?.startAt) {
+      params.append('startAt', options.startAt);
+    }
+    if (options?.endAt) {
+      params.append('endAt', options.endAt);
+    }
+    if (options?.contactId) {
+      params.append('contactId', options.contactId);
+    }
+    if (options?.search) {
+      params.append('search', options.search);
+    }
+    
+    return this.makeRequest<{ data: GHLTransaction[], totalCount: number }>(
+      `/payments/transactions?${params.toString()}`
     );
   }
 

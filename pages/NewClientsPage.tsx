@@ -232,75 +232,75 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
       // Create GHL service
       const ghlService = createGHLService(integration.ghl_api_key, integration.ghl_location_id);
 
-      // NEW APPROACH: Fetch ALL paid invoices first
-      let allInvoices: any[] = [];
+      // NEW APPROACH: Fetch ALL successful transactions
+      let allTransactions: any[] = [];
       let offset = 0;
       const limit = 100;
       let hasMore = true;
       
       while (hasMore) {
         try {
-          // Fetch ALL invoices from GHL (no status filter)
-          const result = await ghlService.getInvoices(limit, offset);
-          const invoices = result.invoices || [];
+          // Fetch transactions from GHL (live mode only)
+          const result = await ghlService.getTransactions(limit, offset, { paymentMode: 'live' });
+          const transactions = result.data || [];
           
-          // Log first invoice to see structure
-          if (offset === 0 && invoices.length > 0) {
-            console.log('🔍 Sample invoice structure:', JSON.stringify(invoices[0], null, 2));
+          // Log first transaction to see structure
+          if (offset === 0 && transactions.length > 0) {
+            console.log('🔍 Sample transaction structure:', JSON.stringify(transactions[0], null, 2));
           }
           
-          // Filter for revenue-generating invoices (paid, sent, partially paid)
-          const revenueInvoices = invoices.filter(inv => {
-            const status = (inv.status || '').toLowerCase();
-            return status === 'paid' || status === 'sent' || status === 'partially paid' || status === 'partiallypaid';
+          // Filter for SUCCESSFUL transactions only
+          const successfulTransactions = transactions.filter(txn => {
+            const status = (txn.status || '').toLowerCase();
+            return status === 'succeeded' || status === 'success';
           });
           
-          allInvoices = allInvoices.concat(revenueInvoices);
+          allTransactions.push(...successfulTransactions);
           
-          console.log(`📦 Fetched ${invoices.length} total invoices, ${revenueInvoices.length} with revenue (offset ${offset})`);
+          console.log(`📦 Fetched ${transactions.length} total transactions, ${successfulTransactions.length} successful (offset ${offset})`);
           
-          // Check if there are more invoices
-          if (invoices.length < limit) {
+          // Check if there are more transactions
+          if (transactions.length < limit) {
             hasMore = false;
           } else {
             offset += limit;
           }
         } catch (error) {
-          console.error('⚠️ Error fetching invoices:', error);
+          console.error('⚠️ Error fetching transactions:', error);
           hasMore = false;
         }
       }
       
-      console.log(`📊 Total revenue invoices found: ${allInvoices.length}`);
+      console.log(`📊 Total successful transactions found: ${allTransactions.length}`);
       
       // Log unique statuses found
-      const uniqueStatuses = new Set(allInvoices.map(inv => inv.status));
-      console.log(`🏷️ Invoice statuses found:`, Array.from(uniqueStatuses));
+      const uniqueStatuses = new Set(allTransactions.map(txn => txn.status));
+      console.log(`🏷️ Transaction statuses found:`, Array.from(uniqueStatuses));
       
-      if (allInvoices.length === 0) {
-        throw new Error('No revenue invoices found in GoHighLevel. Make sure you have invoices marked as "paid" or "sent". Check your GHL Payments > Invoices page.');
+      if (allTransactions.length === 0) {
+        throw new Error('No successful transactions found in GoHighLevel. Make sure you have completed payments. Check your GHL Payments > Transactions page.');
       }
       
-      // Group invoices by contact ID
-      const invoicesByContact = new Map<string, any[]>();
-      for (const invoice of allInvoices) {
-        if (invoice.contactId) {
-          if (!invoicesByContact.has(invoice.contactId)) {
-            invoicesByContact.set(invoice.contactId, []);
+      // Group transactions by contact ID
+      const transactionsByContact = new Map<string, any[]>();
+      for (const transaction of allTransactions) {
+        if (transaction.contactId) {
+          if (!transactionsByContact.has(transaction.contactId)) {
+            transactionsByContact.set(transaction.contactId, []);
           }
-          invoicesByContact.get(invoice.contactId)!.push(invoice);
+          transactionsByContact.get(transaction.contactId)!.push(transaction);
         }
       }
       
-      console.log(`👥 Unique customers with paid invoices: ${invoicesByContact.size}`);
+      console.log(`👥 Unique customers with transactions: ${transactionsByContact.size}`);
       
-      setImportProgress(`Found ${invoicesByContact.size} paying customers. Importing to MAT...`);
+      setImportProgress(`Found ${transactionsByContact.size} paying customers. Importing to MAT...`);
 
-      // Now import each customer with their invoices
+      // Now import each customer with their transactions
       let imported = 0;
-      let totalTransactions = 0;
+      let totalTransactionsImported = 0;
       
-      for (const [contactId, invoices] of invoicesByContact.entries()) {
+      for (const [contactId, transactions] of transactionsByContact.entries()) {
         // Fetch contact details from GHL
         let ghlContact: any = null;
         try {
@@ -319,7 +319,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         // Extract contact data
         const fullName = ghlContact.name || `${ghlContact.firstName || ''} ${ghlContact.lastName || ''}`.trim() || 'Unnamed Contact';
         
-        // This customer has paid invoices - create them as a client!
+        // This customer has successful transactions - create them as a client!
         const address = (ghlContact as any).address1 || 
                        (ghlContact as any).address || 
                        ghlContact.customFields?.address || 
@@ -352,51 +352,44 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         await onSaveClient(newClient);
         imported++;
         
-        // Import all paid invoices as transactions
-        for (const invoice of invoices) {
-          // Use invoice items to determine product, or fall back to invoice title
-          let productName = 'Service';
-          let invoiceAmount = invoice.total || invoice.amountPaid || 0;
-          
-          // If invoice has line items, use the first item's name
-          if (invoice.items && invoice.items.length > 0) {
-            productName = invoice.items[0].name || invoice.items[0].description || 'Service';
-          } else if (invoice.title || invoice.name) {
-            productName = invoice.title || invoice.name || 'Service';
-          }
+        // Import all successful transactions
+        for (const txn of transactions) {
+          // Use transaction name/description to determine product
+          let productName = txn.name || txn.description || 'Payment';
+          let transactionAmount = txn.amount || 0;
           
           const categorizedProduct = categorizeProduct(productName);
           
-          // Use invoice date if available, otherwise today
-          const invoiceDate = invoice.invoiceDate 
-            ? new Date(invoice.invoiceDate).toISOString().split('T')[0]
+          // Use transaction date
+          const transactionDate = txn.createdAt 
+            ? new Date(txn.createdAt).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0];
           
-          const transaction: Transaction = {
-            id: `ghl-inv-${invoice.id}-${Date.now()}`,
-            date: invoiceDate,
+          const matTransaction: Transaction = {
+            id: `ghl-txn-${txn.id}-${Date.now()}`,
+            date: transactionDate,
             clientName: fullName,
             product: categorizedProduct,
-            amount: invoiceAmount,
+            amount: transactionAmount,
             isRecurring: false,
             userId: loggedInUser.id,
           };
           
-          console.log(`💵 Invoice #${invoice.id}: "${productName}" → ${categorizedProduct} ($${invoiceAmount})`);
+          console.log(`💵 Transaction #${txn.id}: "${productName}" → ${categorizedProduct} ($${transactionAmount})`);
           
-          await onSaveTransaction(transaction);
-          totalTransactions++;
+          await onSaveTransaction(matTransaction);
+          totalTransactionsImported++;
         }
         
-        console.log(`✅ Imported ${fullName} with ${invoices.length} paid invoice(s)`);
+        console.log(`✅ Imported ${fullName} with ${transactions.length} transaction(s)`);
         
         if (imported % 10 === 0) {
-          setImportProgress(`Imported ${imported} of ${invoicesByContact.size} paying customers...`);
+          setImportProgress(`Imported ${imported} of ${transactionsByContact.size} paying customers...`);
         }
       }
 
-      setImportSuccess(`✅ Successfully imported ${imported} paying customers with ${totalTransactions} transactions from GoHighLevel!`);
-      console.log(`📊 Import Summary: ${imported} customers imported, ${totalTransactions} transactions created`);
+      setImportSuccess(`✅ Successfully imported ${imported} paying customers with ${totalTransactionsImported} transactions from GoHighLevel!`);
+      console.log(`📊 Import Summary: ${imported} customers imported, ${totalTransactionsImported} transactions created`);
       setTimeout(() => setImportSuccess(null), 10000);
     } catch (error: any) {
       console.error('GHL Import Error:', error);
