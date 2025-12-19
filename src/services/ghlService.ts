@@ -286,6 +286,29 @@ class GHLService {
   }
 
   /**
+   * Get all opportunities for a contact
+   */
+  async getContactOpportunities(contactId: string): Promise<{ opportunities: GHLOpportunity[] }> {
+    return this.makeRequest<{ opportunities: GHLOpportunity[] }>(
+      `/contacts/${contactId}/opportunities`
+    );
+  }
+
+  /**
+   * Search opportunities by location
+   */
+  async searchOpportunities(pipelineId?: string, status?: string): Promise<{ opportunities: GHLOpportunity[] }> {
+    let endpoint = `/opportunities/search?locationId=${this.locationId}`;
+    if (pipelineId) {
+      endpoint += `&pipelineId=${pipelineId}`;
+    }
+    if (status) {
+      endpoint += `&status=${status}`;
+    }
+    return this.makeRequest<{ opportunities: GHLOpportunity[] }>(endpoint);
+  }
+
+  /**
    * WEBHOOKS
    */
 

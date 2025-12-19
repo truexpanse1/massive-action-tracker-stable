@@ -11,6 +11,7 @@ import { createGHLService } from '../src/services/ghlService';
 interface NewClientsPageProps {
   newClients: NewClient[];
   onSaveClient: (client: NewClient) => Promise<void>;
+  onSaveTransaction?: (transaction: Transaction) => Promise<void>;
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   loggedInUser: User;
@@ -68,6 +69,7 @@ const ClientCard: React.FC<ClientCardProps> = ({
 const NewClientsPage: React.FC<NewClientsPageProps> = ({
   newClients,
   onSaveClient,
+  onSaveTransaction,
   selectedDate,
   onDateChange,
   loggedInUser,
@@ -280,6 +282,34 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
         
         if (imported % 10 === 0) {
           setImportProgress(`Imported ${imported} of ${ghlContacts.length} contacts...`);
+        }
+
+        // Import opportunities (deals) for this contact
+        if (onSaveTransaction && ghlContact.id) {
+          try {
+            const oppResult = await ghlService.getContactOpportunities(ghlContact.id);
+            const opportunities = oppResult.opportunities || [];
+            
+            // Only import WON opportunities as transactions
+            const wonOpps = opportunities.filter(opp => opp.status === 'won');
+            
+            for (const opp of wonOpps) {
+              const transaction: Transaction = {
+                id: `ghl-opp-${opp.id}-${Date.now()}`,
+                date: new Date().toISOString().split('T')[0], // Use today's date or opp close date if available
+                clientName: fullName,
+                product: opp.name || 'Deal',
+                amount: opp.monetaryValue || 0,
+                isRecurring: false,
+                userId: loggedInUser.id,
+              };
+              
+              await onSaveTransaction(transaction);
+            }
+          } catch (oppError) {
+            console.log('⚠️ Could not fetch opportunities for contact:', ghlContact.id, oppError);
+            // Don't fail the whole import if opportunities fail
+          }
         }
       }
 

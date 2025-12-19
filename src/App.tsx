@@ -934,6 +934,7 @@ const App: React.FC = () => {
           <NewClientsPage
             newClients={newClients}
             onSaveClient={handleSaveNewClient}
+            onSaveTransaction={handleSaveTransaction}
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             loggedInUser={user}
