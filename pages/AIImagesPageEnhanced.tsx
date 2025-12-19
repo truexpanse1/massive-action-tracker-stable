@@ -12,8 +12,8 @@ import { supabase } from '../src/services/supabaseClient';
 import { createGHLService } from '../src/services/ghlService';
 
 interface AIImagesPageEnhancedProps {
-  companyId: string;
-  userId: string;
+  companyId?: string;
+  userId?: string;
 }
 
 const AIImagesPageEnhanced: React.FC<AIImagesPageEnhancedProps> = ({ companyId, userId }) => {
@@ -143,6 +143,11 @@ const AIImagesPageEnhanced: React.FC<AIImagesPageEnhancedProps> = ({ companyId, 
   };
 
   const handleSaveToGHL = async (imageUrl: string, filename: string) => {
+    if (!companyId) {
+      setGhlSaveError('Company ID not available. Please refresh the page.');
+      return;
+    }
+
     setIsSavingToGHL(true);
     setGhlSaveSuccess(null);
     setGhlSaveError(null);
