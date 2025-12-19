@@ -365,18 +365,15 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
             ? new Date(txn.createdAt).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0];
           
-          // Generate unique ID (GHL transaction ID might be undefined)
-          const uniqueId = txn.id || `${contactId}-${txn.createdAt || Date.now()}`;
-          
+          // Don't pass ID - let database auto-generate integer ID
           const matTransaction: Transaction = {
-            id: `ghl-txn-${uniqueId}-${Date.now()}`,
             date: transactionDate,
             clientName: fullName,
             product: categorizedProduct,
             amount: transactionAmount,
             isRecurring: false,
             userId: loggedInUser.id,
-          };
+          } as Transaction;
           
           console.log(`💵 Transaction #${txn.id}: "${productName}" → ${categorizedProduct} ($${transactionAmount})`);
           
