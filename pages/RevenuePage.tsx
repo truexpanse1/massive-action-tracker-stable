@@ -242,23 +242,35 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
           
           // Try to fetch invoice details to get actual product name
           let productName = 'Payment';
+          console.log(`🔍 Transaction ${txn.id}: entityType=${txn.entityType}, entityId=${txn.entityId}`);
+          
           if (txn.entityType === 'invoice' && txn.entityId) {
             try {
+              console.log(`📥 Fetching invoice ${txn.entityId}...`);
               const invoiceResponse = await ghlService.getInvoice(txn.entityId);
+              console.log(`📄 Invoice response:`, JSON.stringify(invoiceResponse, null, 2));
               const invoice = invoiceResponse.invoice;
               
               // Extract first line item name
-              if (invoice.items && invoice.items.length > 0 && invoice.items[0].name) {
-                productName = invoice.items[0].name;
-                console.log(`📝 Invoice ${txn.entityId}: "${productName}"`);
+              if (invoice.items && invoice.items.length > 0) {
+                console.log(`📦 Invoice items:`, JSON.stringify(invoice.items, null, 2));
+                if (invoice.items[0].name) {
+                  productName = invoice.items[0].name;
+                  console.log(`✅ Product name from invoice: "${productName}"`);
+                } else {
+                  console.warn(`⚠️ Invoice item has no name field`);
+                  productName = txn.entitySourceName || 'Payment';
+                }
               } else {
+                console.warn(`⚠️ Invoice has no items: ${JSON.stringify(invoice)}`);
                 productName = txn.entitySourceName || 'Payment';
               }
             } catch (error) {
-              console.warn(`⚠️ Could not fetch invoice ${txn.entityId}:`, error);
+              console.error(`❌ Failed to fetch invoice ${txn.entityId}:`, error);
               productName = txn.entitySourceName || 'Payment';
             }
           } else {
+            console.log(`ℹ️ Not an invoice transaction, using entitySourceName: ${txn.entitySourceName}`);
             productName = txn.entitySourceName || txn.name || txn.description || 'Payment';
           }
           let transactionAmount = txn.amount_received 
