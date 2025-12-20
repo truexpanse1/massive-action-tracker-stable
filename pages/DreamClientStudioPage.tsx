@@ -5,6 +5,7 @@ import { User } from '../src/types';
 import { BuyerAvatar } from '../src/marketingTypes';
 import AvatarBuilderModal from '../components/AvatarBuilderModal';
 import ContentGeneratorModal from '../components/ContentGeneratorModal';
+import SavedContentList from '../components/SavedContentList';
 
 interface DreamClientStudioPageProps {
   user: User;
@@ -224,6 +225,9 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user }) => {
           Edit
         </button>
       </div>
+
+      {/* Saved Content List */}
+      <SavedContentList avatarId={avatar.id} />
 
       {/* Content Generator Modal */}
       {showContentGenerator && (
