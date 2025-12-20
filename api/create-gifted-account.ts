@@ -128,16 +128,18 @@ export const handler: Handler = async (event) => {
 
     console.log(`Company created with ID: ${companyData.id}`);
 
-    // Create the user record
+    // Create or update the user record (upsert in case trigger already created it)
     const { error: userError } = await supabaseAdmin
       .from('users')
-      .insert({
+      .upsert({
         id: newUserId,
         email,
         name,
         role: 'Admin', // Gifted account owner is admin of their own company
         company_id: companyData.id,
         status: 'active',
+      }, {
+        onConflict: 'id'
       });
 
     if (userError) {
