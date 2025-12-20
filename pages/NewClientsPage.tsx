@@ -89,6 +89,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [isAutoGenerating, setIsAutoGenerating] = useState(false);
 
   const userColors = [
     '#2F81F7',
@@ -429,6 +430,112 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
     }
   };
 
+  const handleAutoGenerateClients = async () => {
+    if (!transactions || transactions.length === 0) {
+      setImportError('No transactions found to generate clients from.');
+      return;
+    }
+
+    setIsAutoGenerating(true);
+    setImportProgress('Analyzing transactions...');
+    setImportError(null);
+    setImportSuccess(null);
+
+    try {
+      // Group transactions by client name
+      const clientMap = new Map<string, Transaction[]>();
+      
+      for (const txn of transactions) {
+        const clientName = txn.clientName?.trim();
+        if (!clientName) continue;
+        
+        if (!clientMap.has(clientName)) {
+          clientMap.set(clientName, []);
+        }
+        clientMap.get(clientName)!.push(txn);
+      }
+
+      setImportProgress(`Found ${clientMap.size} unique clients. Creating client cards...`);
+
+      // Check which clients already exist
+      const existingClientNames = new Set(
+        newClients.map(c => c.name?.toLowerCase()).filter(Boolean)
+      );
+      const existingCompanyNames = new Set(
+        newClients.map(c => c.company?.toLowerCase()).filter(Boolean)
+      );
+
+      let createdCount = 0;
+      let skippedCount = 0;
+
+      // Create client cards for each unique client
+      for (const [clientName, clientTransactions] of clientMap.entries()) {
+        const lowerClientName = clientName.toLowerCase();
+        
+        // Skip if client already exists (by name or company)
+        if (existingClientNames.has(lowerClientName) || existingCompanyNames.has(lowerClientName)) {
+          skippedCount++;
+          continue;
+        }
+
+        // Calculate financial metrics
+        const totalRevenue = clientTransactions.reduce((sum, t) => sum + t.amount, 0);
+        const recurringTransactions = clientTransactions.filter(t => t.isRecurring);
+        const oneTimeTransactions = clientTransactions.filter(t => !t.isRecurring);
+        
+        const recurringRevenue = recurringTransactions.reduce((sum, t) => sum + t.amount, 0);
+        const oneTimeRevenue = oneTimeTransactions.reduce((sum, t) => sum + t.amount, 0);
+        
+        // Get the earliest transaction date as close date
+        const sortedDates = clientTransactions
+          .map(t => new Date(t.date))
+          .sort((a, b) => a.getTime() - b.getTime());
+        const closeDate = sortedDates[0]?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
+
+        // Create the client card
+        const newClient: NewClient = {
+          id: `auto-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: clientName,
+          company: clientName, // Use same name for company initially
+          phone: '',
+          email: '',
+          address: '',
+          city: '',
+          state: '',
+          zip: '',
+          salesProcessLength: '',
+          monthlyContractValue: recurringRevenue,
+          initialAmountCollected: oneTimeRevenue,
+          closeDate: closeDate,
+          stage: 'Closed',
+          userId: loggedInUser.id,
+          companyId: companyId,
+          assigned_to: loggedInUser.id,
+        };
+
+        // Save to database
+        await onSaveClient(newClient);
+        createdCount++;
+        
+        setImportProgress(`Created ${createdCount} of ${clientMap.size - skippedCount} clients...`);
+      }
+
+      setImportSuccess(`✅ Successfully created ${createdCount} client cards! ${skippedCount > 0 ? `(${skippedCount} already existed)` : ''}`);
+      
+      // Reload page to refresh the list
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('Auto-generate Error:', error);
+      setImportError(error.message || 'Failed to generate clients');
+    } finally {
+      setIsAutoGenerating(false);
+      setImportProgress('');
+    }
+  };
+
   const handleDeleteAllClients = async () => {
     if (!window.confirm('⚠️ Are you sure you want to DELETE ALL CLIENTS? This cannot be undone!')) {
       return;
@@ -495,13 +602,23 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
                   </button>
                 )}
                 {(loggedInUser.role === 'Admin' || loggedInUser.role === 'admin') && (
-                  <button
-                    onClick={handleImportFromGHL}
-                    disabled={isImportingFromGHL}
-                    className="bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isImportingFromGHL ? '⏳ Importing...' : '📥 Import from GHL'}
-                  </button>
+                  <>
+                    <button
+                      onClick={handleImportFromGHL}
+                      disabled={isImportingFromGHL}
+                      className="bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isImportingFromGHL ? '⏳ Importing...' : '📥 Import from GHL'}
+                    </button>
+                    <button
+                      onClick={handleAutoGenerateClients}
+                      disabled={isAutoGenerating || !transactions || transactions.length === 0}
+                      className="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Automatically create client cards from existing transactions"
+                    >
+                      {isAutoGenerating ? '⏳ Generating...' : '✨ Auto-Generate from Transactions'}
+                    </button>
+                  </>
                 )}
                 <ClientCSVImporter onImport={handleCSVImport} />
                 <button
