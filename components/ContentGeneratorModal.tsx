@@ -32,7 +32,8 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
     cta: string;
     imagePrompt: string;
   } | null>(null);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   const frameworks = {
     PAS: {
@@ -118,7 +119,8 @@ Return ONLY a JSON object with this exact structure:
       const jsonString = response.text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
       const content = JSON.parse(jsonString);
       setGeneratedContent(content);
-      setGeneratedImageUrl(null); // Reset image when generating new content
+      setGeneratedImages([]); // Reset images when generating new content
+      setSelectedImageIndex(null);
     } catch (error) {
       console.error('Error generating content:', error);
       alert('Failed to generate content. Please try again.');
@@ -132,11 +134,14 @@ Return ONLY a JSON object with this exact structure:
     
     setIsGeneratingImage(true);
     try {
-      const imageUrl = await generateImage(generatedContent.imagePrompt, '16:9');
-      setGeneratedImageUrl(imageUrl);
+      // Generate 3 image variations
+      const imagePromises = [1, 2, 3].map(() => generateImage(generatedContent.imagePrompt, '16:9'));
+      const images = await Promise.all(imagePromises);
+      setGeneratedImages(images);
+      setSelectedImageIndex(null); // Reset selection
     } catch (error) {
-      console.error('Error generating image:', error);
-      alert('Failed to generate image. Please try again.');
+      console.error('Error generating images:', error);
+      alert('Failed to generate images. Please try again.');
     } finally {
       setIsGeneratingImage(false);
     }
@@ -158,7 +163,7 @@ Return ONLY a JSON object with this exact structure:
         body_copy: generatedContent.body,
         call_to_action: generatedContent.cta,
         image_prompt: generatedContent.imagePrompt,
-        image_url: generatedImageUrl,
+        image_url: selectedImageIndex !== null ? generatedImages[selectedImageIndex] : null,
         hook_type: framework,
         campaign_objective: finalObjective,
         used: false,
@@ -369,26 +374,61 @@ Return ONLY a JSON object with this exact structure:
                     </div>
                   </div>
 
-                  {/* Image */}
-                  {generatedImageUrl ? (
-                    <img src={generatedImageUrl} alt="Generated" className="w-full border-y border-gray-200 dark:border-gray-700" />
-                  ) : (
-                    <div className="bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 p-8 text-center border-y border-gray-200 dark:border-gray-700">
-                      <svg className="w-16 h-16 mx-auto text-purple-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                        {generatedContent.imagePrompt}
-                      </p>
-                      <button
-                        onClick={handleGenerateImage}
-                        disabled={isGeneratingImage}
-                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50"
-                      >
-                        {isGeneratingImage ? 'Generating...' : 'Generate Image'}
-                      </button>
-                    </div>
-                  )}
+            {/* Image */}
+            {selectedImageIndex !== null && generatedImages[selectedImageIndex] ? (
+              <img src={generatedImages[selectedImageIndex]} alt="Selected" className="w-full border-y border-gray-200 dark:border-gray-700" />
+            ) : generatedImages.length > 0 ? (
+              <div className="border-y border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
+                <p className="text-sm font-semibold text-brand-light-text dark:text-white mb-3 text-center">
+                  Choose your favorite image:
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {generatedImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImageIndex(idx)}
+                      className={`relative rounded-lg overflow-hidden border-2 transition ${
+                        selectedImageIndex === idx
+                          ? 'border-purple-600 ring-2 ring-purple-600'
+                          : 'border-gray-300 dark:border-gray-600 hover:border-purple-400'
+                      }`}
+                    >
+                      <img src={img} alt={`Option ${idx + 1}`} className="w-full h-auto" />
+                      {selectedImageIndex === idx && (
+                        <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={handleGenerateImage}
+                  disabled={isGeneratingImage}
+                  className="w-full mt-3 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white rounded-lg text-sm font-semibold transition"
+                >
+                  🔄 Generate 3 New Options
+                </button>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 p-8 text-center border-y border-gray-200 dark:border-gray-700">
+                <svg className="w-16 h-16 mx-auto text-purple-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                  {generatedContent.imagePrompt}
+                </p>
+                <button
+                  onClick={handleGenerateImage}
+                  disabled={isGeneratingImage}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50"
+                >
+                  {isGeneratingImage ? 'Generating 3 Options...' : '✨ Generate 3 Image Options'}
+                </button>
+              </div>
+            )}
 
                   <div className="p-4">
                     <button className="w-full bg-purple-600 text-white font-bold py-2 px-4 rounded-lg">

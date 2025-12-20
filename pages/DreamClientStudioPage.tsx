@@ -6,6 +6,7 @@ import { BuyerAvatar } from '../src/marketingTypes';
 import AvatarBuilderModal from '../components/AvatarBuilderModal';
 import ContentGeneratorModal from '../components/ContentGeneratorModal';
 import SavedContentList from '../components/SavedContentList';
+import AvatarViewModal from '../components/AvatarViewModal';
 
 interface DreamClientStudioPageProps {
   user: User;
@@ -137,8 +138,10 @@ interface AvatarCardProps {
   user: User;
 }
 
-const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user }) => {
+const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user, onRefresh }) => {
   const [showContentGenerator, setShowContentGenerator] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   return (
     <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 hover:shadow-lg transition-all duration-200 hover:border-purple-500">
       {/* Avatar Header */}
@@ -218,16 +221,41 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user }) => {
         >
           Generate Content
         </button>
-        <button className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
+        <button 
+          onClick={() => setShowViewModal(true)}
+          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+        >
           View Full
         </button>
-        <button className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
+        <button 
+          onClick={() => setShowEditModal(true)}
+          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+        >
           Edit
         </button>
       </div>
 
       {/* Saved Content List */}
       <SavedContentList avatarId={avatar.id} />
+
+      {/* View Full Modal */}
+      <AvatarViewModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        avatar={avatar}
+      />
+
+      {/* Edit Modal */}
+      <AvatarBuilderModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={() => {
+          setShowEditModal(false);
+          onRefresh();
+        }}
+        user={user}
+        existingAvatar={avatar}
+      />
 
       {/* Content Generator Modal */}
       {showContentGenerator && (

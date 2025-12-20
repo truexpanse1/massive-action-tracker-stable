@@ -2,19 +2,20 @@
 import React, { useState } from 'react';
 import { supabase } from '../src/services/supabaseClient';
 import { User } from '../src/types';
-import { AvatarFormData } from '../src/marketingTypes';
+import { AvatarFormData, BuyerAvatar } from '../src/marketingTypes';
 
 interface AvatarBuilderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   user: User;
+  existingAvatar?: BuyerAvatar;
 }
 
-const AvatarBuilderModal: React.FC<AvatarBuilderModalProps> = ({ isOpen, onClose, onSuccess, user }) => {
+const AvatarBuilderModal: React.FC<AvatarBuilderModalProps> = ({ isOpen, onClose, onSuccess, user, existingAvatar }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Partial<AvatarFormData>>({
+  const [formData, setFormData] = useState<Partial<AvatarFormData>>(existingAvatar || {
     avatar_name: '',
     industry: '',
     age_range: '',
@@ -93,9 +94,21 @@ const AvatarBuilderModal: React.FC<AvatarBuilderModalProps> = ({ isOpen, onClose
         is_active: true,
       };
 
-      const { error } = await supabase
-        .from('buyer_avatars')
-        .insert([avatarData]);
+      let error;
+      if (existingAvatar) {
+        // Update existing avatar
+        const { error: updateError } = await supabase
+          .from('buyer_avatars')
+          .update(avatarData)
+          .eq('id', existingAvatar.id);
+        error = updateError;
+      } else {
+        // Create new avatar
+        const { error: insertError } = await supabase
+          .from('buyer_avatars')
+          .insert([avatarData]);
+        error = insertError;
+      }
 
       if (error) throw error;
 
