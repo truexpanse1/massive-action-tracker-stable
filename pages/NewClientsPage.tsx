@@ -509,11 +509,21 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           monthlyContractValue = mostCommon ? mostCommon[0] : 0;
         }
 
+        // Smart company name detection
+        const companyKeywords = ['llc', 'inc', 'corp', 'company', 'co.', 'ltd', 'limited', 
+          'construction', 'painting', 'services', 'consulting', 'group', 'enterprises',
+          'solutions', 'partners', 'associates', 'industries', 'contractors', 'builders',
+          'roofing', 'plumbing', 'electrical', 'landscaping', 'design', 'remodeling',
+          'restoration', 'cleaning', 'maintenance', 'repair', 'hvac', 'flooring'];
+        
+        const lowerName = clientName.toLowerCase();
+        const isCompany = companyKeywords.some(keyword => lowerName.includes(keyword));
+        
         // Create the client card with temporary ID (database will replace it)
         const newClient: NewClient = {
           id: undefined as any, // Let database generate ID
           name: clientName,
-          company: clientName, // Use same name for company initially
+          company: isCompany ? clientName : '', // Set company only if it looks like a business
           phone: '',
           email: '',
           address: '',
