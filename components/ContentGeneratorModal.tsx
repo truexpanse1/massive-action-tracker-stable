@@ -51,49 +51,24 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      // Call OpenAI to generate content
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Call Netlify function to generate content
+      const response = await fetch('/api/generate-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4',
-          messages: [
-            {
-              role: 'system',
-              content: `You are an expert copywriter specializing in high-converting ${platform} ads using the ${frameworks[framework].name} framework. You write compelling, benefit-driven copy that speaks directly to the target audience's desires and pain points.`,
-            },
-            {
-              role: 'user',
-              content: `Create a ${platform} ad for a ${avatar.industry || 'business'} targeting this avatar:
-
-Avatar: ${avatar.avatar_name}
-Demographics: ${avatar.age_range || 'N/A'} | ${avatar.gender || 'N/A'} | ${avatar.income_range || 'N/A'}
-Goals: ${(avatar.goals || []).slice(0, 3).join(', ')}
-Fears: ${(avatar.fears || []).slice(0, 3).join(', ')}
-Pain Points: ${(avatar.pain_points || []).slice(0, 3).join(', ')}
-Buying Triggers: ${(avatar.buying_triggers || []).slice(0, 3).join(', ')}
-
-Framework: ${frameworks[framework].name}
-
-Return ONLY a JSON object with this exact structure:
-{
-  "headline": "Attention-grabbing headline (max 60 characters)",
-  "body": "Main ad copy (3-5 paragraphs, use line breaks)",
-  "cta": "Clear call-to-action (max 30 characters)",
-  "imagePrompt": "Detailed prompt for AI image generation showing the transformation or result"
-}`,
-            },
-          ],
-          temperature: 0.8,
-          max_tokens: 1000,
+          avatar,
+          platform,
+          framework,
         }),
       });
 
-      const data = await response.json();
-      const content = JSON.parse(data.choices[0].message.content);
+      if (!response.ok) {
+        throw new Error('Failed to generate content');
+      }
+
+      const content = await response.json();
       setGeneratedContent(content);
     } catch (error) {
       console.error('Error generating content:', error);
