@@ -491,7 +491,7 @@ const App: React.FC = () => {
     if (clientData.ghl_contact_id) {
       payload.ghl_contact_id = clientData.ghl_contact_id;
     }
-    if (String(clientData.id).startsWith('manual-') || String(clientData.id).startsWith('ghl-')) {
+    if (!clientData.id || String(clientData.id).startsWith('manual-') || String(clientData.id).startsWith('ghl-') || String(clientData.id).startsWith('auto-')) {
       const { data, error } = await supabase
         .from('clients')
         .insert(payload)
