@@ -36,6 +36,7 @@ import PerformanceDashboardPage from '../pages/PerformanceDashboardPage';
 import EODReportPage from '../pages/EODReportPage';
 import AccountSettingsPage from '../pages/AccountSettingsPage';
 import GHLIntegrationPage from '../pages/GHLIntegrationPage';
+import DreamClientStudioPage from '../pages/DreamClientStudioPage';
 
 // Components
 import ChatIcon from '../components/ChatIcon';
@@ -1012,6 +1013,8 @@ const App: React.FC = () => {
             userRole={user.role}
           />
         );
+      case 'dream-avatars':
+        return <DreamClientStudioPage user={user} />;
       default:
         return <div>View not found</div>;
     }
