@@ -4,6 +4,7 @@ import { supabase } from '../src/services/supabaseClient';
 import { User } from '../src/types';
 import { BuyerAvatar } from '../src/marketingTypes';
 import AvatarBuilderModal from '../components/AvatarBuilderModal';
+import ContentGeneratorModal from '../components/ContentGeneratorModal';
 
 interface DreamClientStudioPageProps {
   user: User;
@@ -111,7 +112,7 @@ const DreamClientStudioPage: React.FC<DreamClientStudioPageProps> = ({ user }) =
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {avatars.map((avatar) => (
-              <AvatarCard key={avatar.id} avatar={avatar} onRefresh={fetchAvatars} />
+              <AvatarCard key={avatar.id} avatar={avatar} onRefresh={fetchAvatars} user={user} />
             ))}
           </div>
         </div>
@@ -132,9 +133,11 @@ const DreamClientStudioPage: React.FC<DreamClientStudioPageProps> = ({ user }) =
 interface AvatarCardProps {
   avatar: BuyerAvatar;
   onRefresh: () => void;
+  user: User;
 }
 
-const AvatarCard: React.FC<AvatarCardProps> = ({ avatar }) => {
+const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user }) => {
+  const [showContentGenerator, setShowContentGenerator] = useState(false);
   return (
     <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 hover:shadow-lg transition-all duration-200 hover:border-purple-500">
       {/* Avatar Header */}
@@ -208,7 +211,10 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar }) => {
 
       {/* Action Buttons */}
       <div className="flex gap-2">
-        <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
+        <button 
+          onClick={() => setShowContentGenerator(true)}
+          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+        >
           Generate Content
         </button>
         <button className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
@@ -218,6 +224,16 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar }) => {
           Edit
         </button>
       </div>
+
+      {/* Content Generator Modal */}
+      {showContentGenerator && (
+        <ContentGeneratorModal
+          isOpen={showContentGenerator}
+          onClose={() => setShowContentGenerator(false)}
+          avatar={avatar}
+          user={user}
+        />
+      )}
     </div>
   );
 };
