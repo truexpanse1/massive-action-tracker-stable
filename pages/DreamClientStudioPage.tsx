@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/services/supabaseClient';
 import { User } from '../src/types';
 import { BuyerAvatar } from '../src/marketingTypes';
+import AvatarBuilderModal from '../components/AvatarBuilderModal';
 
 interface DreamClientStudioPageProps {
   user: User;
@@ -116,25 +117,13 @@ const DreamClientStudioPage: React.FC<DreamClientStudioPageProps> = ({ user }) =
         </div>
       )}
 
-      {/* Create Avatar Modal - Will be implemented in next phase */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-8 max-w-md w-full">
-            <h3 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
-              Avatar Builder Coming Soon!
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              The multi-step avatar creation wizard is being built right now. Check back in a few minutes!
-            </p>
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Create Avatar Modal */}
+      <AvatarBuilderModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={fetchAvatars}
+        user={user}
+      />
     </div>
   );
 };
