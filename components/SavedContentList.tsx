@@ -101,7 +101,11 @@ const SavedContentList: React.FC<SavedContentListProps> = ({ avatarId }) => {
         {content.map((item) => (
           <div
             key={item.id}
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:border-purple-400 dark:hover:border-purple-600 transition"
+            className={`border rounded-lg p-3 transition ${
+              item.used
+                ? 'bg-purple-50 dark:bg-purple-900/10 border-purple-300 dark:border-purple-700/50'
+                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-600'
+            }`}
           >
             <div className="flex items-center gap-3">
               {/* Platform Icon */}
@@ -111,9 +115,16 @@ const SavedContentList: React.FC<SavedContentListProps> = ({ avatarId }) => {
 
               {/* Headline */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-brand-light-text dark:text-white truncate">
-                  {item.headline}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-brand-light-text dark:text-white truncate">
+                    {item.headline}
+                  </p>
+                  {item.used && (
+                    <span className="flex-shrink-0 px-2 py-0.5 bg-purple-600 text-white text-xs font-semibold rounded-full">
+                      Posted ✓
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {new Date(item.created_at).toLocaleDateString()}
                   {item.campaign_objective && ` • ${item.campaign_objective}`}
@@ -140,7 +151,11 @@ const SavedContentList: React.FC<SavedContentListProps> = ({ avatarId }) => {
               <div className="flex-shrink-0">
                 <button
                   onClick={() => handleOpenContent(item)}
-                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded transition"
+                  className={`px-3 py-1 text-xs font-semibold rounded transition ${
+                    item.used
+                      ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                      : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  }`}
                 >
                   Open
                 </button>
