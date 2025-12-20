@@ -69,10 +69,15 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose, onSave
         onSave(formData as NewClient);
     };
 
-    // Filter transactions for this client (match by company name)
-    const clientTransactions = transactions.filter(
-        t => t.clientName.toLowerCase() === formData.company?.toLowerCase()
-    );
+    // Filter transactions for this client (match by client name OR company name)
+    const clientTransactions = transactions.filter(t => {
+        const txnClientName = t.clientName?.toLowerCase() || '';
+        const clientName = formData.name?.toLowerCase() || '';
+        const companyName = formData.company?.toLowerCase() || '';
+        
+        // Match if transaction clientName matches either the client's name or company
+        return txnClientName === clientName || txnClientName === companyName;
+    });
 
     // Calculate totals
     const totalCollected = clientTransactions.reduce((sum, t) => sum + t.amount, 0);
