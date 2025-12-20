@@ -187,31 +187,62 @@ const App: React.FC = () => {
         });
         setAllData(dataMap);
 
-        const { data: transactionData, error: transactionError } =
-          await supabase
-            .from('transactions')
-            .select('*')
-            .eq('userId', user.id)
-            .order('date', { ascending: false });
+        // Fetch transactions based on role
+        let transactionsQuery = supabase
+          .from('transactions')
+          .select('*');
+        
+        // Sales reps only see their assigned transactions
+        if (user.role !== 'Admin' && user.role !== 'admin') {
+          transactionsQuery = transactionsQuery.eq('assigned_to', user.id);
+        }
+        // Admins see all transactions in their company
+        else {
+          transactionsQuery = transactionsQuery.eq('company_id', user.company_id);
+        }
+        
+        const { data: transactionData, error: transactionError } = await transactionsQuery
+          .order('date', { ascending: false });
 
         if (transactionError) throw transactionError;
         setTransactions(transactionData as Transaction[]);
 
-        const { data: hotLeadsData, error: hotLeadsError } = await supabase
+        // Fetch hot leads based on role
+        let hotLeadsQuery = supabase
           .from('hot_leads')
-          .select('*')
-          .eq('userId', user.id)
+          .select('*');
+        
+        // Sales reps only see their assigned hot leads
+        if (user.role !== 'Admin' && user.role !== 'admin') {
+          hotLeadsQuery = hotLeadsQuery.eq('assigned_to', user.id);
+        }
+        // Admins see all hot leads in their company
+        else {
+          hotLeadsQuery = hotLeadsQuery.eq('company_id', user.company_id);
+        }
+        
+        const { data: hotLeadsData, error: hotLeadsError } = await hotLeadsQuery
           .order('created_at', { ascending: false });
 
         if (hotLeadsError) throw hotLeadsError;
         setHotLeads(hotLeadsData as Contact[]);
 
-        const { data: newClientsData, error: newClientsError } =
-          await supabase
-            .from('new_clients')
-            .select('*')
-            .eq('userId', user.id)
-            .order('closeDate', { ascending: false });
+        // Fetch clients based on role
+        let clientsQuery = supabase
+          .from('new_clients')
+          .select('*');
+        
+        // Sales reps only see their assigned clients
+        if (user.role !== 'Admin' && user.role !== 'admin') {
+          clientsQuery = clientsQuery.eq('assigned_to', user.id);
+        }
+        // Admins see all clients in their company
+        else {
+          clientsQuery = clientsQuery.eq('company_id', user.company_id);
+        }
+        
+        const { data: newClientsData, error: newClientsError } = await clientsQuery
+          .order('close_date', { ascending: false });
 
         if (newClientsError) throw newClientsError;
         setNewClients(newClientsData as NewClient[]);

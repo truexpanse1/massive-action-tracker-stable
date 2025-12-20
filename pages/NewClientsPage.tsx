@@ -158,7 +158,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
   const handleSaveClient = async (clientData: NewClient) => {
     console.log('📦 NewClientsPage handleSaveClient called with:', clientData);
     const payload: NewClient = String(clientData.id).startsWith('manual-')
-      ? { ...clientData, userId: loggedInUser.id }
+      ? { ...clientData, userId: loggedInUser.id, assignedTo: loggedInUser.id }
       : clientData;
 
     console.log('📦 Calling onSaveClient with payload:', payload);
@@ -363,6 +363,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
             : new Date().toISOString().split('T')[0];
 
           // Insert client into database
+          // Only admins can import from GHL, so assign to admin
           const { error: insertError } = await supabase
             .from('clients')
             .insert({
@@ -382,6 +383,7 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
               user_id: loggedInUser.id,
               company_id: companyId,
               ghl_contact_id: contact.id,
+              assigned_to: loggedInUser.id, // Assign to admin who imported
             });
 
           if (insertError) {
@@ -492,13 +494,15 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
                     {isDeletingAll ? '⏳ Deleting...' : '🗑️ Delete All'}
                   </button>
                 )}
-                <button
-                  onClick={handleImportFromGHL}
-                  disabled={isImportingFromGHL}
-                  className="bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isImportingFromGHL ? '⏳ Importing...' : '📥 Import from GHL'}
-                </button>
+                {(loggedInUser.role === 'Admin' || loggedInUser.role === 'admin') && (
+                  <button
+                    onClick={handleImportFromGHL}
+                    disabled={isImportingFromGHL}
+                    className="bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isImportingFromGHL ? '⏳ Importing...' : '📥 Import from GHL'}
+                  </button>
+                )}
                 <ClientCSVImporter onImport={handleCSVImport} />
                 <button
                   onClick={handleOpenModalForNew}

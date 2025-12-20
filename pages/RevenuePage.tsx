@@ -295,11 +295,35 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
         }
 
         console.log(`📦 Mapped product names for ${contactProductNames.size} contacts`);
+        
+        // Fetch all existing clients to match for auto-assignment
+        setImportProgress('Loading existing clients for assignment...');
+        const { data: existingClients, error: clientsError } = await supabase
+          .from('new_clients')
+          .select('name, assigned_to')
+          .eq('company_id', companyId);
+        
+        if (clientsError) {
+          console.error('Error loading clients:', clientsError);
+        }
+        
+        // Create a map for quick client lookup (case-insensitive)
+        const clientAssignmentMap = new Map<string, string>();
+        if (existingClients) {
+          existingClients.forEach(client => {
+            if (client.name && client.assigned_to) {
+              clientAssignmentMap.set(client.name.toLowerCase().trim(), client.assigned_to);
+            }
+          });
+        }
+        console.log(`📋 Loaded ${clientAssignmentMap.size} clients for auto-assignment`);
+        
         setImportProgress(`Importing ${allTransactions.length} transactions...`);
 
         // Import all transactions with the correct product names
         let totalTransactionsImported = 0;
         let duplicatesSkipped = 0;
+        let autoAssigned = 0;
 
         for (const txn of allTransactions) {
           const customerName = txn.contactName || txn.name || 'Unknown Customer';
@@ -335,8 +359,13 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             continue;
           }
           
+          // Auto-assign to client owner if client exists
+          const assignedTo = clientAssignmentMap.get(customerName.toLowerCase().trim()) || loggedInUser.id;
+          const wasAutoAssigned = clientAssignmentMap.has(customerName.toLowerCase().trim());
+          if (wasAutoAssigned) autoAssigned++;
+          
           // Insert transaction
-          console.log(`💵 ${customerName}: "${productName}" → ${categorizedProduct} ($${transactionAmount}) ${isRecurring ? '(RECURRING)' : '(ONE-TIME)'}`);
+          console.log(`💵 ${customerName}: "${productName}" → ${categorizedProduct} ($${transactionAmount}) ${isRecurring ? '(RECURRING)' : '(ONE-TIME)'} ${wasAutoAssigned ? '→ Auto-assigned' : ''}`);
           
           const { error: insertError } = await supabase
             .from('transactions')
@@ -348,6 +377,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
               is_recurring: isRecurring,
               user_id: loggedInUser.id,
               company_id: companyId,
+              assigned_to: assignedTo,
               ghl_transaction_id: txn.id,
             });
           
@@ -370,8 +400,8 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
           .eq('company_id', companyId);
         
         const summaryMessage = duplicatesSkipped > 0
-          ? `✅ Imported ${totalTransactionsImported} new transactions! (Skipped ${duplicatesSkipped} duplicates)`
-          : `✅ Successfully imported ${totalTransactionsImported} transactions!`;
+          ? `✅ Imported ${totalTransactionsImported} new transactions! (${autoAssigned} auto-assigned, ${duplicatesSkipped} duplicates skipped)`
+          : `✅ Successfully imported ${totalTransactionsImported} transactions! (${autoAssigned} auto-assigned to sales reps)`;
         
         setImportSuccess(summaryMessage);
         setTimeout(() => setImportSuccess(null), 10000);
@@ -534,13 +564,15 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
                 <h1 className="text-2xl font-bold text-brand-light-text dark:text-white">Revenue Center</h1>
                 <div className="flex items-center gap-3">
-                    <button 
-                        onClick={handleImportFromGHL}
-                        disabled={isImportingFromGHL}
-                        className="bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                    {(loggedInUser.role === 'Admin' || loggedInUser.role === 'admin') && (
+                      <button 
+                          onClick={handleImportFromGHL}
+                          disabled={isImportingFromGHL}
+                          className="bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isImportingFromGHL ? '⏳ Importing...' : '📥 Import from GHL'}
                     </button>
+                    )}
                     <div className="flex items-center bg-brand-light-bg dark:bg-brand-ink p-1 rounded-lg border border-brand-light-border dark:border-brand-gray">
                         <button onClick={() => setViewMode('daily')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'daily' ? 'bg-brand-blue text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand-light-text dark:hover:text-white'}`}>Daily Entry</button>
                         <button onClick={() => setViewMode('analysis')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'analysis' ? 'bg-brand-blue text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand-light-text dark:hover:text-white'}`}>Analysis</button>

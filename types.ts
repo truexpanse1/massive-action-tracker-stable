@@ -123,6 +123,7 @@ export interface NewClient {
     closeDate: string; // YYYY-MM-DD
     stage: string;
     userId?: string;
+    assignedTo?: string; // User ID of the sales rep who owns this client
 }
 
 //
