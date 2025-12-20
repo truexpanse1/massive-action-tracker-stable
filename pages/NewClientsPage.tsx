@@ -480,17 +480,34 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
 
         // Calculate financial metrics
         const totalRevenue = clientTransactions.reduce((sum, t) => sum + t.amount, 0);
+        
+        // Sort transactions by date to get the earliest one
+        const sortedTransactions = [...clientTransactions].sort((a, b) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        const closeDate = sortedTransactions[0]?.date || new Date().toISOString().split('T')[0];
+        const initialAmount = sortedTransactions[0]?.amount || 0;
+        
+        // Calculate MCV from recurring transactions
+        // Group recurring transactions by unique amount to identify the monthly recurring value
         const recurringTransactions = clientTransactions.filter(t => t.isRecurring);
-        const oneTimeTransactions = clientTransactions.filter(t => !t.isRecurring);
+        const recurringAmounts = new Set(recurringTransactions.map(t => t.amount));
         
-        const recurringRevenue = recurringTransactions.reduce((sum, t) => sum + t.amount, 0);
-        const oneTimeRevenue = oneTimeTransactions.reduce((sum, t) => sum + t.amount, 0);
-        
-        // Get the earliest transaction date as close date
-        const sortedDates = clientTransactions
-          .map(t => new Date(t.date))
-          .sort((a, b) => a.getTime() - b.getTime());
-        const closeDate = sortedDates[0]?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
+        // If there's a consistent recurring amount, use it; otherwise use average
+        let monthlyContractValue = 0;
+        if (recurringAmounts.size === 1) {
+          // Single recurring amount - this is the MCV
+          monthlyContractValue = Array.from(recurringAmounts)[0];
+        } else if (recurringAmounts.size > 1) {
+          // Multiple recurring amounts - use the most common one
+          const amountCounts = new Map<number, number>();
+          recurringTransactions.forEach(t => {
+            amountCounts.set(t.amount, (amountCounts.get(t.amount) || 0) + 1);
+          });
+          const mostCommon = Array.from(amountCounts.entries())
+            .sort((a, b) => b[1] - a[1])[0];
+          monthlyContractValue = mostCommon ? mostCommon[0] : 0;
+        }
 
         // Create the client card with temporary ID (database will replace it)
         const newClient: NewClient = {
@@ -504,8 +521,8 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           state: '',
           zip: '',
           salesProcessLength: '',
-          monthlyContractValue: recurringRevenue,
-          initialAmountCollected: oneTimeRevenue,
+          monthlyContractValue: monthlyContractValue,
+          initialAmountCollected: initialAmount,
           closeDate: closeDate,
           stage: 'Closed',
           userId: loggedInUser.id,
