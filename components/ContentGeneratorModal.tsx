@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { supabase } from '../src/services/supabaseClient';
 import { User } from '../src/types';
-import { BuyerAvatar, GeneratedContent } from '../src/marketingTypes';
+import { BuyerAvatar } from '../src/marketingTypes';
 import { GoogleGenAI, Type } from '@google/genai';
+import { generateImage } from '../services/geminiService';
 
 const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const ai = new GoogleGenAI({ apiKey: geminiApiKey });
@@ -21,13 +22,17 @@ type Framework = 'PAS' | 'BAB' | 'Dream' | 'SocialProof';
 const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, onClose, avatar, user }) => {
   const [platform, setPlatform] = useState<Platform>('Facebook');
   const [framework, setFramework] = useState<Framework>('PAS');
+  const [objective, setObjective] = useState('');
+  const [customObjective, setCustomObjective] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<{
     headline: string;
     body: string;
     cta: string;
     imagePrompt: string;
   } | null>(null);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
 
   const frameworks = {
     PAS: {
@@ -52,9 +57,21 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
     },
   };
 
+  const campaignObjectives = [
+    { value: 'leads', label: '📞 Generate Leads', icon: '📞' },
+    { value: 'sales', label: '💰 Drive Sales', icon: '💰' },
+    { value: 'awareness', label: '🎯 Build Awareness', icon: '🎯' },
+    { value: 'appointments', label: '📅 Book Appointments', icon: '📅' },
+    { value: 'offer', label: '🎁 Promote Offer', icon: '🎁' },
+    { value: 'engagement', label: '💬 Increase Engagement', icon: '💬' },
+    { value: 'custom', label: '✏️ Custom Objective', icon: '✏️' },
+  ];
+
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
+      const finalObjective = objective === 'custom' ? customObjective : campaignObjectives.find(o => o.value === objective)?.label || '';
+      
       // Build the prompt for Gemini
       const prompt = `You are an expert copywriter specializing in high-converting ${platform} ads using the ${frameworks[framework].name} framework.
 
@@ -67,6 +84,7 @@ Fears: ${(avatar.fears || []).slice(0, 3).join(', ')}
 Pain Points: ${(avatar.pain_points || []).slice(0, 3).join(', ')}
 Buying Triggers: ${(avatar.buying_triggers || []).slice(0, 3).join(', ')}
 
+Campaign Objective: ${finalObjective}
 Framework: ${frameworks[framework].name} - ${frameworks[framework].description}
 
 Return ONLY a JSON object with this exact structure:
@@ -100,6 +118,7 @@ Return ONLY a JSON object with this exact structure:
       const jsonString = response.text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
       const content = JSON.parse(jsonString);
       setGeneratedContent(content);
+      setGeneratedImageUrl(null); // Reset image when generating new content
     } catch (error) {
       console.error('Error generating content:', error);
       alert('Failed to generate content. Please try again.');
@@ -108,10 +127,27 @@ Return ONLY a JSON object with this exact structure:
     }
   };
 
+  const handleGenerateImage = async () => {
+    if (!generatedContent) return;
+    
+    setIsGeneratingImage(true);
+    try {
+      const imageUrl = await generateImage(generatedContent.imagePrompt, '16:9');
+      setGeneratedImageUrl(imageUrl);
+    } catch (error) {
+      console.error('Error generating image:', error);
+      alert('Failed to generate image. Please try again.');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!generatedContent) return;
 
     try {
+      const finalObjective = objective === 'custom' ? customObjective : campaignObjectives.find(o => o.value === objective)?.label || '';
+      
       const contentData = {
         company_id: user.company_id,
         assigned_to: user.id,
@@ -122,8 +158,11 @@ Return ONLY a JSON object with this exact structure:
         body_copy: generatedContent.body,
         call_to_action: generatedContent.cta,
         image_prompt: generatedContent.imagePrompt,
+        image_url: generatedImageUrl,
         hook_type: framework,
+        campaign_objective: finalObjective,
         used: false,
+        performance_rating: null,
         version: 1,
       };
 
@@ -148,11 +187,13 @@ Return ONLY a JSON object with this exact structure:
 
   if (!isOpen) return null;
 
+  const canGenerate = platform && framework && (objective !== 'custom' ? objective : customObjective.trim());
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray max-w-5xl w-full my-8">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray max-w-6xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="border-b border-brand-light-border dark:border-brand-gray p-6">
+        <div className="border-b border-brand-light-border dark:border-brand-gray p-6 flex-shrink-0">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold text-brand-light-text dark:text-white">
@@ -173,8 +214,8 @@ Return ONLY a JSON object with this exact structure:
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left: Configuration */}
             <div className="space-y-6">
@@ -230,9 +271,43 @@ Return ONLY a JSON object with this exact structure:
                 </div>
               </div>
 
+              <div>
+                <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-4">
+                  3. Campaign Objective
+                </h3>
+                <div className="space-y-2">
+                  {campaignObjectives.map((obj) => (
+                    <button
+                      key={obj.value}
+                      onClick={() => setObjective(obj.value)}
+                      className={`w-full text-left px-4 py-2 rounded-lg border-2 transition flex items-center gap-3 ${
+                        objective === obj.value
+                          ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-purple-400'
+                      }`}
+                    >
+                      <span className="text-xl">{obj.icon}</span>
+                      <span className="font-semibold">{obj.label.replace(/^[^\s]+ /, '')}</span>
+                    </button>
+                  ))}
+                </div>
+                
+                {objective === 'custom' && (
+                  <div className="mt-3">
+                    <input
+                      type="text"
+                      value={customObjective}
+                      onChange={(e) => setCustomObjective(e.target.value)}
+                      placeholder="Enter your custom objective..."
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-brand-light-text dark:text-white focus:ring-2 focus:ring-purple-600"
+                    />
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={handleGenerate}
-                disabled={isGenerating}
+                disabled={isGenerating || !canGenerate}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isGenerating ? (
@@ -263,7 +338,7 @@ Return ONLY a JSON object with this exact structure:
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                   </svg>
                   <p className="text-gray-500 dark:text-gray-400">
-                    Click "Generate Content" to see your ad preview
+                    Select platform, framework, and objective, then click "Generate Content"
                   </p>
                 </div>
               ) : (
@@ -294,15 +369,26 @@ Return ONLY a JSON object with this exact structure:
                     </div>
                   </div>
 
-                  {/* Image Placeholder */}
-                  <div className="bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 p-8 text-center border-y border-gray-200 dark:border-gray-700">
-                    <svg className="w-16 h-16 mx-auto text-purple-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {generatedContent.imagePrompt}
-                    </p>
-                  </div>
+                  {/* Image */}
+                  {generatedImageUrl ? (
+                    <img src={generatedImageUrl} alt="Generated" className="w-full border-y border-gray-200 dark:border-gray-700" />
+                  ) : (
+                    <div className="bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 p-8 text-center border-y border-gray-200 dark:border-gray-700">
+                      <svg className="w-16 h-16 mx-auto text-purple-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                        {generatedContent.imagePrompt}
+                      </p>
+                      <button
+                        onClick={handleGenerateImage}
+                        disabled={isGeneratingImage}
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50"
+                      >
+                        {isGeneratingImage ? 'Generating...' : 'Generate Image'}
+                      </button>
+                    </div>
+                  )}
 
                   <div className="p-4">
                     <button className="w-full bg-purple-600 text-white font-bold py-2 px-4 rounded-lg">
@@ -332,7 +418,7 @@ Return ONLY a JSON object with this exact structure:
         </div>
 
         {/* Footer */}
-        <div className="border-t border-brand-light-border dark:border-brand-gray p-6 flex justify-between">
+        <div className="border-t border-brand-light-border dark:border-brand-gray p-6 flex justify-between flex-shrink-0">
           <button
             onClick={onClose}
             className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-brand-light-text dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition"
@@ -342,7 +428,8 @@ Return ONLY a JSON object with this exact structure:
           {generatedContent && (
             <button
               onClick={handleGenerate}
-              className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white rounded-lg transition"
+              disabled={isGenerating}
+              className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white rounded-lg transition disabled:opacity-50"
             >
               Regenerate
             </button>
