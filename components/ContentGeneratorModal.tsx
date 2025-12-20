@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 import { supabase } from '../src/services/supabaseClient';
 import { User } from '../src/types';
 import { BuyerAvatar, GeneratedContent } from '../src/marketingTypes';
+import { GoogleGenAI, Type } from '@google/genai';
+
+const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
 interface ContentGeneratorModalProps {
   isOpen: boolean;
@@ -51,24 +55,50 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      // Call Netlify function to generate content
-      const response = await fetch('/api/generate-content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Build the prompt for Gemini
+      const prompt = `You are an expert copywriter specializing in high-converting ${platform} ads using the ${frameworks[framework].name} framework.
+
+Create a ${platform} ad for a ${avatar.industry || 'business'} targeting this avatar:
+
+Avatar: ${avatar.avatar_name}
+Demographics: ${avatar.age_range || 'N/A'} | ${avatar.gender || 'N/A'} | ${avatar.income_range || 'N/A'}
+Goals: ${(avatar.goals || []).slice(0, 3).join(', ')}
+Fears: ${(avatar.fears || []).slice(0, 3).join(', ')}
+Pain Points: ${(avatar.pain_points || []).slice(0, 3).join(', ')}
+Buying Triggers: ${(avatar.buying_triggers || []).slice(0, 3).join(', ')}
+
+Framework: ${frameworks[framework].name} - ${frameworks[framework].description}
+
+Return ONLY a JSON object with this exact structure:
+{
+  "headline": "Attention-grabbing headline (max 60 characters)",
+  "body": "Main ad copy (3-5 paragraphs, use line breaks)",
+  "cta": "Clear call-to-action (max 30 characters)",
+  "imagePrompt": "Detailed prompt for AI image generation showing the transformation or result"
+}`;
+
+      // Call Gemini AI
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-pro',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              headline: { type: Type.STRING },
+              body: { type: Type.STRING },
+              cta: { type: Type.STRING },
+              imagePrompt: { type: Type.STRING },
+            },
+            required: ['headline', 'body', 'cta', 'imagePrompt'],
+          },
         },
-        body: JSON.stringify({
-          avatar,
-          platform,
-          framework,
-        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate content');
-      }
-
-      const content = await response.json();
+      // Parse the JSON response
+      const jsonString = response.text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      const content = JSON.parse(jsonString);
       setGeneratedContent(content);
     } catch (error) {
       console.error('Error generating content:', error);
