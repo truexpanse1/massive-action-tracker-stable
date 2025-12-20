@@ -602,24 +602,22 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
                   </button>
                 )}
                 {(loggedInUser.role === 'Admin' || loggedInUser.role === 'admin') && (
-                  <>
-                    <button
-                      onClick={handleImportFromGHL}
-                      disabled={isImportingFromGHL}
-                      className="bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isImportingFromGHL ? '⏳ Importing...' : '📥 Import from GHL'}
-                    </button>
-                    <button
-                      onClick={handleAutoGenerateClients}
-                      disabled={isAutoGenerating || !transactions || transactions.length === 0}
-                      className="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Automatically create client cards from existing transactions"
-                    >
-                      {isAutoGenerating ? '⏳ Generating...' : '✨ Auto-Generate from Transactions'}
-                    </button>
-                  </>
+                  <button
+                    onClick={handleImportFromGHL}
+                    disabled={isImportingFromGHL}
+                    className="bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isImportingFromGHL ? '⏳ Importing...' : '📥 Import from GHL'}
+                  </button>
                 )}
+                <button
+                  onClick={handleAutoGenerateClients}
+                  disabled={isAutoGenerating || !transactions || transactions.length === 0}
+                  className="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Automatically create client cards from existing transactions"
+                >
+                  {isAutoGenerating ? '⏳ Generating...' : '✨ Auto-Generate from Transactions'}
+                </button>
                 <ClientCSVImporter onImport={handleCSVImport} />
                 <button
                   onClick={handleOpenModalForNew}
