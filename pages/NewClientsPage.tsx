@@ -492,9 +492,8 @@ const NewClientsPage: React.FC<NewClientsPageProps> = ({
           .sort((a, b) => a.getTime() - b.getTime());
         const closeDate = sortedDates[0]?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
 
-        // Create the client card
-        const newClient: NewClient = {
-          id: `auto-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        // Create the client card (let database generate ID)
+        const newClient: Partial<NewClient> = {
           name: clientName,
           company: clientName, // Use same name for company initially
           phone: '',
