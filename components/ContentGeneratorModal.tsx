@@ -34,6 +34,7 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
   } | null>(null);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [customImagePrompt, setCustomImagePrompt] = useState<string>('');
 
   const frameworks = {
     PAS: {
@@ -121,6 +122,7 @@ Return ONLY a JSON object with this exact structure:
       setGeneratedContent(content);
       setGeneratedImages([]); // Reset images when generating new content
       setSelectedImageIndex(null);
+      setCustomImagePrompt(content.imagePrompt); // Set initial custom prompt
     } catch (error) {
       console.error('Error generating content:', error);
       alert('Failed to generate content. Please try again.');
@@ -134,8 +136,9 @@ Return ONLY a JSON object with this exact structure:
     
     setIsGeneratingImage(true);
     try {
-      // Generate 3 image variations
-      const imagePromises = [1, 2, 3].map(() => generateImage(generatedContent.imagePrompt, '16:9'));
+      // Generate 3 image variations using custom prompt
+      const promptToUse = customImagePrompt || generatedContent.imagePrompt;
+      const imagePromises = [1, 2, 3].map(() => generateImage(promptToUse, '16:9'));
       const images = await Promise.all(imagePromises);
       setGeneratedImages(images);
       setSelectedImageIndex(null); // Reset selection
@@ -417,9 +420,18 @@ Return ONLY a JSON object with this exact structure:
                 <svg className="w-16 h-16 mx-auto text-purple-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                  {generatedContent.imagePrompt}
-                </p>
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Customize Image Prompt (Optional):
+                  </label>
+                  <textarea
+                    value={customImagePrompt}
+                    onChange={(e) => setCustomImagePrompt(e.target.value)}
+                    placeholder="Describe the image you want..."
+                    className="w-full px-3 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-brand-light-text dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                    rows={3}
+                  />
+                </div>
                 <button
                   onClick={handleGenerateImage}
                   disabled={isGeneratingImage}
