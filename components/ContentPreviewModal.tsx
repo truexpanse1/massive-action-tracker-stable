@@ -335,6 +335,7 @@ const ContentPreviewModal: React.FC<ContentPreviewModalProps> = ({ isOpen, onClo
             🗑️ Delete
           </button>
         </div>
+        </div>
       </div>
 
       {/* Social Media Settings Modal */}
