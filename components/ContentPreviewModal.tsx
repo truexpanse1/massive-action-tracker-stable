@@ -1,7 +1,8 @@
 // components/ContentPreviewModal.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/services/supabaseClient';
 import { GeneratedContent } from '../src/marketingTypes';
+import SocialMediaSettingsModal from './SocialMediaSettingsModal';
 
 interface ContentPreviewModalProps {
   isOpen: boolean;
@@ -13,6 +14,32 @@ interface ContentPreviewModalProps {
 const ContentPreviewModal: React.FC<ContentPreviewModalProps> = ({ isOpen, onClose, content, onUpdate }) => {
   const [rating, setRating] = useState<number | null>(content.performance_rating);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<any>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchSocialLinks();
+    }
+  }, [isOpen]);
+
+  const fetchSocialLinks = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('social_media_links')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setSocialLinks(data);
+    } catch (error) {
+      console.error('Error fetching social links:', error);
+    }
+  };
 
   const handleRatingChange = async (newRating: number) => {
     setRating(newRating);
@@ -55,6 +82,43 @@ const ContentPreviewModal: React.FC<ContentPreviewModalProps> = ({ isOpen, onClo
     const text = `${content.headline}\n\n${content.body_copy}\n\n${content.call_to_action}`;
     navigator.clipboard.writeText(text);
     alert('Content copied to clipboard!');
+  };
+
+  const handleQuickLink = (platform: string) => {
+    // Copy content to clipboard
+    const text = `${content.headline}\n\n${content.body_copy}\n\n${content.call_to_action}`;
+    navigator.clipboard.writeText(text);
+
+    // Get the URL for the platform
+    let url = '';
+    if (!socialLinks) {
+      setShowSettingsModal(true);
+      return;
+    }
+
+    switch (platform) {
+      case 'Facebook':
+        url = socialLinks.facebook_url || 'https://business.facebook.com/latest/posts';
+        break;
+      case 'Instagram':
+        url = socialLinks.instagram_url || 'https://www.instagram.com/';
+        break;
+      case 'LinkedIn':
+        url = socialLinks.linkedin_url || 'https://www.linkedin.com/feed/';
+        break;
+      case 'TikTok':
+        url = socialLinks.tiktok_url || 'https://www.tiktok.com/creator-center/content';
+        break;
+    }
+
+    if (!url) {
+      setShowSettingsModal(true);
+      return;
+    }
+
+    // Open in new tab
+    window.open(url, '_blank');
+    alert(`Content copied! Opening ${platform} dashboard...`);
   };
 
   const handleDelete = async () => {
@@ -199,7 +263,53 @@ const ContentPreviewModal: React.FC<ContentPreviewModalProps> = ({ isOpen, onClo
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-brand-light-border dark:border-brand-gray p-6 flex gap-3 flex-shrink-0">
+        <div className="border-t border-brand-light-border dark:border-brand-gray p-6 flex-shrink-0">
+          {/* Social Media Quick Links */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold text-brand-light-text dark:text-white">
+                Quick Post To:
+              </label>
+              <button
+                onClick={() => setShowSettingsModal(true)}
+                className="text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+              >
+                ⚙️ Configure Links
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleQuickLink('Facebook')}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+              >
+                <span className="text-xl">📘</span>
+                Facebook
+              </button>
+              <button
+                onClick={() => handleQuickLink('Instagram')}
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+              >
+                <span className="text-xl">📷</span>
+                Instagram
+              </button>
+              <button
+                onClick={() => handleQuickLink('LinkedIn')}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg transition"
+              >
+                <span className="text-xl">💼</span>
+                LinkedIn
+              </button>
+              <button
+                onClick={() => handleQuickLink('TikTok')}
+                className="flex-1 flex items-center justify-center gap-2 bg-black hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded-lg transition"
+              >
+                <span className="text-xl">🎵</span>
+                TikTok
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
           <button
             onClick={handleCopy}
             className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white font-semibold py-2 px-4 rounded-lg transition"
@@ -226,6 +336,13 @@ const ContentPreviewModal: React.FC<ContentPreviewModalProps> = ({ isOpen, onClo
           </button>
         </div>
       </div>
+
+      {/* Social Media Settings Modal */}
+      <SocialMediaSettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        onSave={fetchSocialLinks}
+      />
     </div>
   );
 };
