@@ -35,6 +35,7 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [customImagePrompt, setCustomImagePrompt] = useState<string>('');
+  const [imageDescription, setImageDescription] = useState<string>('');
 
   const frameworks = {
     PAS: {
@@ -88,13 +89,15 @@ Buying Triggers: ${(avatar.buying_triggers || []).slice(0, 3).join(', ')}
 
 Campaign Objective: ${finalObjective}
 Framework: ${frameworks[framework].name} - ${frameworks[framework].description}
+${imageDescription ? `
+Image Requirements: ${imageDescription}` : ''}
 
 Return ONLY a JSON object with this exact structure:
 {
   "headline": "Attention-grabbing headline (max 60 characters)",
   "body": "Main ad copy (3-5 paragraphs, use line breaks)",
   "cta": "Clear call-to-action (max 30 characters)",
-  "imagePrompt": "Detailed prompt for AI image generation showing the transformation or result"
+  "imagePrompt": "Detailed prompt for AI image generation${imageDescription ? ' that incorporates: ' + imageDescription : ' showing the transformation or result'}"
 }`;
 
       // Call Gemini AI
@@ -311,6 +314,22 @@ Return ONLY a JSON object with this exact structure:
                     />
                   </div>
                 )}
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-2">
+                  4. Image Description (Optional)
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  Describe what you want in the image, or leave blank for AI to decide
+                </p>
+                <textarea
+                  value={imageDescription}
+                  onChange={(e) => setImageDescription(e.target.value)}
+                  placeholder='e.g., "Include a team cheering for the winner" or "Stressed business owner at desk" or "Before/after transformation split screen"'
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-brand-light-text dark:text-white focus:ring-2 focus:ring-purple-600 resize-none"
+                />
               </div>
 
               <button
