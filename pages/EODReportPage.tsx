@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { DayData, Transaction, getInitialDayData, formatCurrency, Contact } from '../types';
 import Calendar from '../components/Calendar';
 import EODPerformanceChart from '../components/EODPerformanceChart';
+import DreamClientStudioStats from '../components/DreamClientStudioStats';
 
 // --- PROPS INTERFACE ---
 interface EODReportPageProps {
@@ -158,6 +159,12 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
                 </div>
             </div>
         </div>
+
+        {/* Dream Client Studio Stats */}
+        <DreamClientStudioStats
+            userId={userId}
+            selectedDate={selectedDate}
+        />
 
         {/* Performance Chart Section */}
         <EODPerformanceChart
