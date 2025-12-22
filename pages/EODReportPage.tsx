@@ -77,7 +77,7 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
                 const { data, error } = await supabase
                     .from('generated_content')
                     .select('id')
-                    .eq('user_id', userId)
+                    .eq('assigned_to', userId)
                     .eq('used', true)
                     .gte('created_at', `${currentDateKey}T00:00:00`)
                     .lte('created_at', `${currentDateKey}T23:59:59`);
@@ -167,7 +167,7 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
                         <KPI_Card label="Calls Made" value={dailyKpis.callsMade} />
                         <KPI_Card label="Proposals Sent" value={dailyKpis.proposalsSent} />
                         <KPI_Card label="Texts Sent" value={dailyKpis.texts} />
-                        <KPI_Card label="Social Media Touches" value={dailyKpis.socialMediaTouches} />
+                        <KPI_Card label="Social Media Posts" value={dailyKpis.socialMediaTouches} />
                     </Column>
                     <Column title="Pipeline" subtitle="Progress">
                         <KPI_Card label="New Leads" value={dailyKpis.newLeads} />

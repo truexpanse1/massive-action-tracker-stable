@@ -151,6 +151,11 @@ export const MarketingPerformanceTrendsChart: React.FC<MarketingPerformanceTrend
         appointments = (dayData.prospectingContacts || []).filter(
           (c: any) => c.prospecting.SA
         ).length;
+        
+        // Debug logging
+        if (calls > 0 || appointments > 0) {
+          console.log(`${dateKey}: Calls=${calls}, Appointments=${appointments}`, dayData.prospectingContacts);
+        }
       }
 
       // Revenue from transactions
