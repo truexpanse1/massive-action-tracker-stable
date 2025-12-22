@@ -19,12 +19,12 @@ interface ContentGeneratorModalProps {
 
 type Platform = 'Facebook' | 'Instagram' | 'LinkedIn' | 'TikTok';
 type Framework = 'PAS' | 'BAB' | 'Dream' | 'SocialProof';
-type WritingStyle = 'Standard' | 'Dan Kennedy' | 'Sabri Suby';
+type WritingStyle = 'Professional' | 'Friendly' | 'Business' | 'Bold' | 'Fiery' | 'Confident';
 
 const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, onClose, avatar, user }) => {
   const [platform, setPlatform] = useState<Platform>('Facebook');
   const [framework, setFramework] = useState<Framework>('PAS');
-  const [writingStyle, setWritingStyle] = useState<WritingStyle>('Standard');
+  const [writingStyle, setWritingStyle] = useState<WritingStyle>('Professional');
   const [objective, setObjective] = useState('');
   const [customObjective, setCustomObjective] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -87,9 +87,12 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
       
       // Writing style instructions
       const styleInstructions = {
-        'Standard': '',
-        'Dan Kennedy': `\n\nWRITING STYLE: Use Dan Kennedy's direct-response approach:\n- Write with bold, attention-grabbing headlines\n- Use specific numbers, dates, and details (never vague claims)\n- Include reason-why explanations for every claim\n- Create urgency and scarcity (limited time, limited availability)\n- Be direct and no-nonsense - cut the fluff\n- Use personality and strong opinions\n- Include proof elements (case studies, testimonials, specific results)\n- Make the call-to-action crystal clear and urgent\n- Don't be afraid of longer copy if it converts`,
-        'Sabri Suby': `\n\nWRITING STYLE: Use Sabri Suby's aggressive, results-driven approach:\n- Lead with bold, provocative statements\n- Focus on tangible, measurable outcomes\n- Use urgency and FOMO (fear of missing out)\n- Include social proof and authority\n- Challenge the status quo\n- Be confident and assertive\n- Use short, punchy sentences\n- Create immediate desire for action`
+        'Professional': '',
+        'Friendly': `\n\nWRITING TONE: Friendly and conversational:\n- Use warm, approachable language\n- Write like you're talking to a friend\n- Be personable and relatable\n- Use "you" and "we" language\n- Keep it light and engaging\n- Show empathy and understanding`,
+        'Business': `\n\nWRITING TONE: Business and corporate:\n- Use polished, professional language\n- Maintain authoritative credibility\n- Focus on ROI and business outcomes\n- Use industry terminology appropriately\n- Be clear, concise, and strategic\n- Project competence and expertise`,
+        'Bold': `\n\nWRITING TONE: Bold and direct-response:\n- Write with bold, attention-grabbing headlines\n- Use specific numbers, dates, and details (never vague claims)\n- Include reason-why explanations for every claim\n- Create urgency and scarcity (limited time, limited availability)\n- Be direct and no-nonsense - cut the fluff\n- Use strong opinions and personality\n- Include proof elements (case studies, testimonials, specific results)\n- Make the call-to-action crystal clear and urgent\n- Don't be afraid of longer copy if it converts`,
+        'Fiery': `\n\nWRITING TONE: Fiery and aggressive:\n- Lead with bold, provocative statements\n- Focus on tangible, measurable outcomes\n- Use urgency and FOMO (fear of missing out)\n- Include social proof and authority\n- Challenge the status quo\n- Be confident and assertive\n- Use short, punchy sentences\n- Create immediate desire for action`,
+        'Confident': `\n\nWRITING TONE: Confident and commanding:\n- Write with absolute certainty and authority\n- Use declarative statements\n- Project expertise and mastery\n- Be assertive without being aggressive\n- Use power words and strong verbs\n- Command attention and respect\n- Show unwavering belief in your solution`
       };
 
       // Build the prompt for Gemini
@@ -304,30 +307,36 @@ Return ONLY a JSON object with this exact structure:
 
               <div>
                 <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-4">
-                  3. Writing Style
+                  3. Writing Tone
                 </h3>
                 <div className="grid grid-cols-3 gap-3">
-                  {(['Standard', 'Dan Kennedy', 'Sabri Suby'] as WritingStyle[]).map((style) => (
+                  {(['Professional', 'Friendly', 'Business', 'Bold', 'Fiery', 'Confident'] as WritingStyle[]).map((tone) => (
                     <button
-                      key={style}
-                      onClick={() => setWritingStyle(style)}
+                      key={tone}
+                      onClick={() => setWritingStyle(tone)}
                       className={`px-4 py-3 rounded-lg border-2 transition text-center ${
-                        writingStyle === style
+                        writingStyle === tone
                           ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 font-semibold'
                           : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 text-brand-light-text dark:text-white'
                       }`}
                     >
-                      {style === 'Dan Kennedy' && '📣 '}
-                      {style === 'Sabri Suby' && '🔥 '}
-                      {style === 'Standard' && '📝 '}
-                      {style}
+                      {tone === 'Professional' && '📝 '}
+                      {tone === 'Friendly' && '🤝 '}
+                      {tone === 'Business' && '💼 '}
+                      {tone === 'Bold' && '💪 '}
+                      {tone === 'Fiery' && '🔥 '}
+                      {tone === 'Confident' && '✨ '}
+                      {tone}
                     </button>
                   ))}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  {writingStyle === 'Dan Kennedy' && 'Direct-response, reason-why, urgency-driven copy'}
-                  {writingStyle === 'Sabri Suby' && 'Aggressive, results-focused, bold statements'}
-                  {writingStyle === 'Standard' && 'Balanced, professional, framework-focused'}
+                  {writingStyle === 'Professional' && 'Balanced, credible, framework-focused'}
+                  {writingStyle === 'Friendly' && 'Warm, conversational, approachable'}
+                  {writingStyle === 'Business' && 'Corporate, polished, authoritative'}
+                  {writingStyle === 'Bold' && 'Direct-response, urgent, no-nonsense'}
+                  {writingStyle === 'Fiery' && 'Aggressive, provocative, results-driven'}
+                  {writingStyle === 'Confident' && 'Assertive, expert, commanding'}
                 </p>
               </div>
 
