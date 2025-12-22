@@ -397,8 +397,8 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
             )}
           </div>
 
-          {/* Framework & Platform Performance - REMOVED */}
-          {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Framework & Platform Performance - REMOVED
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Framework Analysis */}
             <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
               <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
@@ -525,10 +525,9 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
                 </div>
               )}
             </div>
-          </div> */}
+          </div>
 
-          {/* Best Performing Content - REMOVED */}
-          {/*
+          {/* Best Performing Content - REMOVED
           <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
             <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
               ⭐ Top Performing Content
@@ -549,8 +548,7 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
             )}
           </div> */}
 
-          {/* Insights & Recommendations - REMOVED */}
-          {/*
+          {/* Insights & Recommendations - REMOVED
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-lg text-white">
             <h2 className="text-xl font-bold mb-3">
               💡 AI Insights (Coming Soon)
