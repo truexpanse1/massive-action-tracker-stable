@@ -64,6 +64,7 @@ const AvatarBuilderModal: React.FC<AvatarBuilderModalProps> = ({ isOpen, onClose
 
       const avatarData = {
         company_id: user.company_id,
+        user_id: user.id,
         assigned_to: user.id,
         avatar_name: formData.avatar_name || 'Unnamed Avatar',
         industry: formData.industry || null,
