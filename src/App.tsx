@@ -1038,7 +1038,6 @@ const App: React.FC = () => {
         onLogout={handleLogout}
         userName={user.name}
         isDemoMode={isDemoMode}
-        user={user}
       />
       <main className="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
         {renderView()}

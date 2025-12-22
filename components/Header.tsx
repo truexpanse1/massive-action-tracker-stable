@@ -2,10 +2,7 @@
 import React, { useState } from 'react';
 import ThemeToggle from './ThemeToggle';
 import GitHubStatus from './GitHubStatus';
-import UsageWidget from './UsageWidget';
-import UpgradeModal from './UpgradeModal';
 import { View, Role } from '../types';
-import { User } from '../src/types';
 
 interface HeaderProps {
   theme: 'dark' | 'light';
@@ -16,7 +13,6 @@ interface HeaderProps {
   onLogout: () => void;
   userName: string;
   isDemoMode: boolean;
-  user: User;
 }
 
 const NavItem: React.FC<{ children: React.ReactNode; onClick: () => void; active?: boolean }> = ({ children, onClick, active }) => (
@@ -47,11 +43,9 @@ const Dropdown: React.FC<{ title: string; children: React.ReactNode; isOpen: boo
   </div>
 );
 
-const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, userRole, onLogout, userName, isDemoMode, user }) => {
+const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, userRole, onLogout, userName, isDemoMode }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState<'starter' | 'pro' | 'agency' | 'free'>('pro');
 
   const handleToggle = (title: string) => {
     setOpenDropdown(openDropdown === title ? null : title);
@@ -116,9 +110,8 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
                 EOD Report
               </button>
             </nav>
-            <div className="flex items-center gap-3 ml-4">
-                <UsageWidget user={user} onUpgradeClick={() => setShowUpgradeModal(true)} />
-                <span className="hidden sm:inline text-sm text-gray-500 dark:text-gray-400">Welcome, {userName?.split(' ')[0] || ""}
+            <div className="flex items-center ml-4">
+                <span className="hidden sm:inline text-sm text-gray-500 dark:text-gray-400 mr-3">Welcome, {userName?.split(' ')[0] || ""}
 </span>
                 <Dropdown title="Settings" isOpen={openDropdown === 'settings'} onToggle={() => handleToggle('settings')}>
                   <NavItem onClick={() => handleSetView('account-settings')} active={currentView === 'account-settings'}>Account Settings</NavItem>
@@ -226,13 +219,6 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
           </div>
         </div>
       )}
-
-      {/* Upgrade Modal */}
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        currentPlan={currentPlan}
-      />
     </header>
   );
 };
