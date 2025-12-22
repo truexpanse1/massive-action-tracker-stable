@@ -39,6 +39,7 @@ interface PlatformStats {
 type DateRange = '7days' | '30days' | '90days' | 'all';
 
 const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dateRange, setDateRange] = useState<DateRange>('30days');
   const [overviewStats, setOverviewStats] = useState<OverviewStats>({
     totalAvatars: 0,
@@ -206,26 +207,20 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
           </p>
         </div>
 
-        {/* Date Range Filter */}
-        <div className="flex gap-2">
-          {[
-            { value: '7days' as DateRange, label: 'Last 7 Days' },
-            { value: '30days' as DateRange, label: 'Last 30 Days' },
-            { value: '90days' as DateRange, label: 'Last 90 Days' },
-            { value: 'all' as DateRange, label: 'All Time' },
-          ].map(option => (
-            <button
-              key={option.value}
-              onClick={() => setDateRange(option.value)}
-              className={`px-4 py-2 rounded-lg font-semibold transition ${
-                dateRange === option.value
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+        {/* Date Selector (synced with EOD Report) */}
+        <div className="flex items-center gap-3">
+          <input
+            type="date"
+            value={selectedDate.toISOString().split('T')[0]}
+            onChange={(e) => setSelectedDate(new Date(e.target.value))}
+            className="px-4 py-2 rounded-lg border border-brand-light-border dark:border-brand-gray bg-brand-light-card dark:bg-brand-navy text-brand-light-text dark:text-white font-semibold cursor-pointer"
+          />
+          <button
+            onClick={() => setSelectedDate(new Date())}
+            className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold transition"
+          >
+            Today
+          </button>
         </div>
       </div>
 
@@ -290,13 +285,24 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
             </div>
           </div>
 
-          {/* Avatar Performance Table */}
+          {/* Social Media ROI Chart */}
+          <SocialMediaROIChart user={user} />
+
+          {/* Removed sections for simplicity:
+          - Avatar Performance Table
+          - Framework Performance
+          - Platform Performance
+          
+          Focus: Activity tracking (Posts, HVCO Downloads, Leads)
+          */}
+
+          {/* Avatar Performance Table - REMOVED
           <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
             <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
               🎯 Avatar Performance
             </h2>
-            
-            {avatarStats.length === 0 ? (
+            */}
+            {/* avatarStats.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500 dark:text-gray-400">
                   No avatars created yet. Create your first buyer persona to see performance data!
@@ -391,8 +397,8 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
             )}
           </div>
 
-          {/* Framework & Platform Performance */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Framework & Platform Performance - REMOVED */}
+          {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Framework Analysis */}
             <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
               <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
@@ -519,9 +525,10 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
-          {/* Best Performing Content */}
+          {/* Best Performing Content - REMOVED */}
+          {/*
           <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
             <h2 className="text-xl font-bold text-brand-light-text dark:text-white mb-4">
               ⭐ Top Performing Content
@@ -540,12 +547,10 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
                 </p>
               </div>
             )}
-          </div>
+          </div> */}
 
-          {/* Social Media ROI Chart */}
-          <SocialMediaROIChart user={user} />
-
-          {/* Insights & Recommendations */}
+          {/* Insights & Recommendations - REMOVED */}
+          {/*
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-lg text-white">
             <h2 className="text-xl font-bold mb-3">
               💡 AI Insights (Coming Soon)
@@ -556,7 +561,7 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
               <p>• Framework suggestions tailored to each avatar</p>
               <p>• Platform optimization tips based on your performance data</p>
             </div>
-          </div>
+          </div> */}
         </>
       )}
     </div>

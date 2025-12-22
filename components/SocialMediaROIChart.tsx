@@ -36,6 +36,7 @@ type TimeRange = 'week' | 'month' | 'custom';
 const SocialMediaROIChart: React.FC<SocialMediaROIChartProps> = ({ user }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
   const [postedContent, setPostedContent] = useState<any[]>([]);
+  const [hvcoDownloads, setHvcoDownloads] = useState<any[]>([]);
   const [socialLeads, setSocialLeads] = useState<Contact[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +81,16 @@ const SocialMediaROIChart: React.FC<SocialMediaROIChartProps> = ({ user }) => {
 
       if (contentError) throw contentError;
 
+      // Fetch HVCO downloads
+      const { data: hvcoData, error: hvcoError } = await supabase
+        .from('hvco_downloads')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('downloaded_at', startISO)
+        .lte('downloaded_at', endISO);
+
+      if (hvcoError) throw hvcoError;
+
       // Fetch social media leads
       const socialSources = ['Facebook', 'Instagram', 'LinkedIn', 'TikTok'];
       const { data: leadsData, error: leadsError } = await supabase
@@ -101,6 +112,7 @@ const SocialMediaROIChart: React.FC<SocialMediaROIChartProps> = ({ user }) => {
       if (transactionsError) throw transactionsError;
 
       setPostedContent(contentData || []);
+      setHvcoDownloads(hvcoData || []);
       setSocialLeads(leadsData || []);
       setTransactions(transactionsData || []);
     } catch (error) {
@@ -114,6 +126,7 @@ const SocialMediaROIChart: React.FC<SocialMediaROIChartProps> = ({ user }) => {
     const { startDate, endDate } = getDateRange();
     const days: string[] = [];
     const postsPerDay: number[] = [];
+    const hvcoDownloadsPerDay: number[] = [];
     const leadsPerDay: number[] = [];
     const revenuePerDay: number[] = [];
 
@@ -128,6 +141,12 @@ const SocialMediaROIChart: React.FC<SocialMediaROIChartProps> = ({ user }) => {
         c.created_at && c.created_at.startsWith(dateKey)
       ).length;
       postsPerDay.push(postsCount);
+
+      // Count HVCO downloads for this day
+      const hvcoCount = hvcoDownloads.filter(h => 
+        h.downloaded_at && h.downloaded_at.startsWith(dateKey)
+      ).length;
+      hvcoDownloadsPerDay.push(hvcoCount);
 
       // Count leads for this day
       const leadsCount = socialLeads.filter(l => 
@@ -156,24 +175,24 @@ const SocialMediaROIChart: React.FC<SocialMediaROIChartProps> = ({ user }) => {
           tension: 0.4,
         },
         {
-          label: 'Leads Generated',
-          data: leadsPerDay,
+          label: 'HVCO Downloads',
+          data: hvcoDownloadsPerDay,
           borderColor: 'rgb(59, 130, 246)', // Blue
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
           yAxisID: 'y',
           tension: 0.4,
         },
         {
-          label: 'Revenue ($)',
-          data: revenuePerDay,
+          label: 'Leads Added',
+          data: leadsPerDay,
           borderColor: 'rgb(34, 197, 94)', // Green
           backgroundColor: 'rgba(34, 197, 94, 0.1)',
-          yAxisID: 'y1',
+          yAxisID: 'y',
           tension: 0.4,
         },
       ],
     };
-  }, [postedContent, socialLeads, transactions, timeRange]);
+  }, [postedContent, hvcoDownloads, socialLeads, timeRange]);
 
   const chartOptions = {
     responsive: true,
@@ -249,19 +268,19 @@ const SocialMediaROIChart: React.FC<SocialMediaROIChartProps> = ({ user }) => {
 
   const summaryStats = useMemo(() => {
     const totalPosts = postedContent.length;
+    const totalDownloads = hvcoDownloads.length;
     const totalLeads = socialLeads.length;
-    const totalRevenue = transactions.reduce((sum, t) => sum + t.amount, 0);
-    const conversionRate = totalPosts > 0 ? (totalLeads / totalPosts * 100).toFixed(1) : '0';
-    const revenuePerPost = totalPosts > 0 ? (totalRevenue / totalPosts).toFixed(2) : '0';
+    const downloadRate = totalPosts > 0 ? (totalDownloads / totalPosts * 100).toFixed(1) : '0';
+    const leadConversionRate = totalDownloads > 0 ? (totalLeads / totalDownloads * 100).toFixed(1) : '0';
 
     return {
       totalPosts,
+      totalDownloads,
       totalLeads,
-      totalRevenue,
-      conversionRate,
-      revenuePerPost,
+      downloadRate,
+      leadConversionRate,
     };
-  }, [postedContent, socialLeads, transactions]);
+  }, [postedContent, hvcoDownloads, socialLeads]);
 
   return (
     <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
@@ -316,30 +335,30 @@ const SocialMediaROIChart: React.FC<SocialMediaROIChartProps> = ({ user }) => {
               </p>
             </div>
             <div className="border-l-4 border-blue-600 pl-4">
-              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Leads</p>
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">HVCO Downloads</p>
+              <p className="text-2xl font-black text-brand-light-text dark:text-white">
+                {summaryStats.totalDownloads}
+              </p>
+            </div>
+            <div className="border-l-4 border-green-600 pl-4">
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Leads Added</p>
               <p className="text-2xl font-black text-brand-light-text dark:text-white">
                 {summaryStats.totalLeads}
               </p>
             </div>
-            <div className="border-l-4 border-green-600 pl-4">
-              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Revenue</p>
-              <p className="text-2xl font-black text-brand-light-text dark:text-white">
-                ${summaryStats.totalRevenue.toLocaleString()}
-              </p>
-            </div>
             <div className="border-l-4 border-yellow-600 pl-4">
-              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Conv. Rate</p>
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Download Rate</p>
               <p className="text-2xl font-black text-brand-light-text dark:text-white">
-                {summaryStats.conversionRate}%
+                {summaryStats.downloadRate}%
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">leads/post</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">downloads/post</p>
             </div>
             <div className="border-l-4 border-pink-600 pl-4">
-              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">$/Post</p>
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Lead Conv.</p>
               <p className="text-2xl font-black text-brand-light-text dark:text-white">
-                ${summaryStats.revenuePerPost}
+                {summaryStats.leadConversionRate}%
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">avg revenue</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">downloads→leads</p>
             </div>
           </div>
         </>
