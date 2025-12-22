@@ -235,7 +235,8 @@ Return ONLY a JSON object with this exact structure:
         body_copy: generatedContent.body,
         call_to_action: generatedContent.cta,
         image_prompt: generatedContent.imagePrompt,
-        image_url: selectedImageIndex !== null ? generatedImages[selectedImageIndex] : null,
+        // image_url removed - users download images to their hard drive instead to save Supabase storage costs
+        image_url: null,
         hook_type: framework,
         campaign_objective: finalObjective,
         used: false,
