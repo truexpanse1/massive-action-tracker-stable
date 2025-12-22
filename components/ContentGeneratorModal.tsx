@@ -1,5 +1,5 @@
 // components/ContentGeneratorModal.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/services/supabaseClient';
 import { User } from '../src/types';
 import { BuyerAvatar } from '../src/marketingTypes';
@@ -39,6 +39,41 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [customImagePrompt, setCustomImagePrompt] = useState<string>('');
   const [imageDescription, setImageDescription] = useState<string>('');
+
+  // localStorage key for this avatar's draft
+  const draftKey = `content-draft-${avatar.id}`;
+
+  // Restore draft from localStorage on mount
+  useEffect(() => {
+    if (isOpen) {
+      const savedDraft = localStorage.getItem(draftKey);
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          setGeneratedContent(draft.content);
+          setGeneratedImages(draft.images || []);
+          setSelectedImageIndex(draft.selectedImageIndex);
+          setCustomImagePrompt(draft.customImagePrompt || '');
+        } catch (error) {
+          console.error('Error restoring draft:', error);
+        }
+      }
+    }
+  }, [isOpen, draftKey]);
+
+  // Auto-save to localStorage whenever content changes
+  useEffect(() => {
+    if (generatedContent) {
+      const draft = {
+        content: generatedContent,
+        images: generatedImages,
+        selectedImageIndex,
+        customImagePrompt,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+    }
+  }, [generatedContent, generatedImages, selectedImageIndex, customImagePrompt, draftKey]);
 
   const frameworks = {
     PAS: {
@@ -146,6 +181,7 @@ Return ONLY a JSON object with this exact structure:
       setGeneratedImages([]); // Reset images when generating new content
       setSelectedImageIndex(null);
       setCustomImagePrompt(content.imagePrompt); // Set initial custom prompt
+      // Auto-save will trigger via useEffect
 
       // Increment post count
       await incrementPostCount(user.id);
@@ -206,6 +242,9 @@ Return ONLY a JSON object with this exact structure:
 
       if (error) throw error;
 
+      // Clear localStorage draft after successful save
+      localStorage.removeItem(draftKey);
+      
       alert('Content saved to your Content Library!');
       onClose();
     } catch (error) {
