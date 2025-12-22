@@ -154,7 +154,7 @@ export const MarketingPerformanceTrendsChart: React.FC<MarketingPerformanceTrend
       }
 
       // Revenue from transactions
-      const dayTransactions = transactions.filter(t => t.date === dateKey && t.userId === userId);
+      const dayTransactions = transactions.filter(t => t.date === dateKey && t.user_id === userId);
       revenue = dayTransactions.reduce((sum, t) => sum + t.amount, 0);
 
       // Posts created on this day (content marked as used)

@@ -192,7 +192,7 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
       const { data: transactionsData, error: transactionsError } = await supabase
         .from('transactions')
         .select('*')
-        .eq('userId', user.id);
+        .eq('user_id', user.id);
 
       if (transactionsError) {
         console.error('Error fetching transactions:', transactionsError);
