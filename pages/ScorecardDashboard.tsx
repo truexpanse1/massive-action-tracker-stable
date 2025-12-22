@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/services/supabaseClient';
 import { User } from '../src/types';
 import { BuyerAvatar } from '../src/marketingTypes';
+import SocialMediaROIChart from '../components/SocialMediaROIChart';
 
 interface ScorecardDashboardProps {
   user: User;
@@ -540,6 +541,9 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
               </div>
             )}
           </div>
+
+          {/* Social Media ROI Chart */}
+          <SocialMediaROIChart user={user} />
 
           {/* Insights & Recommendations */}
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-lg text-white">

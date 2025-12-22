@@ -13,6 +13,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSave }) 
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [interestLevel, setInterestLevel] = useState(5);
+    const [leadSource, setLeadSource] = useState('');
 
     useEffect(() => {
         // Reset form when modal opens
@@ -22,6 +23,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSave }) 
             setPhone('');
             setEmail('');
             setInterestLevel(5);
+            setLeadSource('');
         }
     }, [isOpen]);
 
@@ -35,7 +37,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSave }) 
             alert('Please enter a contact name.');
             return;
         }
-        onSave({ name, company, phone, email, interestLevel });
+        onSave({ name, company, phone, email, interestLevel, lead_source: leadSource || 'Unknown' });
     };
 
     if (!isOpen) return null;
@@ -53,6 +55,26 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSave }) 
                     <input type="text" placeholder="Company (Optional)" value={company} onChange={e => setCompany(e.target.value)} className="w-full bg-transparent border-b-2 border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white p-1 focus:outline-none focus:border-brand-blue" />
                     <input type="tel" placeholder="Phone Number (Optional)" value={phone} onChange={handlePhoneChange} className="w-full bg-transparent border-b-2 border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white p-1 focus:outline-none focus:border-brand-blue" />
                     <input type="email" placeholder="Email Address (Optional)" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-transparent border-b-2 border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white p-1 focus:outline-none focus:border-brand-blue" />
+
+                    {/* Lead Source */}
+                    <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400 block mb-2">Lead Source</label>
+                        <select
+                            value={leadSource}
+                            onChange={e => setLeadSource(e.target.value)}
+                            className="w-full bg-white dark:bg-brand-gray border-2 border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white p-2 rounded-lg focus:outline-none focus:border-brand-blue"
+                        >
+                            <option value="">Select Source...</option>
+                            <option value="Facebook">👥 Facebook</option>
+                            <option value="Instagram">📷 Instagram</option>
+                            <option value="LinkedIn">💼 LinkedIn</option>
+                            <option value="TikTok">🎵 TikTok</option>
+                            <option value="Website">🌐 Website</option>
+                            <option value="Referral">🤝 Referral</option>
+                            <option value="Direct Call">📞 Direct Call</option>
+                            <option value="Other">💬 Other</option>
+                        </select>
+                    </div>
 
                     {/* Interest Level */}
                     <div className="pt-2">

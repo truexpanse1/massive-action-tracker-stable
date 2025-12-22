@@ -97,6 +97,7 @@ export interface Contact {
   appointmentDate?: string; // YYYY-MM-DD
   completedFollowUps?: Record<number, string>; // day number -> date completed
   userId?: string;
+  lead_source?: string; // Facebook, Instagram, LinkedIn, TikTok, Website, Referral, Direct Call, Other
 }
 
 export interface Transaction {
