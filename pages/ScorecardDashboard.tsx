@@ -72,7 +72,7 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
       const { data: content, error: contentError } = await supabase
         .from('generated_content')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('assigned_to', user.id);
 
       if (contentError) throw contentError;
 
