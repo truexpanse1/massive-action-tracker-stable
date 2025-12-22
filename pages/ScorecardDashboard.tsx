@@ -295,8 +295,7 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
           
           Focus: Activity tracking (Posts, HVCO Downloads, Leads)
           */}
-
-
+        </>
       )}
     </div>
   );
