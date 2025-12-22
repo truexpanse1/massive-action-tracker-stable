@@ -201,6 +201,28 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user, onRefresh }) => {
   const [showContentGenerator, setShowContentGenerator] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      const { error } = await supabase
+        .from('buyer_avatars')
+        .update({ is_active: false })
+        .eq('id', avatar.id);
+
+      if (error) throw error;
+      
+      setShowDeleteConfirm(false);
+      onRefresh();
+    } catch (error) {
+      console.error('Error deleting avatar:', error);
+      alert('Failed to delete avatar. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   return (
     <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 hover:shadow-lg transition-all duration-200 hover:border-purple-500">
       {/* Avatar Header */}
@@ -273,7 +295,7 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user, onRefresh }) => {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 mb-2">
         <button 
           onClick={() => setShowContentGenerator(true)}
           className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
@@ -293,6 +315,54 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user, onRefresh }) => {
           Edit
         </button>
       </div>
+
+      {/* Delete Button */}
+      <button
+        onClick={() => setShowDeleteConfirm(true)}
+        className="w-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold py-2 px-4 rounded-lg transition text-sm flex items-center justify-center gap-2 border border-red-200 dark:border-red-800"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        Delete Avatar
+      </button>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-brand-light-text dark:text-white mb-3">
+              Delete Avatar?
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Are you sure you want to delete <strong>{avatar.avatar_name}</strong>? This will also delete all associated content. This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white font-semibold py-2 px-4 rounded-lg transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Saved Content List */}
       <SavedContentList avatarId={avatar.id} />
