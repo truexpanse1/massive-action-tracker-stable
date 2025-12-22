@@ -18,7 +18,9 @@ export type View =
   | 'coaching'
   | 'team-control'
   | 'performance-dashboard'
-  | 'eod-report';
+  | 'eod-report'
+  | 'dream-avatars'
+  | 'scorecard-dashboard';
 
 export type Role = 'Sales Rep' | 'Manager';
 export type UserStatus = 'Active' | 'Inactive';

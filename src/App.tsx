@@ -37,6 +37,7 @@ import EODReportPage from '../pages/EODReportPage';
 import AccountSettingsPage from '../pages/AccountSettingsPage';
 import GHLIntegrationPage from '../pages/GHLIntegrationPage';
 import DreamClientStudioPage from '../pages/DreamClientStudioPage';
+import ScorecardDashboard from '../pages/ScorecardDashboard';
 
 // Components
 import ChatIcon from '../components/ChatIcon';
@@ -1015,6 +1016,8 @@ const App: React.FC = () => {
         );
       case 'dream-avatars':
         return <DreamClientStudioPage user={user} />;
+      case 'scorecard-dashboard':
+        return <ScorecardDashboard user={user} />;
       default:
         return <div>View not found</div>;
     }

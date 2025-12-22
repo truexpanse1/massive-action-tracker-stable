@@ -91,12 +91,13 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
                 <NavItem onClick={() => handleSetView('new-clients')} active={currentView === 'new-clients'}>New Clients</NavItem>
                  <NavItem onClick={() => handleSetView('revenue')} active={currentView === 'revenue'}>Revenue</NavItem>
               </Dropdown>
-              <Dropdown title="Marketing" isOpen={openDropdown === 'marketing'} onToggle={() => handleToggle('marketing')}>
-                 <NavItem onClick={() => handleSetView('dream-avatars')} active={currentView === 'dream-avatars'}>Dream Client Studio</NavItem>
-                 <NavItem onClick={() => handleSetView('ai-images')} active={currentView === 'ai-images'}>AI Images</NavItem>
-                 <NavItem onClick={() => handleSetView('ai-content')} active={currentView === 'ai-content'}>AI Content</NavItem>
-                 <NavItem onClick={() => handleSetView('coaching')} active={currentView === 'coaching'}>Coaching</NavItem>
-              </Dropdown>
+               <Dropdown title="Marketing" isOpen={openDropdown === 'marketing'} onToggle={() => handleToggle('marketing')}>
+                  <NavItem onClick={() => handleSetView('dream-avatars')} active={currentView === 'dream-avatars'}>Dream Client Studio</NavItem>
+                  <NavItem onClick={() => handleSetView('scorecard-dashboard')} active={currentView === 'scorecard-dashboard'}>Scorecard Dashboard</NavItem>
+                  <NavItem onClick={() => handleSetView('ai-images')} active={currentView === 'ai-images'}>AI Images</NavItem>
+                  <NavItem onClick={() => handleSetView('ai-content')} active={currentView === 'ai-content'}>AI Content</NavItem>
+                  <NavItem onClick={() => handleSetView('coaching')} active={currentView === 'coaching'}>Coaching</NavItem>
+               </Dropdown>
               
               {(userRole === 'Admin' || userRole === 'Manager') && (
                 <Dropdown title="Leadership" isOpen={openDropdown === 'leadership'} onToggle={() => handleToggle('leadership')}>
@@ -163,6 +164,12 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
 
             {/* Marketing Section */}
             <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mt-3">Marketing</div>
+            <button onClick={() => { handleSetView('dream-avatars'); setMobileMenuOpen(false); }} className={`block w-full text-left px-4 py-2 text-sm rounded-md ${currentView === 'dream-avatars' ? 'bg-brand-red text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+              Dream Client Studio
+            </button>
+            <button onClick={() => { handleSetView('scorecard-dashboard'); setMobileMenuOpen(false); }} className={`block w-full text-left px-4 py-2 text-sm rounded-md ${currentView === 'scorecard-dashboard' ? 'bg-brand-red text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+              Scorecard Dashboard
+            </button>
             <button onClick={() => { handleSetView('ai-images'); setMobileMenuOpen(false); }} className={`block w-full text-left px-4 py-2 text-sm rounded-md ${currentView === 'ai-images' ? 'bg-brand-red text-white' : 'text-gray-700 dark:text-gray-300'}`}>
               AI Images
             </button>
