@@ -5,6 +5,7 @@ import { DayData, Transaction, getInitialDayData, formatCurrency, Contact } from
 import Calendar from '../components/Calendar';
 import EODPerformanceChart from '../components/EODPerformanceChart';
 import DreamClientStudioStats from '../components/DreamClientStudioStats';
+import { supabase } from '../src/services/supabaseClient';
 
 // --- PROPS INTERFACE ---
 interface EODReportPageProps {
@@ -60,6 +61,7 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
     const currentDateKey = getDateKey(selectedDate);
     
     const [talkTime, setTalkTime] = useState('');
+    const [contentPostedCount, setContentPostedCount] = useState(0);
 
     const currentData = useMemo(() => allData[currentDateKey] || getInitialDayData(), [allData, currentDateKey]);
     const isSubmitted = currentData.eodSubmitted;
@@ -68,12 +70,35 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
         setTalkTime(currentData.talkTime || '');
     }, [currentData]);
 
+    // Fetch Content Posted count for selected date from Scorecard
+    useEffect(() => {
+        const fetchContentPosted = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('generated_content')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .eq('used', true)
+                    .gte('created_at', `${currentDateKey}T00:00:00`)
+                    .lte('created_at', `${currentDateKey}T23:59:59`);
+                
+                if (error) throw error;
+                setContentPostedCount(data?.length || 0);
+            } catch (error) {
+                console.error('Error fetching content posted count:', error);
+                setContentPostedCount(0);
+            }
+        };
+        
+        fetchContentPosted();
+    }, [userId, currentDateKey]);
+
     const dailyKpis = useMemo(() => {
         // Activity
         const callsMade = (currentData.prospectingContacts || []).filter(c => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM).length;
         const proposalsSent = (currentData.prospectingContacts || []).filter(c => c.prospecting.EP).length;
         const texts = (currentData.prospectingContacts || []).filter(c => c.prospecting.ST).length;
-        const totalContacts = (currentData.prospectingContacts || []).length;
+        const socialMediaTouches = contentPostedCount; // Synced with Scorecard Content Posted metric
 
         // Pipeline
         const newLeads = hotLeads.filter(l => l.dateAdded && l.dateAdded.startsWith(currentDateKey)).length;
@@ -94,12 +119,12 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
         const demoToCloseRate = demosHeld > 0 ? ((closedDeals / demosHeld) * 100).toFixed(1) : '0';
 
         return {
-            callsMade, proposalsSent, texts, totalContacts,
+            callsMade, proposalsSent, texts, socialMediaTouches,
             newLeads, demosHeld, quotesSent, apptsSet,
             closedDeals, revenueCollected, avgDeal, acv,
             callToApptRate, leadToApptRate, demoToCloseRate
         };
-    }, [currentData, hotLeads, transactions, currentDateKey]);
+    }, [currentData, hotLeads, transactions, currentDateKey, contentPostedCount]);
 
 
     const handleSubmit = async () => {
@@ -142,7 +167,7 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
                         <KPI_Card label="Calls Made" value={dailyKpis.callsMade} />
                         <KPI_Card label="Proposals Sent" value={dailyKpis.proposalsSent} />
                         <KPI_Card label="Texts Sent" value={dailyKpis.texts} />
-                        <KPI_Card label="Total Contacts" value={dailyKpis.totalContacts} />
+                        <KPI_Card label="Social Media Touches" value={dailyKpis.socialMediaTouches} />
                     </Column>
                     <Column title="Pipeline" subtitle="Progress">
                         <KPI_Card label="New Leads" value={dailyKpis.newLeads} />

@@ -39,8 +39,6 @@ interface PlatformStats {
 type DateRange = '7days' | '30days' | '90days' | 'all';
 
 const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [dateRange, setDateRange] = useState<DateRange>('30days');
   const [overviewStats, setOverviewStats] = useState<OverviewStats>({
     totalAvatars: 0,
     totalContentGenerated: 0,
@@ -54,30 +52,13 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
 
   useEffect(() => {
     fetchAllStats();
-  }, [user.id, dateRange]);
+  }, [user.id]);
 
-  const getDateFilter = (): string | null => {
-    const now = new Date();
-    switch (dateRange) {
-      case '7days':
-        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return sevenDaysAgo.toISOString();
-      case '30days':
-        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        return thirtyDaysAgo.toISOString();
-      case '90days':
-        const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        return ninetyDaysAgo.toISOString();
-      case 'all':
-        return null;
-    }
-  };
+
 
   const fetchAllStats = async () => {
     setIsLoading(true);
     try {
-      const dateFilter = getDateFilter();
-
       // Fetch all avatars
       const { data: avatars, error: avatarsError } = await supabase
         .from('buyer_avatars')
@@ -87,17 +68,11 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
 
       if (avatarsError) throw avatarsError;
 
-      // Fetch all content with date filter
-      let contentQuery = supabase
+      // Fetch all content (no date filter - show all-time stats)
+      const { data: content, error: contentError } = await supabase
         .from('generated_content')
         .select('*')
         .eq('user_id', user.id);
-
-      if (dateFilter) {
-        contentQuery = contentQuery.gte('created_at', dateFilter);
-      }
-
-      const { data: content, error: contentError } = await contentQuery;
 
       if (contentError) throw contentError;
 
@@ -203,24 +178,8 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
             📊 Dream Client Studio Scorecard
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Analytics & Performance Insights
+            All-Time Analytics & Performance Insights
           </p>
-        </div>
-
-        {/* Date Selector (synced with EOD Report) */}
-        <div className="flex items-center gap-3">
-          <input
-            type="date"
-            value={selectedDate.toISOString().split('T')[0]}
-            onChange={(e) => setSelectedDate(new Date(e.target.value))}
-            className="px-4 py-2 rounded-lg border border-brand-light-border dark:border-brand-gray bg-brand-light-card dark:bg-brand-navy text-brand-light-text dark:text-white font-semibold cursor-pointer"
-          />
-          <button
-            onClick={() => setSelectedDate(new Date())}
-            className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold transition"
-          >
-            Today
-          </button>
         </div>
       </div>
 
