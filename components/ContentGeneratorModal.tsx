@@ -5,6 +5,7 @@ import { User } from '../src/types';
 import { BuyerAvatar } from '../src/marketingTypes';
 import { GoogleGenAI, Type } from '@google/genai';
 import { generateImage } from '../services/geminiService';
+import { canGenerateContent, incrementPostCount } from '../src/services/subscriptionService';
 
 const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const ai = new GoogleGenAI({ apiKey: geminiApiKey });
@@ -71,6 +72,13 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
   ];
 
   const handleGenerate = async () => {
+    // Check usage limits
+    const check = await canGenerateContent(user.id);
+    if (!check.allowed) {
+      alert(check.reason || 'Cannot generate content');
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const finalObjective = objective === 'custom' ? customObjective : campaignObjectives.find(o => o.value === objective)?.label || '';
@@ -126,6 +134,9 @@ Return ONLY a JSON object with this exact structure:
       setGeneratedImages([]); // Reset images when generating new content
       setSelectedImageIndex(null);
       setCustomImagePrompt(content.imagePrompt); // Set initial custom prompt
+
+      // Increment post count
+      await incrementPostCount(user.id);
     } catch (error) {
       console.error('Error generating content:', error);
       alert('Failed to generate content. Please try again.');
