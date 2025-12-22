@@ -38,6 +38,7 @@ import AccountSettingsPage from '../pages/AccountSettingsPage';
 import GHLIntegrationPage from '../pages/GHLIntegrationPage';
 import DreamClientStudioPage from '../pages/DreamClientStudioPage';
 import ScorecardDashboard from '../pages/ScorecardDashboard';
+import BillingPlansPage from '../pages/BillingPlansPage';
 
 // Components
 import ChatIcon from '../components/ChatIcon';
@@ -1018,6 +1019,8 @@ const App: React.FC = () => {
         return <DreamClientStudioPage user={user} />;
       case 'scorecard-dashboard':
         return <ScorecardDashboard user={user} />;
+      case 'billing-plans':
+        return <BillingPlansPage user={user} />;
       default:
         return <div>View not found</div>;
     }
@@ -1035,6 +1038,7 @@ const App: React.FC = () => {
         onLogout={handleLogout}
         userName={user.name}
         isDemoMode={isDemoMode}
+        user={user}
       />
       <main className="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
         {renderView()}

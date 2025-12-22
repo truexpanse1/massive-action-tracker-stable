@@ -20,7 +20,8 @@ export type View =
   | 'performance-dashboard'
   | 'eod-report'
   | 'dream-avatars'
-  | 'scorecard-dashboard';
+  | 'scorecard-dashboard'
+  | 'billing-plans';
 
 export type Role = 'Sales Rep' | 'Manager';
 export type UserStatus = 'Active' | 'Inactive';
