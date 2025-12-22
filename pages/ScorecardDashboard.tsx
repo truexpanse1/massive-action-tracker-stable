@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/services/supabaseClient';
 import { User } from '../src/types';
 import { BuyerAvatar } from '../src/marketingTypes';
-import SocialMediaROIChart from '../components/SocialMediaROIChart';
+import MarketingPerformanceTrendsChart from '../components/MarketingPerformanceTrendsChart';
 
 interface ScorecardDashboardProps {
   user: User;
@@ -49,6 +49,12 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
   const [frameworkStats, setFrameworkStats] = useState<FrameworkStats[]>([]);
   const [platformStats, setPlatformStats] = useState<PlatformStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Data for chart
+  const [allData, setAllData] = useState<{ [key: string]: any }>({});
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [avatarsData, setAvatarsData] = useState<any[]>([]);
+  const [contentData, setContentData] = useState<any[]>([]);
 
   useEffect(() => {
     fetchAllStats();
@@ -162,6 +168,38 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
 
       setPlatformStats(platformStatsData);
 
+      // Store data for chart
+      setAvatarsData(avatars || []);
+      setContentData(content || []);
+
+      // Fetch day_data for chart
+      const { data: dayData, error: dayDataError } = await supabase
+        .from('day_data')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (dayDataError) {
+        console.error('Error fetching day_data:', dayDataError);
+      } else {
+        const dayDataMap: { [key: string]: any } = {};
+        dayData?.forEach((day: any) => {
+          dayDataMap[day.date] = day;
+        });
+        setAllData(dayDataMap);
+      }
+
+      // Fetch transactions for chart
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('userId', user.id);
+
+      if (transactionsError) {
+        console.error('Error fetching transactions:', transactionsError);
+      } else {
+        setTransactions(transactionsData || []);
+      }
+
     } catch (error) {
       console.error('Error fetching scorecard stats:', error);
     } finally {
@@ -244,8 +282,14 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
             </div>
           </div>
 
-          {/* Social Media ROI Chart */}
-          <SocialMediaROIChart user={user} />
+          {/* Marketing Performance Trends Chart */}
+          <MarketingPerformanceTrendsChart
+            userId={user.id}
+            allData={allData}
+            transactions={transactions}
+            contentData={contentData}
+            avatarsData={avatarsData}
+          />
 
           {/* Removed sections for simplicity:
           - Avatar Performance Table
