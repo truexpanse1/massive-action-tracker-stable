@@ -478,12 +478,20 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             
             // 91-365 days: Group by month
             if (numDays <= 365) {
-                const months: Record<string, number> = {};
+                const monthsMap: Record<string, { revenue: number; monthNum: number }> = {};
                 data.forEach(d => {
-                    const monthKey = new Date(d.date).toLocaleDateString('en-US', { month: 'short' });
-                    months[monthKey] = (months[monthKey] || 0) + d.revenue;
+                    const date = new Date(d.date);
+                    const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+                    const monthNum = date.getMonth(); // 0-11
+                    if (!monthsMap[monthKey]) {
+                        monthsMap[monthKey] = { revenue: 0, monthNum };
+                    }
+                    monthsMap[monthKey].revenue += d.revenue;
                 });
-                return Object.entries(months).map(([label, revenue]) => ({ label, revenue }));
+                // Sort by month number (January=0 to December=11)
+                return Object.entries(monthsMap)
+                    .sort(([, a], [, b]) => a.monthNum - b.monthNum)
+                    .map(([label, data]) => ({ label, revenue: data.revenue }));
             }
             
             // 366+ days: Group by year
