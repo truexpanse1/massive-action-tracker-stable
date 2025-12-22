@@ -19,10 +19,12 @@ interface ContentGeneratorModalProps {
 
 type Platform = 'Facebook' | 'Instagram' | 'LinkedIn' | 'TikTok';
 type Framework = 'PAS' | 'BAB' | 'Dream' | 'SocialProof';
+type WritingStyle = 'Standard' | 'Dan Kennedy' | 'Sabri Suby';
 
 const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, onClose, avatar, user }) => {
   const [platform, setPlatform] = useState<Platform>('Facebook');
   const [framework, setFramework] = useState<Framework>('PAS');
+  const [writingStyle, setWritingStyle] = useState<WritingStyle>('Standard');
   const [objective, setObjective] = useState('');
   const [customObjective, setCustomObjective] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -83,8 +85,15 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
     try {
       const finalObjective = objective === 'custom' ? customObjective : campaignObjectives.find(o => o.value === objective)?.label || '';
       
+      // Writing style instructions
+      const styleInstructions = {
+        'Standard': '',
+        'Dan Kennedy': `\n\nWRITING STYLE: Use Dan Kennedy's direct-response approach:\n- Write with bold, attention-grabbing headlines\n- Use specific numbers, dates, and details (never vague claims)\n- Include reason-why explanations for every claim\n- Create urgency and scarcity (limited time, limited availability)\n- Be direct and no-nonsense - cut the fluff\n- Use personality and strong opinions\n- Include proof elements (case studies, testimonials, specific results)\n- Make the call-to-action crystal clear and urgent\n- Don't be afraid of longer copy if it converts`,
+        'Sabri Suby': `\n\nWRITING STYLE: Use Sabri Suby's aggressive, results-driven approach:\n- Lead with bold, provocative statements\n- Focus on tangible, measurable outcomes\n- Use urgency and FOMO (fear of missing out)\n- Include social proof and authority\n- Challenge the status quo\n- Be confident and assertive\n- Use short, punchy sentences\n- Create immediate desire for action`
+      };
+
       // Build the prompt for Gemini
-      const prompt = `You are an expert copywriter specializing in high-converting ${platform} ads using the ${frameworks[framework].name} framework.
+      const prompt = `You are an expert copywriter specializing in high-converting ${platform} ads using the ${frameworks[framework].name} framework.${styleInstructions[writingStyle]}
 
 Create a ${platform} ad for a ${avatar.industry || 'business'} targeting this avatar:
 
@@ -295,7 +304,36 @@ Return ONLY a JSON object with this exact structure:
 
               <div>
                 <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-4">
-                  3. Campaign Objective
+                  3. Writing Style
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {(['Standard', 'Dan Kennedy', 'Sabri Suby'] as WritingStyle[]).map((style) => (
+                    <button
+                      key={style}
+                      onClick={() => setWritingStyle(style)}
+                      className={`px-4 py-3 rounded-lg border-2 transition text-center ${
+                        writingStyle === style
+                          ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 font-semibold'
+                          : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 text-brand-light-text dark:text-white'
+                      }`}
+                    >
+                      {style === 'Dan Kennedy' && '📣 '}
+                      {style === 'Sabri Suby' && '🔥 '}
+                      {style === 'Standard' && '📝 '}
+                      {style}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  {writingStyle === 'Dan Kennedy' && 'Direct-response, reason-why, urgency-driven copy'}
+                  {writingStyle === 'Sabri Suby' && 'Aggressive, results-focused, bold statements'}
+                  {writingStyle === 'Standard' && 'Balanced, professional, framework-focused'}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-4">
+                  4. Campaign Objective
                 </h3>
                 <div className="space-y-2">
                   {campaignObjectives.map((obj) => (
@@ -329,7 +367,7 @@ Return ONLY a JSON object with this exact structure:
 
               <div>
                 <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-2">
-                  4. Image Description (Optional)
+                  5. Image Description (Optional)
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                   Describe what you want in the image, or leave blank for AI to decide
