@@ -19,7 +19,8 @@ export type View =
   | 'eod-report'
   | 'account-settings'
   | 'ghl-integration'
-  | 'dream-avatars';
+  | 'dream-avatars'
+  | 'scorecard-dashboard';
 
 export type Role = 'Sales Rep' | 'Manager';
 export type UserStatus = 'Active' | 'Inactive';
