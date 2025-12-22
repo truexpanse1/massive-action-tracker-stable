@@ -64,14 +64,21 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
   // Auto-save to localStorage whenever content changes
   useEffect(() => {
     if (generatedContent) {
-      const draft = {
-        content: generatedContent,
-        images: generatedImages,
-        selectedImageIndex,
-        customImagePrompt,
-        timestamp: Date.now()
-      };
-      localStorage.setItem(draftKey, JSON.stringify(draft));
+      try {
+        const draft = {
+          content: generatedContent,
+          // Don't save images to localStorage - they're too large and cause quota errors
+          // Users can download images instead
+          images: [], 
+          selectedImageIndex,
+          customImagePrompt,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+      } catch (error) {
+        // Handle quota exceeded error gracefully
+        console.warn('localStorage quota exceeded - draft not saved:', error);
+      }
     }
   }, [generatedContent, generatedImages, selectedImageIndex, customImagePrompt, draftKey]);
 
@@ -565,19 +572,36 @@ Return ONLY a JSON object with this exact structure:
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
-                    <button
-                      onClick={() => handleCopy(`${generatedContent.headline}\n\n${generatedContent.body}\n\n${generatedContent.cta}`)}
-                      className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
-                    >
-                      Copy Text
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
-                    >
-                      Save to Library
-                    </button>
+                  <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleCopy(`${generatedContent.headline}\n\n${generatedContent.body}\n\n${generatedContent.cta}`)}
+                        className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-brand-light-text dark:text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+                      >
+                        📋 Copy Text
+                      </button>
+                      {selectedImageIndex !== null && generatedImages[selectedImageIndex] && (
+                        <button
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = generatedImages[selectedImageIndex];
+                            link.download = `${avatar.avatar_name.replace(/\s+/g, '-')}-post-image.png`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+                        >
+                          💾 Download Image
+                        </button>
+                      )}
+                      <button
+                        onClick={handleSave}
+                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+                      >
+                        💫 Save to Library
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
