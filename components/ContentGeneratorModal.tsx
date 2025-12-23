@@ -271,16 +271,16 @@ Return ONLY a JSON object with this exact structure:
   const canGenerate = platform && framework && (objective !== 'custom' ? objective : customObjective.trim());
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray max-w-6xl w-full max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="border-b border-brand-light-border dark:border-brand-gray p-6 flex-shrink-0">
+        <div className="border-b border-brand-light-border dark:border-brand-gray p-4 sm:p-6 flex-shrink-0">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold text-brand-light-text dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-bold text-brand-light-text dark:text-white">
                 Generate Content
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                 For: <span className="font-semibold text-purple-600">{avatar.avatar_name}</span>
               </p>
             </div>
@@ -296,20 +296,20 @@ Return ONLY a JSON object with this exact structure:
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Left: Configuration */}
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-4">
+                <h3 className="text-base sm:text-lg font-bold text-brand-light-text dark:text-white mb-3 sm:mb-4">
                   1. Select Platform
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   {(['Facebook', 'Instagram', 'LinkedIn', 'TikTok'] as Platform[]).map((p) => (
                     <button
                       key={p}
                       onClick={() => setPlatform(p)}
-                      className={`px-4 py-3 rounded-lg border-2 transition font-semibold ${
+                      className={`px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 transition font-semibold text-sm sm:text-base ${
                         platform === p
                           ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-purple-400'
@@ -322,7 +322,7 @@ Return ONLY a JSON object with this exact structure:
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-4">
+                <h3 className="text-base sm:text-lg font-bold text-brand-light-text dark:text-white mb-3 sm:mb-4">
                   2. Choose Framework
                 </h3>
                 <div className="space-y-3">
@@ -353,7 +353,7 @@ Return ONLY a JSON object with this exact structure:
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-4">
+                <h3 className="text-base sm:text-lg font-bold text-brand-light-text dark:text-white mb-3 sm:mb-4">
                   3. Writing Tone
                 </h3>
                 <div className="grid grid-cols-3 gap-3">
@@ -388,7 +388,7 @@ Return ONLY a JSON object with this exact structure:
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-4">
+                <h3 className="text-base sm:text-lg font-bold text-brand-light-text dark:text-white mb-3 sm:mb-4">
                   4. Campaign Objective
                 </h3>
                 <div className="space-y-2">

@@ -498,8 +498,8 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
         {/* Enhanced Add Account Modal */}
         {showCreateGifted && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCreateGifted(false)}>
-            <div className="bg-brand-light-card dark:bg-brand-navy border border-brand-light-border dark:border-brand-gray rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-2xl font-bold text-brand-light-text dark:text-white mb-6">Add Account</h3>
+            <div className="bg-brand-light-card dark:bg-brand-navy border border-brand-light-border dark:border-brand-gray rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-xl sm:text-2xl font-bold text-brand-light-text dark:text-white mb-4 sm:mb-6">Add Account</h3>
               
               <div className="space-y-6">
                 {/* Step 1: Account Type */}
@@ -507,7 +507,7 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                     Account Type
                   </label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <button
                       onClick={() => setAccountType('team')}
                       className={`p-4 rounded-lg border-2 transition ${
@@ -543,7 +543,7 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                       Billing Method
                     </label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <button
                         onClick={() => setBillingType('ghl')}
                         className={`p-4 rounded-lg border-2 transition ${
@@ -580,7 +580,7 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                       Plan Tier
                     </label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <button
                         onClick={() => setSelectedPlan('solo')}
                         className={`p-4 rounded-lg border-2 transition ${

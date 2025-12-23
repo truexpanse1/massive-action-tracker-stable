@@ -63,15 +63,15 @@ const DreamClientStudioPage: React.FC<DreamClientStudioPageProps> = ({ user }) =
   };
 
   return (
-    <div className="min-h-screen bg-brand-light-bg dark:bg-brand-ink p-6">
+    <div className="min-h-screen bg-brand-light-bg dark:bg-brand-ink p-3 sm:p-6">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-brand-light-text dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-brand-light-text dark:text-white mb-2">
               Dream Client Studio
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
               Create detailed buyer avatars and generate high-converting content that attracts your ideal clients.
             </p>
           </div>
@@ -85,7 +85,7 @@ const DreamClientStudioPage: React.FC<DreamClientStudioPageProps> = ({ user }) =
                 setLimitMessage(check.reason || 'Cannot create avatar');
               }
             }}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-lg"
+            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-lg text-sm sm:text-base w-full sm:w-auto justify-center"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

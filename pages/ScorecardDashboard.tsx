@@ -212,10 +212,10 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-brand-light-text dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-brand-light-text dark:text-white">
             📊 Dream Client Studio Scorecard
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             All-Time Analytics & Performance Insights
           </p>
         </div>
@@ -228,8 +228,8 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
       ) : (
         <>
           {/* Overview Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="bg-brand-light-card dark:bg-brand-navy p-4 sm:p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
               <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">
                 Total Avatars
               </p>
@@ -241,7 +241,7 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
               </p>
             </div>
 
-            <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+            <div className="bg-brand-light-card dark:bg-brand-navy p-4 sm:p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
               <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">
                 Content Generated
               </p>
@@ -253,7 +253,7 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
               </p>
             </div>
 
-            <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+            <div className="bg-brand-light-card dark:bg-brand-navy p-4 sm:p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
               <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">
                 Content Posted
               </p>
@@ -267,7 +267,7 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
               </p>
             </div>
 
-            <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+            <div className="bg-brand-light-card dark:bg-brand-navy p-4 sm:p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
               <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">
                 Avg Performance
               </p>

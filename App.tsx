@@ -160,7 +160,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-brand-light-bg dark:bg-brand-ink">
       <Header currentView={view} setView={setView} isDemoMode={isDemoMode} />
-      <main className="flex-grow p-4 lg:p-8">
+      <main className="flex-grow p-3 sm:p-4 lg:p-8">
         {renderView()}
       </main>
     </div>
