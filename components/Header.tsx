@@ -212,8 +212,17 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
                   GHL Integration
                 </button>
               )}
-              <button onClick={() => { onLogout(); setMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
-                Logout
+              <button 
+                onClick={(e) => { 
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onLogout(); 
+                  setMobileMenuOpen(false); 
+                }} 
+                className="block w-full text-left px-4 py-3 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors active:bg-red-100 dark:active:bg-red-900/30"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                🚪 Logout
               </button>
             </div>
           </div>
