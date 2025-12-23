@@ -26,14 +26,8 @@ const SavedQuotesCard: React.FC<SavedQuotesCardProps> = ({ savedQuotes, onSaveQu
         const body = encodeURIComponent(`"${quote.text}"\n\n- ${quote.author}`);
         const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
         
-        // Create a temporary anchor and click it for better compatibility
-        const anchor = document.createElement('a');
-        anchor.href = mailtoLink;
-        anchor.target = '_blank';
-        anchor.rel = 'noopener noreferrer';
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
+        // Open mailto link directly (no target=_blank for mailto)
+        window.location.href = mailtoLink;
     };
 
     const sortedQuotes = [...savedQuotes].sort((a, b) => new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime());
