@@ -18,7 +18,7 @@ interface ContentGeneratorModalProps {
 }
 
 type Platform = 'Facebook' | 'Instagram' | 'LinkedIn' | 'TikTok';
-type Framework = 'PAS' | 'BAB' | 'Dream' | 'SocialProof';
+type Framework = 'PAS' | 'BAB' | 'Dream' | 'SocialProof' | 'Custom';
 type WritingStyle = 'Professional' | 'Friendly' | 'Business' | 'Bold' | 'Fiery' | 'Confident';
 
 const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, onClose, avatar, user }) => {
@@ -27,6 +27,7 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
   const [writingStyle, setWritingStyle] = useState<WritingStyle>('Professional');
   const [objective, setObjective] = useState('');
   const [customObjective, setCustomObjective] = useState('');
+  const [customTopic, setCustomTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<{
@@ -103,6 +104,11 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
       description: 'Leverage customer success stories and testimonials',
       icon: '⭐',
     },
+    Custom: {
+      name: 'Custom Topic',
+      description: 'Specify your own topic or theme for the content',
+      icon: '✏️',
+    },
   };
 
   const campaignObjectives = [
@@ -138,9 +144,18 @@ const ContentGeneratorModal: React.FC<ContentGeneratorModalProps> = ({ isOpen, o
       };
 
       // Build the prompt for Gemini
-      const prompt = `You are an expert copywriter specializing in high-converting ${platform} ads using the ${frameworks[framework].name} framework.${styleInstructions[writingStyle]}
+      let frameworkInstruction = '';
+      if (framework === 'Custom') {
+        frameworkInstruction = `Create a ${platform} post about this specific topic: ${customTopic}
 
-Create a ${platform} ad for a ${avatar.industry || 'business'} targeting this avatar:
+Use your expertise to structure the content in the most effective way for this topic.`;
+      } else {
+        frameworkInstruction = `Framework: ${frameworks[framework].name} - ${frameworks[framework].description}`;
+      }
+
+      const prompt = `You are an expert copywriter specializing in high-converting ${platform} content${framework !== 'Custom' ? ` using the ${frameworks[framework].name} framework` : ''}.${styleInstructions[writingStyle]}
+
+Create a ${platform} ${framework === 'Custom' ? 'post' : 'ad'} for a ${avatar.industry || 'business'} targeting this avatar:
 
 Avatar: ${avatar.avatar_name}
 Demographics: ${avatar.age_range || 'N/A'} | ${avatar.gender || 'N/A'} | ${avatar.income_range || 'N/A'}
@@ -149,8 +164,8 @@ Fears: ${(avatar.fears || []).slice(0, 3).join(', ')}
 Pain Points: ${(avatar.pain_points || []).slice(0, 3).join(', ')}
 Buying Triggers: ${(avatar.buying_triggers || []).slice(0, 3).join(', ')}
 
-Campaign Objective: ${finalObjective}
-Framework: ${frameworks[framework].name} - ${frameworks[framework].description}
+${framework === 'Custom' ? frameworkInstruction : `Campaign Objective: ${finalObjective}
+${frameworkInstruction}`}
 ${imageDescription ? `
 Image Requirements: ${imageDescription}` : ''}
 
@@ -268,7 +283,8 @@ Return ONLY a JSON object with this exact structure:
 
   if (!isOpen) return null;
 
-  const canGenerate = platform && framework && (objective !== 'custom' ? objective : customObjective.trim());
+  const canGenerate = platform && framework && 
+    (framework === 'Custom' ? customTopic.trim() : (objective !== 'custom' ? objective : customObjective.trim()));
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
@@ -350,6 +366,25 @@ Return ONLY a JSON object with this exact structure:
                     </button>
                   ))}
                 </div>
+                
+                {/* Custom Topic Input - Show when Custom framework is selected */}
+                {framework === 'Custom' && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      What topic would you like to discuss?
+                    </label>
+                    <textarea
+                      value={customTopic}
+                      onChange={(e) => setCustomTopic(e.target.value)}
+                      placeholder="e.g., How to handle objections in sales calls, Tips for better prospecting, Why follow-up is critical for closing deals, Introducing our new coaching program..."
+                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-brand-gray text-brand-light-text dark:text-white focus:border-purple-600 focus:outline-none resize-none"
+                      rows={3}
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      💡 Be specific! Examples: "Prospecting tips for B2B coaches", "How to overcome price objections", "Why consistency beats talent in business"
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>
