@@ -43,6 +43,30 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
     loadGiftedAccounts();
   }, []);
 
+  const handleCopyEmail = async (email: string) => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setMessage('Email copied to clipboard!');
+      setTimeout(() => setMessage(''), 2000);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = email;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setMessage('Email copied to clipboard!');
+        setTimeout(() => setMessage(''), 2000);
+      } catch (err) {
+        setError('Failed to copy email');
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
   const loadUserData = async () => {
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -317,7 +341,18 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
           <div className="space-y-3">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
-              <a href={`mailto:${user?.email}`} className="text-brand-light-text dark:text-white font-medium hover:text-blue-600 dark:hover:text-blue-400 hover:underline">{user?.email}</a>
+              <div className="flex items-center gap-2">
+                <a href={`mailto:${user?.email}`} className="text-brand-light-text dark:text-white font-medium hover:text-blue-600 dark:hover:text-blue-400 hover:underline">{user?.email}</a>
+                <button
+                  onClick={() => handleCopyEmail(user?.email)}
+                  className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  title="Copy email to clipboard"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Name</p>
@@ -416,9 +451,20 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
                         {account.users[0]?.name || 'Unknown'}
                       </p>
                       {account.users[0]?.email ? (
-                        <a href={`mailto:${account.users[0].email}`} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                          {account.users[0].email}
-                        </a>
+                        <div className="flex items-center gap-2">
+                          <a href={`mailto:${account.users[0].email}`} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                            {account.users[0].email}
+                          </a>
+                          <button
+                            onClick={() => handleCopyEmail(account.users[0].email)}
+                            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            title="Copy email to clipboard"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                        </div>
                       ) : (
                         <p className="text-sm text-gray-600 dark:text-gray-400">No email</p>
                       )}
