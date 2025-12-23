@@ -25,7 +25,7 @@ export default function SecurityPage() {
 
         <section className="text-center pt-8">
           <p className="text-sm text-gray-500">
-            Questions? Email us anytime at support@apptruexpanse.com
+            Questions? Email us anytime at <a href="mailto:support@apptruexpanse.com" className="text-blue-600 dark:text-blue-400 hover:underline">support@apptruexpanse.com</a>
           </p>
         </section>
       </div>

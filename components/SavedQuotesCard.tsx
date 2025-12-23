@@ -24,7 +24,16 @@ const SavedQuotesCard: React.FC<SavedQuotesCardProps> = ({ savedQuotes, onSaveQu
     const handleShareViaEmail = (quote: Quote) => {
         const subject = encodeURIComponent(`An inspiring quote from ${quote.author}`);
         const body = encodeURIComponent(`"${quote.text}"\n\n- ${quote.author}`);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+        
+        // Create a temporary anchor and click it for better compatibility
+        const anchor = document.createElement('a');
+        anchor.href = mailtoLink;
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
     };
 
     const sortedQuotes = [...savedQuotes].sort((a, b) => new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime());
@@ -54,7 +63,7 @@ const SavedQuotesCard: React.FC<SavedQuotesCardProps> = ({ savedQuotes, onSaveQu
                             </blockquote>
                              <div className="flex justify-end items-center mt-3 pt-2 border-t border-brand-light-border dark:border-brand-gray">
                                 <div className="flex items-center gap-1">
-                                    <button onClick={() => handleShareViaEmail(quote)} className="p-1 rounded-full text-gray-400 hover:bg-gray-300 dark:hover:bg-brand-gray" title="Share via Email">
+                                    <button onClick={() => handleShareViaEmail(quote)} className="p-1 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors" title="Share via Email">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                                     </button>
                                     <button onClick={() => onRemoveQuote(quote.id)} className="p-1 rounded-full text-red-500 hover:bg-red-500/10" title="Remove Quote">

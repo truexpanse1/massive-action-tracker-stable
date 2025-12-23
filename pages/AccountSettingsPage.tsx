@@ -317,7 +317,7 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
           <div className="space-y-3">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
-              <p className="text-brand-light-text dark:text-white font-medium">{user?.email}</p>
+              <a href={`mailto:${user?.email}`} className="text-brand-light-text dark:text-white font-medium hover:text-blue-600 dark:hover:text-blue-400 hover:underline">{user?.email}</a>
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Name</p>
@@ -415,9 +415,13 @@ const AccountSettingsPage: React.FC<AccountSettingsPageProps> = ({ onClose }) =>
                       <p className="font-medium text-brand-light-text dark:text-white">
                         {account.users[0]?.name || 'Unknown'}
                       </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {account.users[0]?.email || 'No email'}
-                      </p>
+                      {account.users[0]?.email ? (
+                        <a href={`mailto:${account.users[0].email}`} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                          {account.users[0].email}
+                        </a>
+                      ) : (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">No email</p>
+                      )}
                       <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         Company: {account.name} • Created: {new Date(account.gifted_at).toLocaleDateString()}
                       </p>
