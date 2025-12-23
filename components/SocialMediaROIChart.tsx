@@ -74,7 +74,7 @@ const SocialMediaROIChart: React.FC<SocialMediaROIChartProps> = ({ user }) => {
       const { data: contentData, error: contentError } = await supabase
         .from('generated_content')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('assigned_to', user.id)
         .eq('used', true)
         .gte('created_at', startISO)
         .lte('created_at', endISO);

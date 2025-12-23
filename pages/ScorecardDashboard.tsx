@@ -69,7 +69,7 @@ const ScorecardDashboard: React.FC<ScorecardDashboardProps> = ({ user }) => {
       const { data: avatars, error: avatarsError } = await supabase
         .from('buyer_avatars')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('assigned_to', user.id)
         .order('created_at', { ascending: false });
 
       if (avatarsError) throw avatarsError;

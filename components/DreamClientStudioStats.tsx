@@ -40,7 +40,7 @@ const DreamClientStudioStats: React.FC<DreamClientStudioStatsProps> = ({ userId,
       const { data: contentData, error: contentError } = await supabase
         .from('generated_content')
         .select('id, used, performance_rating')
-        .eq('user_id', userId)
+        .eq('assigned_to', userId)
         .gte('created_at', startOfDay)
         .lte('created_at', endOfDay);
 
@@ -50,7 +50,7 @@ const DreamClientStudioStats: React.FC<DreamClientStudioStatsProps> = ({ userId,
       const { data: avatarData, error: avatarError } = await supabase
         .from('buyer_avatars')
         .select('id')
-        .eq('user_id', userId)
+        .eq('assigned_to', userId)
         .gte('created_at', startOfDay)
         .lte('created_at', endOfDay);
 
