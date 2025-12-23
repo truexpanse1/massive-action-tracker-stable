@@ -24,13 +24,28 @@ const SavedQuotesCard: React.FC<SavedQuotesCardProps> = ({ savedQuotes, onSaveQu
         }
     };
     
-    const handleShareViaEmail = (quote: Quote) => {
-        const subject = encodeURIComponent(`An inspiring quote from ${quote.author}`);
-        const body = encodeURIComponent(`"${quote.text}"\n\n- ${quote.author}`);
-        const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
-        
-        // Open mailto link directly (no target=_blank for mailto)
-        window.location.href = mailtoLink;
+    const handleCopyQuote = async (quote: Quote) => {
+        const formattedQuote = `"${quote.text}"\n\n- ${quote.author}`;
+        try {
+            await navigator.clipboard.writeText(formattedQuote);
+            // Show temporary success feedback
+            alert('Quote copied to clipboard! You can now paste it anywhere.');
+        } catch (err) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = formattedQuote;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('Quote copied to clipboard! You can now paste it anywhere.');
+            } catch (err) {
+                alert('Failed to copy quote. Please select and copy manually.');
+            }
+            document.body.removeChild(textArea);
+        }
     };
 
     const handleStartEdit = (quote: Quote) => {
@@ -112,8 +127,8 @@ const SavedQuotesCard: React.FC<SavedQuotesCardProps> = ({ savedQuotes, onSaveQu
                                     </blockquote>
                                     <div className="flex justify-end items-center mt-3 pt-2 border-t border-brand-light-border dark:border-brand-gray">
                                         <div className="flex items-center gap-1">
-                                            <button onClick={() => handleShareViaEmail(quote)} className="p-1 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors" title="Share via Email">
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                            <button onClick={() => handleCopyQuote(quote)} className="p-1 rounded-full text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20 transition-colors" title="Copy to Clipboard">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                             </button>
                                             <button onClick={() => handleStartEdit(quote)} className="p-1 rounded-full text-yellow-600 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/20 transition-colors" title="Edit Quote">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
