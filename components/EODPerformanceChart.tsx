@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -88,6 +88,20 @@ export const EODPerformanceChart: React.FC<EODPerformanceChartProps> = ({
     texts: false,
     emails: false,
   });
+
+  // Responsive chart margins for mobile
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  const chartMargin = isMobile 
+    ? { top: 10, right: 10, left: 10, bottom: 10 }
+    : { top: 20, right: 50, left: 50, bottom: 20 };
 
   const toggleMetric = (metric: string) => {
     setActiveMetrics(prev => ({
@@ -191,7 +205,7 @@ export const EODPerformanceChart: React.FC<EODPerformanceChartProps> = ({
     : '#3B82F6';
 
   return (
-    <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+    <div className="bg-brand-light-card dark:bg-brand-navy p-3 sm:p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-brand-light-text dark:text-white mb-2">
           Performance Trends
@@ -296,11 +310,11 @@ export const EODPerformanceChart: React.FC<EODPerformanceChartProps> = ({
           </p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-brand-gray/20 rounded-lg p-4">
+        <div className="bg-white dark:bg-brand-gray/20 rounded-lg p-2 sm:p-4">
           <ResponsiveContainer width="100%" height={400}>
             <ComposedChart
               data={chartData}
-              margin={{ top: 20, right: 50, left: 50, bottom: 20 }}
+              margin={chartMargin}
             >
               <defs>
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
