@@ -1,30 +1,17 @@
 import React from 'react';
-import { Quote, User } from '../types';
+import { Quote } from '../types';
 import QuotesCard from '../components/QuotesCard';
 import BookRecommendationsCard from '../components/BookRecommendationsCard';
 import SavedQuotesCard from '../components/SavedQuotesCard';
 import BusinessMasteryKnowledgeBase from '../components/BusinessMasteryKnowledgeBase';
 
 interface CoachingPageProps {
-  user: User;
   savedQuotes?: Quote[];
   onSaveQuote?: (quote: Omit<Quote, 'id'>) => Promise<void>;
   onRemoveQuote?: (quoteId: string) => Promise<void>;
 }
 
-const CoachingPage: React.FC<CoachingPageProps> = ({ user, savedQuotes = [], onSaveQuote, onRemoveQuote }) => {
-
-  // Safety check for user
-  if (!user || !user.id) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+const CoachingPage: React.FC<CoachingPageProps> = ({ savedQuotes = [], onSaveQuote, onRemoveQuote }) => {
 
   const handleSaveQuote = (quoteToSave: Omit<Quote, 'id'>) => {
     if (!savedQuotes.some(q => q.text === quoteToSave.text && q.author === quoteToSave.author)) {
@@ -103,7 +90,7 @@ const CoachingPage: React.FC<CoachingPageProps> = ({ user, savedQuotes = [], onS
             onSaveQuote={handleSaveQuote}
             savedQuotes={savedQuotes}
           />
-          <BusinessMasteryKnowledgeBase userId={user.id} />
+          <BusinessMasteryKnowledgeBase />
         </div>
         
         <div className="lg:col-span-2 space-y-8">

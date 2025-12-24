@@ -12,12 +12,9 @@ import {
 } from '../services/knowledgeBaseService';
 import { BusinessConcept, CONCEPT_CATEGORIES } from '../types';
 import ConceptDetailModal from './ConceptDetailModal';
+import { supabase } from '../supabaseClient';
 
-interface BusinessMasteryKnowledgeBaseProps {
-  userId: string;
-}
-
-export default function BusinessMasteryKnowledgeBase({ userId }: BusinessMasteryKnowledgeBaseProps) {
+export default function BusinessMasteryKnowledgeBase() {
   const [searchQuery, setSearchQuery] = useState('');
   const [popularConcepts, setPopularConcepts] = useState<BusinessConcept[]>([]);
   const [recentConcepts, setRecentConcepts] = useState<BusinessConcept[]>([]);
@@ -26,9 +23,26 @@ export default function BusinessMasteryKnowledgeBase({ userId }: BusinessMastery
   const [categoryConcepts, setCategoryConcepts] = useState<BusinessConcept[]>([]);
   const [selectedConcept, setSelectedConcept] = useState<BusinessConcept | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Get user ID from Supabase auth
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      } else {
+        // If no auth user, use a default ID for demo
+        setUserId('demo-user');
+      }
+    };
+    getUserId();
+  }, []);
 
   useEffect(() => {
-    loadInitialData();
+    if (userId) {
+      loadInitialData();
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -90,7 +104,9 @@ export default function BusinessMasteryKnowledgeBase({ userId }: BusinessMastery
   async function handleConceptClick(concept: BusinessConcept) {
     setSelectedConcept(concept);
     // Record the view
-    await recordConceptView(concept.id, userId);
+    if (userId) {
+      await recordConceptView(concept.id, userId);
+    }
   }
 
   function handleCloseModal() {
