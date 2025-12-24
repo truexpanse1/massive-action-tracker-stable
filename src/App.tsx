@@ -331,32 +331,47 @@ const App: React.FC = () => {
     }
   }, [showConfetti]);
 
-  const handleAddActionToTargets = async (actionItem: string, date: string) => {
-    // Add action item to the Top 6 Daily Targets
-    const dateKey = date;
-    const dayData = allData[dateKey] || getInitialDayData();
+  const handleAddActionToTargets = async (actionItem: string, startDate: string, days: number = 1) => {
+    // Add action item to the Top 6 Daily Targets for multiple days
+    let successCount = 0;
+    let skippedCount = 0;
     
-    // Find the first empty target slot
-    const emptyTargetIndex = dayData.topTargets.findIndex(goal => !goal.text || goal.text.trim() === '');
+    for (let i = 0; i < days; i++) {
+      // Calculate the date for this iteration
+      const currentDate = new Date(startDate);
+      currentDate.setDate(currentDate.getDate() + i);
+      const dateKey = currentDate.toISOString().split('T')[0];
+      
+      const dayData = allData[dateKey] || getInitialDayData();
+      
+      // Find the first empty target slot
+      const emptyTargetIndex = dayData.topTargets.findIndex(goal => !goal.text || goal.text.trim() === '');
+      
+      if (emptyTargetIndex !== -1) {
+        // Add to empty slot
+        const updatedTargets = [...dayData.topTargets];
+        updatedTargets[emptyTargetIndex] = {
+          ...updatedTargets[emptyTargetIndex],
+          text: actionItem,
+          completed: false,
+        };
+        
+        const updatedDayData = {
+          ...dayData,
+          topTargets: updatedTargets,
+        };
+        
+        await handleUpsertDayData(dateKey, updatedDayData);
+        successCount++;
+      } else {
+        // All slots full for this date, skip it
+        skippedCount++;
+      }
+    }
     
-    if (emptyTargetIndex !== -1) {
-      // Add to empty slot
-      const updatedTargets = [...dayData.topTargets];
-      updatedTargets[emptyTargetIndex] = {
-        ...updatedTargets[emptyTargetIndex],
-        text: actionItem,
-        completed: false,
-      };
-      
-      const updatedDayData = {
-        ...dayData,
-        topTargets: updatedTargets,
-      };
-      
-      await handleUpsertDayData(dateKey, updatedDayData);
-    } else {
-      // All slots full, show message
-      alert('All 6 target slots are full for this date. Please complete or remove a target first.');
+    // Show summary if some days were skipped
+    if (skippedCount > 0) {
+      alert(`Added to ${successCount} ${successCount === 1 ? 'day' : 'days'}. Skipped ${skippedCount} ${skippedCount === 1 ? 'day' : 'days'} (all target slots full).`);
     }
   };
 
