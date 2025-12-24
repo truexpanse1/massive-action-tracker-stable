@@ -14,9 +14,23 @@ interface CoachingPageProps {
 
 const CoachingPage: React.FC<CoachingPageProps> = ({ user, savedQuotes = [], onSaveQuote, onRemoveQuote }) => {
 
+  // Safety check for user
+  if (!user || !user.id) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   const handleSaveQuote = (quoteToSave: Omit<Quote, 'id'>) => {
     if (!savedQuotes.some(q => q.text === quoteToSave.text && q.author === quoteToSave.author)) {
-      onSaveQuote(quoteToSave);
+      if (onSaveQuote) {
+        onSaveQuote(quoteToSave);
+      }
     } else {
       alert("This quote is already in your saved list.");
     }
