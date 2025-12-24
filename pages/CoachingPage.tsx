@@ -83,23 +83,22 @@ const CoachingPage: React.FC<CoachingPageProps> = ({ savedQuotes = [], onSaveQuo
         </div>
       </div>
 
-      {/* Secondary Content - Quotes and Books */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 space-y-8">
-          <QuotesCard 
-            onSaveQuote={handleSaveQuote}
-            savedQuotes={savedQuotes}
-          />
-          <BusinessMasteryKnowledgeBase />
-        </div>
-        
-        <div className="lg:col-span-2 space-y-8">
-          <SavedQuotesCard 
-            savedQuotes={savedQuotes}
-            onSaveQuote={handleSaveQuote}
-            onRemoveQuote={onRemoveQuote}
-          />
-        </div>
+      {/* Business Mastery Knowledge Base - Full Width */}
+      <div className="w-full">
+        <BusinessMasteryKnowledgeBase />
+      </div>
+
+      {/* Secondary Content - Quotes (moved to bottom, optional) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <QuotesCard 
+          onSaveQuote={handleSaveQuote}
+          savedQuotes={savedQuotes}
+        />
+        <SavedQuotesCard 
+          savedQuotes={savedQuotes}
+          onSaveQuote={handleSaveQuote}
+          onRemoveQuote={onRemoveQuote}
+        />
       </div>
     </div>
   );

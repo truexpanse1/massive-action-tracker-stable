@@ -122,29 +122,29 @@ export default function BusinessMasteryKnowledgeBase() {
     : [];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-2xl shadow-lg p-8">
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
           🎓 Business Mastery Knowledge Base
         </h2>
-        <p className="text-gray-600">
+        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
           Master the concepts that drive business success. Search, learn, take notes, and implement.
         </p>
       </div>
 
       {/* Search Bar */}
-      <div className="mb-6">
+      <div className="mb-8 max-w-2xl mx-auto">
         <div className="relative">
           <input
             type="text"
             placeholder="Search for business concepts... (e.g., 'objections', 'cold calling', '10x')"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-6 py-4 pl-12 text-lg border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
           />
           <svg
-            className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"
+            className="absolute left-4 top-4.5 h-6 w-6 text-gray-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -160,14 +160,14 @@ export default function BusinessMasteryKnowledgeBase() {
       </div>
 
       {/* Category Filters */}
-      <div className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Browse by Category:</h3>
-        <div className="flex flex-wrap gap-2">
+      <div className="mb-8">
+        <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">Browse by Category</h3>
+        <div className="flex flex-wrap gap-3 justify-center">
           {Object.entries(CONCEPT_CATEGORIES).map(([key, category]) => (
             <button
               key={key}
               onClick={() => handleCategoryClick(key)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-6 py-3 rounded-xl font-semibold text-base transition-all transform hover:scale-105 ${
                 selectedCategory === key
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
