@@ -12,7 +12,16 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
   onTargetChange,
   onMoveToTomorrow,
 }) => {
-  const [localTargets, setLocalTargets] = useState<SpeedOfImplementationTarget[]>(targets);
+  const [localTargets, setLocalTargets] = useState<SpeedOfImplementationTarget[]>(
+    targets && targets.length > 0 ? targets : Array.from({ length: 3 }, (_, i) => ({
+      id: `soi-${i + 1}`,
+      text: '',
+      completed: false,
+      currentDay: 0,
+      totalDays: 0,
+      startDate: '',
+    }))
+  );
   const [contextMenu, setContextMenu] = useState<{
     visible: boolean;
     x: number;
@@ -22,7 +31,9 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setLocalTargets(targets);
+    if (targets && targets.length > 0) {
+      setLocalTargets(targets);
+    }
   }, [targets]);
 
   // Close context menu when clicking outside
@@ -123,13 +134,34 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
             onTouchEnd={handleTouchEnd}
             onTouchCancel={handleTouchEnd}
           >
-            {/* Target Icon */}
-            <div
-              onClick={() => handleCompletionToggle(target)}
-              className="w-6 h-6 flex items-center justify-center cursor-pointer text-2xl mt-1"
-              style={{ fontSize: '24px' }}
-            >
-              🎯
+            {/* Checkbox */}
+            <div className="relative flex items-center">
+              <input
+                type="checkbox"
+                checked={target.completed}
+                onChange={() => handleCompletionToggle(target)}
+                className="peer"
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  cursor: 'pointer',
+                  accentColor: '#9333ea', // purple
+                }}
+              />
+
+              {/* Custom checkmark SVG that appears when checked */}
+              <svg
+                className="absolute w-5 h-5 pointer-events-none hidden peer-checked:block text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
             </div>
 
             {/* Target Content */}
@@ -139,7 +171,7 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
                 value={target.text}
                 onChange={(e) => handleTextChange(target, e.target.value)}
                 placeholder="Add a Speed of Implementation target..."
-                className={`w-full bg-transparent border-b border-dashed border-purple-300 dark:border-purple-600 text-sm p-1 focus:outline-none focus:border-purple-600 focus:border-solid ${
+                className={`w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-sm p-1 focus:outline-none focus:border-purple-600 focus:border-solid ${
                   target.completed
                     ? 'line-through text-gray-500'
                     : target.rolledOver
