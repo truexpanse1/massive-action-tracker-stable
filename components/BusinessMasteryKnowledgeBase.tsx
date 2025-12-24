@@ -12,7 +12,7 @@ import {
 } from '../services/knowledgeBaseService';
 import { BusinessConcept, CONCEPT_CATEGORIES } from '../types';
 import ConceptDetailModal from './ConceptDetailModal';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../services/supabaseClient';
 
 export default function BusinessMasteryKnowledgeBase() {
   const [searchQuery, setSearchQuery] = useState('');
