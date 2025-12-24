@@ -170,8 +170,9 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
                 type="text"
                 value={target.text}
                 onChange={(e) => handleTextChange(target, e.target.value)}
-                placeholder="Add a Speed of Implementation target..."
-                className={`w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-sm p-1 focus:outline-none focus:border-purple-600 focus:border-solid ${
+                placeholder=""
+                readOnly={true}
+                className={`w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-sm p-1 focus:outline-none cursor-default ${
                   target.completed
                     ? 'line-through text-gray-500'
                     : target.rolledOver
