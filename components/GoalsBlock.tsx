@@ -183,6 +183,8 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({
               className={`w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-sm p-1 focus:outline-none focus:border-brand-blue focus:border-solid ${
                 goal.completed 
                   ? 'line-through text-gray-500' 
+                  : goal.fromCoaching
+                  ? 'text-purple-600 dark:text-purple-400 font-bold'
                   : (goal as any).forwarded
                   ? 'text-gray-400 dark:text-gray-500'
                   : goal.rolledOver 

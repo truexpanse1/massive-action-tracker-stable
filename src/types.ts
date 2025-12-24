@@ -70,6 +70,7 @@ export interface Goal {
   id: string;
   text: string;
   completed: boolean;
+  fromCoaching?: boolean; // Marks targets added from coaching notes for special styling
 }
 
 export type ProspectingCode = 'SW' | 'NA' | 'LM' | 'ST' | 'EP' | 'SA';

@@ -354,6 +354,7 @@ const App: React.FC = () => {
           ...updatedTargets[emptyTargetIndex],
           text: actionItem,
           completed: false,
+          fromCoaching: true, // Mark as Speed of Implementation target
         };
         
         const updatedDayData = {
