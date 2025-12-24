@@ -27,6 +27,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
   // Form state
+  const [source, setSource] = useState('');
   const [title, setTitle] = useState('');
   const [topicFocus, setTopicFocus] = useState('');
   const [keyTakeaways, setKeyTakeaways] = useState('');
@@ -58,6 +59,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
   const handleEditNote = (note: CoachingNote) => {
     setIsEditing(true);
     setEditingNoteId(note.id);
+    setSource(note.topic_focus || '');
     setTitle(note.title);
     setTopicFocus(note.topic_focus || '');
     setKeyTakeaways(note.key_takeaways);
@@ -69,6 +71,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
   const resetForm = () => {
     setIsEditing(false);
     setEditingNoteId(null);
+    setSource('');
     setTitle('');
     setTopicFocus('');
     setKeyTakeaways('');
@@ -90,7 +93,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
       company_id: companyId,
       session_date: selectedDate.toISOString().split('T')[0],
       title,
-      topic_focus: topicFocus,
+      topic_focus: source,
       key_takeaways: keyTakeaways,
       action_items: actionItems,
       tags,
@@ -211,15 +214,16 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
             </div>
 
             <div className="space-y-4">
-              {/* Date */}
+              {/* Source */}
               <div>
                 <label className="block text-sm font-bold text-brand-light-text dark:text-white mb-2">
-                  Session Date
+                  Source
                 </label>
                 <input
-                  type="date"
-                  value={selectedDate.toISOString().split('T')[0]}
-                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                  type="text"
+                  placeholder="e.g., Coaching Call with John, Book: 10X Rule, Podcast: Grant Cardone"
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
                   className="w-full px-3 py-2 bg-white dark:bg-brand-ink border border-gray-300 dark:border-brand-gray rounded-lg text-brand-light-text dark:text-white"
                 />
               </div>
@@ -404,7 +408,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
                       </h3>
                       {note.topic_focus && (
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Focus: {note.topic_focus}
+                          Source: {note.topic_focus}
                         </p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">

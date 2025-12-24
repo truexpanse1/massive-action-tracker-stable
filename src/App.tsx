@@ -332,15 +332,32 @@ const App: React.FC = () => {
   }, [showConfetti]);
 
   const handleAddActionToTargets = async (actionItem: string, date: string) => {
-    // Add action item to the specified date's wins/tasks
+    // Add action item to the Top 6 Daily Targets
     const dateKey = date;
     const dayData = allData[dateKey] || getInitialDayData();
     
-    // Add to wins as an action item completed
-    handleAddWin(dateKey, `Action: ${actionItem}`);
+    // Find the first empty target slot
+    const emptyTargetIndex = dayData.topTargets.findIndex(goal => !goal.text || goal.text.trim() === '');
     
-    // Optionally, you could add to a specific tasks array if you have one
-    // For now, we'll just add it to wins to track implementation
+    if (emptyTargetIndex !== -1) {
+      // Add to empty slot
+      const updatedTargets = [...dayData.topTargets];
+      updatedTargets[emptyTargetIndex] = {
+        ...updatedTargets[emptyTargetIndex],
+        text: actionItem,
+        completed: false,
+      };
+      
+      const updatedDayData = {
+        ...dayData,
+        topTargets: updatedTargets,
+      };
+      
+      await handleUpsertDayData(dateKey, updatedDayData);
+    } else {
+      // All slots full, show message
+      alert('All 6 target slots are full for this date. Please complete or remove a target first.');
+    }
   };
 
   const handleLogout = async () => {
