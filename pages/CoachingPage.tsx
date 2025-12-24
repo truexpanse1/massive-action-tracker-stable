@@ -83,9 +83,11 @@ const CoachingPage: React.FC<CoachingPageProps> = ({ savedQuotes = [], onSaveQuo
         </div>
       </div>
 
-      {/* Business Mastery Knowledge Base - Full Width */}
-      <div className="w-full">
-        <BusinessMasteryKnowledgeBase />
+      {/* Business Mastery Knowledge Base - Full Width (breaks out of container) */}
+      <div className="-mx-3 sm:-mx-4 lg:-mx-8 px-3 sm:px-4 lg:px-8 bg-gray-50 dark:bg-gray-900 py-12">
+        <div className="max-w-7xl mx-auto">
+          <BusinessMasteryKnowledgeBase />
+        </div>
       </div>
 
       {/* Secondary Content - Quotes (moved to bottom, optional) */}
