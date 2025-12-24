@@ -147,7 +147,7 @@ const App: React.FC = () => {
           </>
         );
       case 'coaching':
-        return <CoachingPage />;
+        return <CoachingPage user={user!} />;
       case 'ai-images':
         return <AIImagesPageEnhanced />;
       case 'ai-content':

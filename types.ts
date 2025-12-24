@@ -253,4 +253,141 @@ export const formatCurrency = (value: number): string => {
         style: 'currency',
         currency: 'USD',
     }).format(value);
-};
+};//
+// Business Mastery Knowledge Base Types
+//
+
+export interface BusinessConcept {
+  id: string;
+  title: string;
+  slug: string;
+  category: 'sales' | 'marketing' | 'mindset' | 'leadership' | 'scripts';
+  subcategory?: string;
+  
+  // AI-generated content
+  definition?: string;
+  why_it_matters?: string;
+  key_principles?: Array<{ title: string; description: string }>;
+  best_practices?: Array<{ title: string; description: string }>;
+  common_mistakes?: Array<{ title: string; description: string }>;
+  examples?: Array<{ scenario: string; dialogue: string }>;
+  action_steps?: Array<{ step: number; description: string }>;
+  scripts_templates?: string;
+  expert_quotes?: Array<{ text: string; author: string }>;
+  related_concepts?: string[];
+  
+  // Metadata
+  search_keywords?: string[];
+  difficulty_level?: 'beginner' | 'intermediate' | 'advanced';
+  estimated_read_time?: number;
+  
+  // Tracking
+  view_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ConceptNote {
+  id: string;
+  concept_id: string;
+  user_id: string;
+  assigned_to: string;
+  company_id?: string;
+  
+  note_text: string;
+  note_type: 'insight' | 'action' | 'example' | 'question' | 'goal' | 'metric';
+  
+  tags?: string[];
+  linked_concepts?: string[];
+  client_project?: string;
+  
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ImplementationStrategy {
+  id: string;
+  concept_id: string;
+  user_id: string;
+  assigned_to: string;
+  company_id?: string;
+  
+  title: string;
+  goal?: string;
+  timeline: '1_week' | '1_month' | '3_months';
+  target_audience?: string;
+  current_skill_level?: 'beginner' | 'intermediate' | 'advanced';
+  
+  // AI-generated plan
+  weekly_tasks?: Array<{
+    week: number;
+    tasks: Array<{ id: string; task: string; completed: boolean }>;
+  }>;
+  milestones?: Array<{ title: string; description: string; target_date?: string }>;
+  metrics_to_track?: Array<{ metric: string; target?: string; current?: string }>;
+  resources_needed?: string;
+  potential_obstacles?: Array<{ obstacle: string; solution: string }>;
+  content_opportunities?: Array<{ type: string; title: string; description: string }>;
+  
+  // Progress tracking
+  status: 'not_started' | 'in_progress' | 'completed' | 'paused';
+  progress_percentage: number;
+  completed_tasks?: string[];
+  
+  // Dates
+  start_date?: string;
+  target_completion_date?: string;
+  actual_completion_date?: string;
+  
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConceptView {
+  id: string;
+  concept_id: string;
+  user_id: string;
+  assigned_to: string;
+  company_id?: string;
+  viewed_at: string;
+  time_spent_seconds?: number;
+}
+
+// Category configuration for UI
+export const CONCEPT_CATEGORIES = {
+  sales: {
+    label: 'Sales Mastery',
+    icon: '📈',
+    description: 'Master the art of selling and closing deals'
+  },
+  marketing: {
+    label: 'Marketing Mastery',
+    icon: '🎯',
+    description: 'Build your brand and attract ideal clients'
+  },
+  mindset: {
+    label: 'Mindset & Motivation',
+    icon: '🧠',
+    description: 'Develop the mindset of top performers'
+  },
+  leadership: {
+    label: 'Leadership & Management',
+    icon: '👥',
+    description: 'Lead teams and build winning cultures'
+  },
+  scripts: {
+    label: 'Scripts & Templates',
+    icon: '💬',
+    description: 'Ready-to-use scripts for every situation'
+  }
+} as const;
+
+// Note type configuration for UI
+export const NOTE_TYPES = {
+  insight: { label: 'Key Insight', icon: '💡', color: 'blue' },
+  action: { label: 'Action Item', icon: '✅', color: 'green' },
+  example: { label: 'Personal Example', icon: '💬', color: 'purple' },
+  question: { label: 'Question', icon: '❓', color: 'yellow' },
+  goal: { label: 'Goal', icon: '🎯', color: 'red' },
+  metric: { label: 'Metric', icon: '📊', color: 'indigo' }
+} as const;
