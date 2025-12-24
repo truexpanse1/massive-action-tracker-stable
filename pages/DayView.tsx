@@ -1,9 +1,10 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   DayData,
   RevenueData,
   CalendarEvent,
   Goal,
+  SpeedOfImplementationTarget,
   Contact,
   Transaction,
   User,
@@ -14,7 +15,7 @@ import {
 import { getSalesChallenges } from '../services/geminiService';
 import Calendar from '../components/Calendar';
 import RevenueCard from '../components/RevenueCard';
-import AIChallengeCard from '../components/AIChallengeCard';
+import SpeedOfImplementationBlock from '../components/SpeedOfImplementationBlock';
 import ProspectingKPIs from '../components/ProspectingKPIs';
 import GoalsBlock from '../components/GoalsBlock';
 import DailyFollowUps from '../components/DailyFollowUps';
@@ -234,6 +235,50 @@ const DayView: React.FC<DayViewProps> = ({
     await saveDayData({ [type]: newGoals });
   };
 
+  // ---------- Speed of Implementation ----------
+  const handleSOITargetChange = async (
+    updatedTarget: SpeedOfImplementationTarget,
+    isCompletion: boolean
+  ) => {
+    const targets = currentData.speedOfImplementation || [];
+    const newTargets = targets.map((t) =>
+      t.id === updatedTarget.id ? updatedTarget : t
+    );
+    await saveDayData({ speedOfImplementation: newTargets });
+  };
+
+  const handleSOIMoveToTomorrow = async (target: SpeedOfImplementationTarget) => {
+    const tomorrow = new Date(selectedDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowKey = getDateKey(tomorrow);
+    const tomorrowData = allData[tomorrowKey] || getInitialDayData();
+
+    // Update target with incremented day counter
+    const forwardedTarget = {
+      ...target,
+      id: `${target.id}-fwd-${tomorrowKey}`,
+      currentDay: target.currentDay + 1,
+      completed: false,
+      rolledOver: false,
+    };
+
+    // Add to tomorrow's Speed of Implementation (find first empty slot)
+    const tomorrowTargets = [...(tomorrowData.speedOfImplementation || [])];
+    const emptyIndex = tomorrowTargets.findIndex(t => !t.text || t.text.trim() === '');
+    if (emptyIndex !== -1) {
+      tomorrowTargets[emptyIndex] = forwardedTarget;
+    }
+
+    // Mark as completed on today's list
+    const todayTargets = (currentData.speedOfImplementation || []).map((t) =>
+      t.id === target.id ? { ...t, completed: true } : t
+    );
+
+    // Save both days
+    await onDataChange(tomorrowKey, { ...tomorrowData, speedOfImplementation: tomorrowTargets });
+    await saveDayData({ speedOfImplementation: todayTargets });
+  };
+
   // ---------- Move Target to Tomorrow ----------
   const handleMoveToTomorrow = async (type: 'topTargets' | 'massiveGoals', goal: Goal) => {
     // Get tomorrow's date
@@ -411,10 +456,10 @@ const DayView: React.FC<DayViewProps> = ({
             data={calculatedRevenue}
             onNavigate={onNavigateToRevenue}
           />
-          <AIChallengeCard
-            data={currentData.aiChallenge}
-            isLoading={isAiChallengeLoading}
-            onAcceptChallenge={handleAcceptAIChallenge}
+          <SpeedOfImplementationBlock
+            targets={currentData.speedOfImplementation || []}
+            onTargetChange={handleSOITargetChange}
+            onMoveToTomorrow={handleSOIMoveToTomorrow}
           />
         </div>
 

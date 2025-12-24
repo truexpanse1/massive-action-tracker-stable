@@ -73,6 +73,17 @@ export interface Goal {
   fromCoaching?: boolean; // Marks targets added from coaching notes for special styling
 }
 
+export interface SpeedOfImplementationTarget {
+  id: string;
+  text: string;
+  completed: boolean;
+  source?: string; // e.g., "Coaching: Don", "Book: 10X Rule", "Podcast: Grant Cardone"
+  currentDay: number; // Which day they're on (1-based)
+  totalDays: number; // Total days for this target (e.g., 30)
+  startDate: string; // YYYY-MM-DD when this target was added
+  rolledOver?: boolean; // If rolled from previous day
+}
+
 export type ProspectingCode = 'SW' | 'NA' | 'LM' | 'ST' | 'EP' | 'SA';
 
 export const prospectingCodes: ProspectingCode[] = ['SW', 'NA', 'LM', 'ST', 'EP', 'SA'];
@@ -170,7 +181,8 @@ export interface DayData {
     winsToday: string[];
     topTargets: Goal[];
     massiveGoals: Goal[];
-    aiChallenge: AIChallengeData;
+    speedOfImplementation: SpeedOfImplementationTarget[]; // NEW: Replaces AI Challenge
+    aiChallenge: AIChallengeData; // Keep for backward compatibility
     prospectingContacts: Contact[];
     milestones: {
       calls30Achieved: boolean;
@@ -200,6 +212,16 @@ export const getInitialDayData = (): DayData => ({
     id: `massive-${i + 1}`,
     text: '',
     completed: false,
+  })),
+
+  // Speed of Implementation - 3 slots
+  speedOfImplementation: Array.from({ length: 3 }, (_, i) => ({
+    id: `soi-${i + 1}`,
+    text: '',
+    completed: false,
+    currentDay: 0,
+    totalDays: 0,
+    startDate: '',
   })),
 
   aiChallenge: {

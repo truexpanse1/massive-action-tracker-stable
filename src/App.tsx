@@ -331,8 +331,8 @@ const App: React.FC = () => {
     }
   }, [showConfetti]);
 
-  const handleAddActionToTargets = async (actionItem: string, startDate: string, days: number = 1) => {
-    // Add action item to the Top 6 Daily Targets for multiple days
+  const handleAddActionToTargets = async (actionItem: string, startDate: string, days: number = 1, source?: string) => {
+    // Add action item to Speed of Implementation for multiple days
     let successCount = 0;
     let skippedCount = 0;
     
@@ -344,35 +344,39 @@ const App: React.FC = () => {
       
       const dayData = allData[dateKey] || getInitialDayData();
       
-      // Find the first empty target slot
-      const emptyTargetIndex = dayData.topTargets.findIndex(goal => !goal.text || goal.text.trim() === '');
+      // Find the first empty Speed of Implementation slot (3 slots)
+      const soiTargets = dayData.speedOfImplementation || [];
+      const emptyIndex = soiTargets.findIndex(t => !t.text || t.text.trim() === '');
       
-      if (emptyTargetIndex !== -1) {
+      if (emptyIndex !== -1) {
         // Add to empty slot
-        const updatedTargets = [...dayData.topTargets];
-        updatedTargets[emptyTargetIndex] = {
-          ...updatedTargets[emptyTargetIndex],
+        const updatedSOI = [...soiTargets];
+        updatedSOI[emptyIndex] = {
+          ...updatedSOI[emptyIndex],
           text: actionItem,
           completed: false,
-          fromCoaching: true, // Mark as Speed of Implementation target
+          source: source || 'Coaching',
+          currentDay: i + 1,
+          totalDays: days,
+          startDate: startDate,
         };
         
         const updatedDayData = {
           ...dayData,
-          topTargets: updatedTargets,
+          speedOfImplementation: updatedSOI,
         };
         
         await handleUpsertDayData(dateKey, updatedDayData);
         successCount++;
       } else {
-        // All slots full for this date, skip it
+        // All 3 slots full for this date, skip it
         skippedCount++;
       }
     }
     
     // Show summary if some days were skipped
     if (skippedCount > 0) {
-      alert(`Added to ${successCount} ${successCount === 1 ? 'day' : 'days'}. Skipped ${skippedCount} ${skippedCount === 1 ? 'day' : 'days'} (all target slots full).`);
+      alert(`Added to ${successCount} ${successCount === 1 ? 'day' : 'days'}. Skipped ${skippedCount} ${skippedCount === 1 ? 'day' : 'days'} (all 3 Speed of Implementation slots full).`);
     }
   };
 

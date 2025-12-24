@@ -10,7 +10,7 @@ interface CoachingNotesJournalProps {
   onCreateNote: (note: Omit<CoachingNote, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   onUpdateNote: (id: string, updates: Partial<CoachingNote>) => Promise<void>;
   onDeleteNote: (id: string) => Promise<void>;
-  onAddToTargets: (actionItem: string, noteDate: string, days: number) => Promise<void>;
+  onAddToTargets: (actionItem: string, noteDate: string, days: number, source?: string) => Promise<void>;
 }
 
 const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
@@ -29,7 +29,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
   
   // Modal state for Add to Targets
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedActionItem, setSelectedActionItem] = useState<{ text: string; noteDate: string } | null>(null);
+  const [selectedActionItem, setSelectedActionItem] = useState<{ text: string; noteDate: string; source?: string } | null>(null);
 
   // Form state
   const [source, setSource] = useState('');
@@ -150,8 +150,8 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
   };
 
   // Open modal to select days
-  const handleAddToTargetsClick = (actionItem: ActionItem, noteDate: string) => {
-    setSelectedActionItem({ text: actionItem.text, noteDate });
+  const handleAddToTargetsClick = (actionItem: ActionItem, noteDate: string, noteSource?: string) => {
+    setSelectedActionItem({ text: actionItem.text, noteDate, source: noteSource });
     setIsModalOpen(true);
   };
 
@@ -160,8 +160,8 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
     if (!selectedActionItem) return;
     
     try {
-      await onAddToTargets(selectedActionItem.text, selectedActionItem.noteDate, days);
-      alert(`Action item added to daily targets for the next ${days} ${days === 1 ? 'day' : 'days'}!`);
+      await onAddToTargets(selectedActionItem.text, selectedActionItem.noteDate, days, selectedActionItem.source);
+      alert(`Action item added to Speed of Implementation for the next ${days} ${days === 1 ? 'day' : 'days'}!`);
       setSelectedActionItem(null);
     } catch (error) {
       console.error('Error adding to targets:', error);
@@ -473,7 +473,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
                             </span>
                             {!item.added_to_targets && (
                               <button
-                                onClick={() => handleAddToTargetsClick(item, note.session_date)}
+                                onClick={() => handleAddToTargetsClick(item, note.session_date, note.topic_focus)}
                                 className="text-xs bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 transition font-bold shadow-md"
                               >
                                 Add to Targets
