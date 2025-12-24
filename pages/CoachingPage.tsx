@@ -1,16 +1,92 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Quote } from '../types';
 import QuotesCard from '../components/QuotesCard';
 import SavedQuotesCard from '../components/SavedQuotesCard';
 import BusinessMasteryQuickRef from '../components/BusinessMasteryQuickRef';
+import CoachingNotesJournal from '../components/CoachingNotesJournal';
+import {
+  CoachingNote,
+  fetchCoachingNotes,
+  createCoachingNote,
+  updateCoachingNote,
+  deleteCoachingNote,
+} from '../src/services/coachingNotesService';
 
 interface CoachingPageProps {
+  userId: string;
+  companyId: string;
   savedQuotes?: Quote[];
   onSaveQuote?: (quote: Omit<Quote, 'id'>) => Promise<void>;
   onRemoveQuote?: (quoteId: string) => Promise<void>;
+  onAddToTargets?: (actionItem: string, date: string) => Promise<void>;
 }
 
-const CoachingPage: React.FC<CoachingPageProps> = ({ savedQuotes = [], onSaveQuote, onRemoveQuote }) => {
+const CoachingPage: React.FC<CoachingPageProps> = ({
+  userId,
+  companyId,
+  savedQuotes = [],
+  onSaveQuote,
+  onRemoveQuote,
+  onAddToTargets,
+}) => {
+  const [coachingNotes, setCoachingNotes] = useState<CoachingNote[]>([]);
+  const [isLoadingNotes, setIsLoadingNotes] = useState(true);
+
+  // Fetch coaching notes on mount
+  useEffect(() => {
+    loadCoachingNotes();
+  }, [userId]);
+
+  const loadCoachingNotes = async () => {
+    try {
+      setIsLoadingNotes(true);
+      const notes = await fetchCoachingNotes(userId);
+      setCoachingNotes(notes);
+    } catch (error) {
+      console.error('Error loading coaching notes:', error);
+    } finally {
+      setIsLoadingNotes(false);
+    }
+  };
+
+  const handleCreateNote = async (note: Omit<CoachingNote, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const newNote = await createCoachingNote(note);
+      setCoachingNotes([newNote, ...coachingNotes]);
+    } catch (error) {
+      console.error('Error creating note:', error);
+      throw error;
+    }
+  };
+
+  const handleUpdateNote = async (id: string, updates: Partial<CoachingNote>) => {
+    try {
+      const updatedNote = await updateCoachingNote(id, updates);
+      setCoachingNotes(coachingNotes.map(note => note.id === id ? updatedNote : note));
+    } catch (error) {
+      console.error('Error updating note:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await deleteCoachingNote(id);
+      setCoachingNotes(coachingNotes.filter(note => note.id !== id));
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      throw error;
+    }
+  };
+
+  const handleAddToTargets = async (actionItem: string, date: string) => {
+    if (onAddToTargets) {
+      await onAddToTargets(actionItem, date);
+    } else {
+      // Fallback: just show a message
+      alert(`Action item will be added to targets for ${date}: ${actionItem}`);
+    }
+  };
 
   const handleSaveQuote = (quoteToSave: Omit<Quote, 'id'>) => {
     if (!savedQuotes.some(q => q.text === quoteToSave.text && q.author === quoteToSave.author)) {
@@ -27,74 +103,78 @@ const CoachingPage: React.FC<CoachingPageProps> = ({ savedQuotes = [], onSaveQuo
 
   return (
     <div className="space-y-8">
-      {/* Hero Section - Massive Action Coaching Strategies */}
-      <div className="bg-gradient-to-br from-brand-blue via-blue-600 to-blue-800 dark:from-brand-blue dark:via-blue-700 dark:to-blue-900 rounded-2xl p-8 md:p-12 text-white shadow-2xl">
+      {/* Hero Section - More Concise */}
+      <div className="bg-gradient-to-br from-brand-blue via-blue-600 to-blue-800 dark:from-brand-blue dark:via-blue-700 dark:to-blue-900 rounded-2xl p-6 md:p-8 text-white shadow-2xl">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-black mb-4">
-            Massive Action Coaching Strategies
+          <h1 className="text-3xl md:text-4xl font-black mb-3">
+            Coaching & Learning Hub
           </h1>
-          <p className="text-xl md:text-2xl mb-2 text-blue-100">
-            Exclusive Training from TrueXpanse
+          <p className="text-lg md:text-xl mb-2 text-blue-100">
+            Learn. Document. Implement. Repeat.
           </p>
-          <p className="text-lg mb-8 text-blue-200">
-            Maximize your MAT results with advanced coaching, video tutorials, and proven strategies
+          <p className="text-base mb-6 text-blue-200">
+            Track your coaching sessions, capture key insights, and convert learnings into action
           </p>
           
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-8 border border-white/20">
-            <h3 className="text-2xl font-bold mb-4">What's Inside:</h3>
-            <div className="grid md:grid-cols-3 gap-4 text-left">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">🎥</div>
-                <div>
-                  <p className="font-bold mb-1">Video Tutorials</p>
-                  <p className="text-sm text-blue-100">Step-by-step MAT training</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">📈</div>
-                <div>
-                  <p className="font-bold mb-1">Growth Strategies</p>
-                  <p className="text-sm text-blue-100">Scale your sales results</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">💪</div>
-                <div>
-                  <p className="font-bold mb-1">Advanced Tactics</p>
-                  <p className="text-sm text-blue-100">Elite-level techniques</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <a
             href={communityLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-brand-red hover:bg-red-700 text-white font-black text-xl px-12 py-5 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-200"
+            className="inline-block bg-brand-red hover:bg-red-700 text-white font-black text-lg px-8 py-3 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-200"
           >
-            Join the Community →
+            Join Community →
           </a>
-          
-          <p className="text-sm text-blue-200 mt-4">
-            Access exclusive content and connect with other high-performers
-          </p>
         </div>
       </div>
 
-      {/* Main Content Grid */}
+      {/* Coaching Notes Journal - Main Feature */}
+      <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-brand-light-text dark:text-white mb-2">
+            Coaching Notes & Journal
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Document your coaching sessions, capture key takeaways, and create action items for immediate implementation.
+          </p>
+        </div>
+
+        {isLoadingNotes ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">Loading notes...</p>
+          </div>
+        ) : (
+          <CoachingNotesJournal
+            userId={userId}
+            companyId={companyId}
+            notes={coachingNotes}
+            onCreateNote={handleCreateNote}
+            onUpdateNote={handleUpdateNote}
+            onDeleteNote={handleDeleteNote}
+            onAddToTargets={handleAddToTargets}
+          />
+        )}
+      </div>
+
+      {/* Resources Grid - Business Mastery & Quotes */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Quick Reference & Quotes */}
         <div className="lg:col-span-1 space-y-8">
-          <BusinessMasteryQuickRef />
-          <QuotesCard 
-            onSaveQuote={handleSaveQuote}
-            savedQuotes={savedQuotes}
-          />
+          <div>
+            <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Business Mastery</h3>
+            <BusinessMasteryQuickRef />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Daily Inspiration</h3>
+            <QuotesCard 
+              onSaveQuote={handleSaveQuote}
+              savedQuotes={savedQuotes}
+            />
+          </div>
         </div>
         
         {/* Right Column - Saved Quotes */}
         <div className="lg:col-span-2">
+          <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Saved Quotes</h3>
           <SavedQuotesCard 
             savedQuotes={savedQuotes}
             onSaveQuote={handleSaveQuote}

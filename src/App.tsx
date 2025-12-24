@@ -331,6 +331,18 @@ const App: React.FC = () => {
     }
   }, [showConfetti]);
 
+  const handleAddActionToTargets = async (actionItem: string, date: string) => {
+    // Add action item to the specified date's wins/tasks
+    const dateKey = date;
+    const dayData = allData[dateKey] || getInitialDayData();
+    
+    // Add to wins as an action item completed
+    handleAddWin(dateKey, `Action: ${actionItem}`);
+    
+    // Optionally, you could add to a specific tasks array if you have one
+    // For now, we'll just add it to wins to track implementation
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -967,9 +979,12 @@ const App: React.FC = () => {
       case 'coaching':
         return (
           <CoachingPage
+            userId={user.id}
+            companyId={user.company_id}
             savedQuotes={savedQuotes}
             onSaveQuote={handleSaveQuote}
             onRemoveQuote={handleRemoveQuote}
+            onAddToTargets={handleAddActionToTargets}
           />
         );
       case 'team-control':
