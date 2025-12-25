@@ -103,15 +103,15 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
   return (
     <div className="space-y-8">
       {/* Hero Section - More Concise */}
-      <div className="bg-gradient-to-br from-brand-blue via-blue-600 to-blue-800 dark:from-brand-blue dark:via-blue-700 dark:to-blue-900 rounded-2xl p-6 md:p-8 text-white shadow-2xl">
+      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 dark:from-purple-700 dark:via-purple-800 dark:to-purple-900 rounded-2xl p-6 md:p-8 text-white shadow-2xl">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-black mb-3">
             Coaching & Learning Hub
           </h1>
-          <p className="text-lg md:text-xl mb-2 text-blue-100">
+          <p className="text-lg md:text-xl mb-2 text-purple-100">
             Learn. Document. Implement. Repeat.
           </p>
-          <p className="text-base mb-6 text-blue-200">
+          <p className="text-base mb-6 text-purple-200">
             Track your coaching sessions, capture key insights, and convert learnings into action
           </p>
           
