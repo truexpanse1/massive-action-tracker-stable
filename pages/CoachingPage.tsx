@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Quote } from '../types';
 import QuotesCard from '../components/QuotesCard';
 import SavedQuotesCard from '../components/SavedQuotesCard';
-import BusinessMasteryQuickRef from '../components/BusinessMasteryQuickRef';
 import CoachingNotesJournal from '../components/CoachingNotesJournal';
 import {
   CoachingNote,
@@ -155,25 +154,19 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
         )}
       </div>
 
-      {/* Resources Grid - Business Mastery & Quotes */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Quick Reference & Quotes */}
-        <div className="lg:col-span-1 space-y-8">
-          <div>
-            <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Business Mastery</h3>
-            <BusinessMasteryQuickRef />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Daily Inspiration</h3>
-            <QuotesCard 
-              onSaveQuote={handleSaveQuote}
-              savedQuotes={savedQuotes}
-            />
-          </div>
+      {/* Resources Grid - Quotes Only */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Column - Daily Inspiration */}
+        <div>
+          <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Daily Inspiration</h3>
+          <QuotesCard 
+            onSaveQuote={handleSaveQuote}
+            savedQuotes={savedQuotes}
+          />
         </div>
         
         {/* Right Column - Saved Quotes */}
-        <div className="lg:col-span-2">
+        <div>
           <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Saved Quotes</h3>
           <SavedQuotesCard 
             savedQuotes={savedQuotes}
