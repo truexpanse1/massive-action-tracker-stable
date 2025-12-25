@@ -13,9 +13,10 @@ interface TeamControlPageProps {
   users: User[];
   onViewUserTrends: (userId: string) => void;
   onDeleteUser?: (userId: string) => void;
+  companyId: string;
 }
 
-const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTrends, onDeleteUser }) => {
+const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTrends, onDeleteUser, companyId }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -91,7 +92,7 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
           email,
           role,
           status: 'Active',
-          company_id: 'your-company-id-here', // replace with real company_id
+          company_id: companyId,
         });
       }
 

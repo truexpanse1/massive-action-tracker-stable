@@ -1033,6 +1033,7 @@ const App: React.FC = () => {
           <TeamControlPage
             users={users}
             onViewUserTrends={handleViewUserTrends}
+            companyId={user.company_id || ''}
           />
         );
       case 'performance-dashboard':
