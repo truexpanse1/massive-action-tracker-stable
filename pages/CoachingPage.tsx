@@ -17,7 +17,7 @@ interface CoachingPageProps {
   savedQuotes?: Quote[];
   onSaveQuote?: (quote: Omit<Quote, 'id'>) => Promise<void>;
   onRemoveQuote?: (quoteId: string) => Promise<void>;
-  onAddToTargets?: (actionItem: string, date: string) => Promise<void>;
+  onAddToTargets?: (actionItem: string, startDate: string, days: number, source?: string) => Promise<void>;
 }
 
 const CoachingPage: React.FC<CoachingPageProps> = ({
@@ -78,12 +78,12 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
     }
   };
 
-  const handleAddToTargets = async (actionItem: string, date: string) => {
+  const handleAddToTargets = async (actionItem: string, startDate: string, days: number, source?: string) => {
     if (onAddToTargets) {
-      await onAddToTargets(actionItem, date);
+      await onAddToTargets(actionItem, startDate, days, source);
     } else {
       // Fallback: just show a message
-      alert(`Action item will be added to targets for ${date}: ${actionItem}`);
+      alert(`Action item will be added to targets for ${days} ${days === 1 ? 'day' : 'days'} starting ${startDate}: ${actionItem}`);
     }
   };
 

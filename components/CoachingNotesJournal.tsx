@@ -161,7 +161,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
     
     try {
       await onAddToTargets(selectedActionItem.text, selectedActionItem.noteDate, days, selectedActionItem.source);
-      alert(`Action item added to Speed of Implementation for the next ${days} ${days === 1 ? 'day' : 'days'}!`);
+      // Success - alert is handled by parent component
       setSelectedActionItem(null);
     } catch (error) {
       console.error('Error adding to targets:', error);

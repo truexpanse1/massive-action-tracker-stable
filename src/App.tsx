@@ -14,6 +14,7 @@ import {
   NewClient,
   CalendarEvent,
   getInitialDayData,
+  normalizeDayData,
   UserStatus,
   EODSubmissions,
 } from './types';
@@ -258,7 +259,7 @@ const App: React.FC = () => {
             dayDataRes.data.reduce(
               (acc, row) => ({
                 ...acc,
-                [row.date]: { ...row.data, userId: row.user_id },
+                [row.date]: normalizeDayData({ ...row.data, userId: row.user_id }),
               }),
               {}
             )
@@ -345,7 +346,20 @@ const App: React.FC = () => {
       const dayData = allData[dateKey] || getInitialDayData();
       
       // Find the first empty Implement Now slot (3 slots)
-      const soiTargets = dayData.speedOfImplementation || [];
+      // Ensure speedOfImplementation is properly initialized with 3 slots
+      let soiTargets = dayData.speedOfImplementation || [];
+      
+      // If array is empty or has fewer than 3 slots, initialize it properly
+      if (soiTargets.length === 0) {
+        soiTargets = Array.from({ length: 3 }, (_, i) => ({
+          id: `soi-${i + 1}`,
+          text: '',
+          completed: false,
+          currentDay: 0,
+          totalDays: 0,
+          startDate: '',
+        }));
+      }
       const emptyIndex = soiTargets.findIndex(t => !t.text || t.text.trim() === '');
       
       if (emptyIndex !== -1) {

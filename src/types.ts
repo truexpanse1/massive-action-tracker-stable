@@ -248,8 +248,25 @@ export const getInitialDayData = (): DayData => ({
   },
 
   talkTime: '',
-  eodSubmitted: false,
+    eodSubmitted: false,
 });
+
+// Normalize day data to ensure all arrays are properly initialized
+export const normalizeDayData = (data: Partial<DayData>): DayData => {
+  const initial = getInitialDayData();
+  
+  // Ensure speedOfImplementation has exactly 3 slots
+  let speedOfImplementation = data.speedOfImplementation || [];
+  if (speedOfImplementation.length === 0) {
+    speedOfImplementation = initial.speedOfImplementation;
+  }
+  
+  return {
+    ...initial,
+    ...data,
+    speedOfImplementation,
+  };
+};
 
 
 //
