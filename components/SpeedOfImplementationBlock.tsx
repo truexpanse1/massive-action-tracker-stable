@@ -116,11 +116,14 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
   return (
     <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
       {/* Header - Purple */}
-      <div className="bg-purple-600 dark:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="bg-purple-600 dark:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-4">
+        <div className="flex items-center justify-center gap-2 mb-2">
           <span className="text-xl">⚡</span>
           <span className="text-lg">IMPLEMENT NOW</span>
         </div>
+        <p className="text-center text-xs text-purple-100 italic font-normal">
+          "Knowledge without action is worthless. Speed of implementation is the ultimate competitive advantage."
+        </p>
       </div>
 
       {/* Targets */}
