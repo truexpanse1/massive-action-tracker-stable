@@ -119,7 +119,7 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
       <div className="bg-purple-600 dark:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xl">⚡</span>
-          <span className="text-lg">SPEED OF IMPLEMENTATION</span>
+          <span className="text-lg">IMPLEMENT NOW</span>
         </div>
       </div>
 

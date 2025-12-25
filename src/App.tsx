@@ -332,7 +332,7 @@ const App: React.FC = () => {
   }, [showConfetti]);
 
   const handleAddActionToTargets = async (actionItem: string, startDate: string, days: number = 1, source?: string) => {
-    // Add action item to Speed of Implementation for multiple days
+    // Add action item to Implement Now for multiple days
     let successCount = 0;
     let skippedCount = 0;
     
@@ -344,7 +344,7 @@ const App: React.FC = () => {
       
       const dayData = allData[dateKey] || getInitialDayData();
       
-      // Find the first empty Speed of Implementation slot (3 slots)
+      // Find the first empty Implement Now slot (3 slots)
       const soiTargets = dayData.speedOfImplementation || [];
       const emptyIndex = soiTargets.findIndex(t => !t.text || t.text.trim() === '');
       
@@ -376,11 +376,11 @@ const App: React.FC = () => {
     
     // Show summary
     if (successCount > 0 && skippedCount === 0) {
-      alert(`✅ Action item added to Speed of Implementation for the next ${successCount} ${successCount === 1 ? 'day' : 'days'}!`);
+      alert(`✅ Action item added to Implement Now for the next ${successCount} ${successCount === 1 ? 'day' : 'days'}!`);
     } else if (successCount > 0 && skippedCount > 0) {
-      alert(`⚠️ Added to ${successCount} ${successCount === 1 ? 'day' : 'days'}. Skipped ${skippedCount} ${skippedCount === 1 ? 'day' : 'days'} because all 3 Speed of Implementation slots were full.\n\nTip: Complete or remove existing targets to make room for new ones.`);
+      alert(`⚠️ Added to ${successCount} ${successCount === 1 ? 'day' : 'days'}. Skipped ${skippedCount} ${skippedCount === 1 ? 'day' : 'days'} because all 3 Implement Now slots were full.\n\nTip: Complete or remove existing targets to make room for new ones.`);
     } else if (successCount === 0) {
-      alert(`❌ Cannot add target. All 3 Speed of Implementation slots are full for the selected dates.\n\nPlease complete or remove existing targets first, then try again.`);
+      alert(`❌ Cannot add target. All 3 Implement Now slots are full for the selected dates.\n\nPlease complete or remove existing targets first, then try again.`);
     }
   };
 
