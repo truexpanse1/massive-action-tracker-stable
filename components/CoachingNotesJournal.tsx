@@ -30,6 +30,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
   // Modal state for Add to Targets
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedActionItem, setSelectedActionItem] = useState<{ text: string; noteDate: string; source?: string } | null>(null);
+  const [bulkActionItems, setBulkActionItems] = useState<{ items: ActionItem[]; noteDate: string; source?: string } | null>(null);
 
   // Form state
   const [source, setSource] = useState('');
@@ -149,23 +150,51 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
     setTags(tags.filter(t => t !== tag));
   };
 
-  // Open modal to select days
+  // Open modal to select days for single item
   const handleAddToTargetsClick = (actionItem: ActionItem, noteDate: string, noteSource?: string) => {
     setSelectedActionItem({ text: actionItem.text, noteDate, source: noteSource });
+    setBulkActionItems(null);
+    setIsModalOpen(true);
+  };
+
+  // Open modal to select days for all items
+  const handleAddAllToTargetsClick = (items: ActionItem[], noteDate: string, noteSource?: string) => {
+    const unadded = items.filter(item => !item.added_to_targets);
+    if (unadded.length === 0) {
+      alert('All action items have already been added to targets!');
+      return;
+    }
+    setBulkActionItems({ items: unadded, noteDate, source: noteSource });
+    setSelectedActionItem(null);
     setIsModalOpen(true);
   };
 
   // Confirm and add to targets for selected days
   const handleConfirmAddToTargets = async (days: number) => {
-    if (!selectedActionItem) return;
-    
-    try {
-      await onAddToTargets(selectedActionItem.text, selectedActionItem.noteDate, days, selectedActionItem.source);
-      // Success - alert is handled by parent component
-      setSelectedActionItem(null);
-    } catch (error) {
-      console.error('Error adding to targets:', error);
-      alert('Failed to add to targets');
+    if (bulkActionItems) {
+      // Bulk add all items
+      try {
+        let successCount = 0;
+        for (const item of bulkActionItems.items) {
+          await onAddToTargets(item.text, bulkActionItems.noteDate, days, bulkActionItems.source);
+          successCount++;
+        }
+        alert(`✅ ${successCount} action ${successCount === 1 ? 'item' : 'items'} added to Implement Now for the next ${days} ${days === 1 ? 'day' : 'days'}!`);
+        setBulkActionItems(null);
+      } catch (error) {
+        console.error('Error adding to targets:', error);
+        alert('Failed to add some items to targets');
+      }
+    } else if (selectedActionItem) {
+      // Single item add
+      try {
+        await onAddToTargets(selectedActionItem.text, selectedActionItem.noteDate, days, selectedActionItem.source);
+        // Success - alert is handled by parent component
+        setSelectedActionItem(null);
+      } catch (error) {
+        console.error('Error adding to targets:', error);
+        alert('Failed to add to targets');
+      }
     }
   };
 
@@ -462,9 +491,19 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
                   {/* Action Items */}
                   {note.action_items && note.action_items.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="text-sm font-bold text-brand-light-text dark:text-white mb-2">
-                        Action Items:
-                      </h4>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-bold text-brand-light-text dark:text-white">
+                          Action Items:
+                        </h4>
+                        {note.action_items.some(item => !item.added_to_targets) && (
+                          <button
+                            onClick={() => handleAddAllToTargetsClick(note.action_items, note.session_date, note.topic_focus)}
+                            className="text-xs bg-purple-600 text-white px-4 py-1.5 rounded-lg hover:bg-purple-700 transition font-bold shadow-md"
+                          >
+                            Add All to Targets
+                          </button>
+                        )}
+                      </div>
                       <ul className="space-y-2">
                         {note.action_items.map((item, index) => (
                           <li key={index} className="flex items-center gap-3 text-sm">
@@ -516,9 +555,14 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
         onClose={() => {
           setIsModalOpen(false);
           setSelectedActionItem(null);
+          setBulkActionItems(null);
         }}
         onConfirm={handleConfirmAddToTargets}
-        actionItemText={selectedActionItem?.text || ''}
+        actionItemText={
+          bulkActionItems 
+            ? `${bulkActionItems.items.length} action ${bulkActionItems.items.length === 1 ? 'item' : 'items'}`
+            : selectedActionItem?.text || ''
+        }
       />
     </div>
   );
