@@ -252,7 +252,7 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                   <th className="p-2 w-1/5">Name</th>
                   <th className="p-2 w-1/5 hidden md:table-cell">Company</th>
                   <th className="p-2 w-1/5">Phone</th>
-                  <th className="p-2 w-1/4">Email</th>
+                  <th className="p-2 w-1/4 hidden md:table-cell">Email</th>
                   <th className="p-2 w-10 text-center">Hot</th>
                   <th className="p-2 w-[220px] text-center hidden md:table-cell">Codes</th>
                 </tr>
@@ -327,7 +327,7 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                     </td>
 
                     {/* Email */}
-                    <td>
+                    <td className="hidden md:table-cell">
                       <input
                         type="email"
                         value={contact.email}
