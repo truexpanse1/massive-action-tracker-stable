@@ -119,7 +119,7 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
             href={communityLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-brand-red hover:bg-red-700 text-white font-black text-lg px-8 py-3 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-200"
+            className="inline-block bg-transparent border-2 border-white hover:bg-black text-white font-black text-lg px-8 py-3 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-200"
           >
             Join Community →
           </a>
