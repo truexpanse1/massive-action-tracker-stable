@@ -250,11 +250,11 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                 <tr>
                   <th className="p-2 w-10 text-center">#</th>
                   <th className="p-2 w-1/5">Name</th>
-                  <th className="p-2 w-1/5">Company</th>
+                  <th className="p-2 w-1/5 hidden md:table-cell">Company</th>
                   <th className="p-2 w-1/5">Phone</th>
                   <th className="p-2 w-1/4">Email</th>
                   <th className="p-2 w-10 text-center">Hot</th>
-                  <th className="p-2 w-[220px] text-center">Codes</th>
+                  <th className="p-2 w-[220px] text-center hidden md:table-cell">Codes</th>
                 </tr>
               </thead>
               <tbody>
@@ -277,10 +277,29 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                         }
                         className="w-full bg-transparent p-1 text-sm focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white"
                       />
+                      {/* Mobile: Show codes below name */}
+                      <div className="flex md:hidden items-center justify-start space-x-1 mt-1">
+                        {prospectingCodes.map((code) => (
+                          <button
+                            key={code}
+                            onClick={() => handleProspectingChange(index, code)}
+                            title={prospectingCodeDescriptions[code]}
+                            className={`w-6 h-6 flex items-center justify-center rounded text-[10px] font-mono transition-colors ${
+                              contact.prospecting[code]
+                                ? code === 'SA'
+                                  ? 'bg-brand-blue text-white'
+                                  : 'bg-brand-red text-white'
+                                : 'bg-gray-200 dark:bg-brand-gray text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-brand-gray/50'
+                            }`}
+                          >
+                            {code}
+                          </button>
+                        ))}
+                      </div>
                     </td>
 
                     {/* Company */}
-                    <td>
+                    <td className="hidden md:table-cell">
                       <input
                         type="text"
                         value={contact.company || ''}
@@ -331,8 +350,8 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                       </button>
                     </td>
 
-                    {/* Codes – slightly smaller */}
-                    <td className="p-2">
+                    {/* Codes – slightly smaller (Desktop only) */}
+                    <td className="p-2 hidden md:table-cell">
                       <div className="flex items-center justify-center space-x-1">
                         {prospectingCodes.map((code) => (
                           <button

@@ -171,10 +171,10 @@ const DayView: React.FC<DayViewProps> = ({
     };
   }, [transactions, selectedDate]);
 
-  // ---------- Appointments ----------
+  // ---------- Events (All Types) ----------
   const appointments = useMemo(() => {
     return (currentData.events || [])
-      .filter((e): e is CalendarEvent => e?.type === 'Appointment')
+      .filter((e): e is CalendarEvent => !!e?.type)
       .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
   }, [currentData.events]);
 
@@ -399,11 +399,11 @@ const DayView: React.FC<DayViewProps> = ({
     await saveDayData({ events: updatedEvents });
 
     const label = event.client
-      ? `${event.client} — ${event.title || 'Appointment'}`
-      : event.title || 'Appointment';
+      ? `${event.client} — ${event.title || event.type}`
+      : event.title || event.type;
 
     if (newConducted) {
-      onAddWin(currentDateKey, `Appointment Conducted: ${label}`);
+      onAddWin(currentDateKey, `${event.type} Conducted: ${label}`);
       // place follow-up trigger here if needed
     }
   };
@@ -493,8 +493,8 @@ const DayView: React.FC<DayViewProps> = ({
               <div className="space-y-3">
                 {appointments.map((event) => {
                   const label = event.client
-                    ? `${event.client} — ${event.title || 'Appointment'}`
-                    : event.title || 'Appointment';
+                    ? `${event.client} — ${event.title || event.type}`
+                    : event.title || event.type;
 
                   return (
                     <div key={event.id} className="flex items-center space-x-3">
