@@ -49,6 +49,8 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
     // Date drill-down modal state
     const [selectedDateForModal, setSelectedDateForModal] = useState<string | null>(null);
     const [showDateModal, setShowDateModal] = useState(false);
+    const [dateModalProductFilter, setDateModalProductFilter] = useState<string>('');
+    const [dateModalMinAmount, setDateModalMinAmount] = useState<string>('');
 
 
     const today = new Date().toISOString().split('T')[0];
@@ -182,13 +184,27 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
         if (!selectedDateForModal) return [];
         try {
             const { startDate, endDate } = JSON.parse(selectedDateForModal);
-            return (transactions || [])
-                .filter(t => t.date >= startDate && t.date <= endDate)
-                .sort((a, b) => b.date.localeCompare(a.date) || a.clientName.localeCompare(b.clientName));
+            let filtered = (transactions || [])
+                .filter(t => t.date >= startDate && t.date <= endDate);
+            
+            // Apply product filter
+            if (dateModalProductFilter) {
+                filtered = filtered.filter(t => t.product.toLowerCase().includes(dateModalProductFilter.toLowerCase()));
+            }
+            
+            // Apply minimum amount filter
+            if (dateModalMinAmount) {
+                const minAmount = parseFloat(dateModalMinAmount);
+                if (!isNaN(minAmount)) {
+                    filtered = filtered.filter(t => t.amount >= minAmount);
+                }
+            }
+            
+            return filtered.sort((a, b) => b.date.localeCompare(a.date) || a.clientName.localeCompare(b.clientName));
         } catch {
             return [];
         }
-    }, [selectedDateForModal, transactions]);
+    }, [selectedDateForModal, transactions, dateModalProductFilter, dateModalMinAmount]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -528,28 +544,36 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             
             // 91-365 days: Group by month
             if (numDays <= 365) {
-                const monthsMap: Record<string, { revenue: number; monthNum: number; startDate: string; endDate: string }> = {};
+                const monthsMap: Record<string, { revenue: number; monthNum: number; year: number; startDate: string; endDate: string }> = {};
                 data.forEach(d => {
                     const date = new Date(d.date);
-                    const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+                    const year = date.getFullYear();
                     const monthNum = date.getMonth(); // 0-11
+                    const monthKey = `${date.toLocaleDateString('en-US', { month: 'short' })} ${year}`;
+                    
+                    // Calculate actual calendar month boundaries
+                    const firstDayOfMonth = new Date(year, monthNum, 1);
+                    const lastDayOfMonth = new Date(year, monthNum + 1, 0);
+                    const startDate = firstDayOfMonth.toISOString().split('T')[0];
+                    const endDate = lastDayOfMonth.toISOString().split('T')[0];
+                    
                     if (!monthsMap[monthKey]) {
-                        monthsMap[monthKey] = { revenue: 0, monthNum, startDate: d.date, endDate: d.date };
+                        monthsMap[monthKey] = { revenue: 0, monthNum, year, startDate, endDate };
                     }
                     monthsMap[monthKey].revenue += d.revenue;
-                    // Update end date to the latest date in this month
-                    if (d.date > monthsMap[monthKey].endDate) {
-                        monthsMap[monthKey].endDate = d.date;
-                    }
-                    // Update start date to the earliest date in this month
-                    if (d.date < monthsMap[monthKey].startDate) {
-                        monthsMap[monthKey].startDate = d.date;
-                    }
                 });
-                // Sort by month number (January=0 to December=11)
+                // Sort by year and month
                 return Object.entries(monthsMap)
-                    .sort(([, a], [, b]) => a.monthNum - b.monthNum)
-                    .map(([label, data]) => ({ label, revenue: data.revenue, startDate: data.startDate, endDate: data.endDate }));
+                    .sort(([, a], [, b]) => {
+                        if (a.year !== b.year) return a.year - b.year;
+                        return a.monthNum - b.monthNum;
+                    })
+                    .map(([label, data]) => ({ 
+                        label: label.split(' ')[0], // Just show month name (e.g., "Jan" not "Jan 2025")
+                        revenue: data.revenue, 
+                        startDate: data.startDate, 
+                        endDate: data.endDate 
+                    }));
             }
             
             // 366+ days: Group by year
@@ -789,6 +813,30 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                             <div className="bg-brand-light-bg dark:bg-brand-ink p-3 rounded-lg text-center">
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Avg. Deal</p>
                                 <p className="text-xl font-bold text-brand-blue">{formatCurrency(dateTransactions.length > 0 ? dateTransactions.reduce((sum, t) => sum + t.amount, 0) / dateTransactions.length : 0)}</p>
+                            </div>
+                        </div>
+                        
+                        {/* Filters */}
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Product</label>
+                                <input
+                                    type="text"
+                                    placeholder="Search product..."
+                                    value={dateModalProductFilter}
+                                    onChange={(e) => setDateModalProductFilter(e.target.value)}
+                                    className="w-full px-3 py-2 border border-brand-light-border dark:border-brand-gray rounded-lg bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Minimum Amount</label>
+                                <input
+                                    type="number"
+                                    placeholder="Min amount..."
+                                    value={dateModalMinAmount}
+                                    onChange={(e) => setDateModalMinAmount(e.target.value)}
+                                    className="w-full px-3 py-2 border border-brand-light-border dark:border-brand-gray rounded-lg bg-white dark:bg-brand-ink text-brand-light-text dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                                />
                             </div>
                         </div>
                         
