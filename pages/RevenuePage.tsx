@@ -570,6 +570,9 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             if (numDays <= 365) {
                 const monthsMap: Record<string, { revenue: number; monthNum: number; year: number; startDate: string; endDate: string }> = {};
                 data.forEach(d => {
+                    // Only process entries that have revenue > 0
+                    if (d.revenue === 0) return;
+                    
                     const date = new Date(d.date);
                     const year = date.getFullYear();
                     const monthNum = date.getMonth(); // 0-11
