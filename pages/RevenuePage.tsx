@@ -850,6 +850,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                                         <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Product</th>
                                         <th className="text-right py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Amount</th>
                                         <th className="text-center py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Recurring</th>
+                                        <th className="text-center py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -863,6 +864,22 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                                                 {transaction.isRecurring && (
                                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300">Recurring</span>
                                                 )}
+                                            </td>
+                                            <td className="py-2 px-3 text-sm text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => { setShowDateModal(false); setShowProductModal(false); handleEdit(transaction); }}
+                                                        className="text-brand-blue hover:text-brand-blue/80 font-medium"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { if (window.confirm('Delete this transaction?')) { setShowDateModal(false); setShowProductModal(false); handleDelete(transaction.id); } }}
+                                                        className="text-red-600 hover:text-red-700 font-medium"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -915,6 +932,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                                         <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Customer</th>
                                         <th className="text-right py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Amount</th>
                                         <th className="text-center py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Recurring</th>
+                                        <th className="text-center py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -927,6 +945,22 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                                                 {transaction.isRecurring && (
                                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300">Recurring</span>
                                                 )}
+                                            </td>
+                                            <td className="py-2 px-3 text-sm text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => { setShowDateModal(false); setShowProductModal(false); handleEdit(transaction); }}
+                                                        className="text-brand-blue hover:text-brand-blue/80 font-medium"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { if (window.confirm('Delete this transaction?')) { setShowDateModal(false); setShowProductModal(false); handleDelete(transaction.id); } }}
+                                                        className="text-red-600 hover:text-red-700 font-medium"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
