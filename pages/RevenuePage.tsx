@@ -200,7 +200,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                 }
             }
             
-            return filtered.sort((a, b) => b.date.localeCompare(a.date) || a.clientName.localeCompare(b.clientName));
+            return filtered.sort((a, b) => a.date.localeCompare(b.date) || a.clientName.localeCompare(b.clientName));
         } catch {
             return [];
         }
