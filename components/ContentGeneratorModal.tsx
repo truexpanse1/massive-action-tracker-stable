@@ -174,7 +174,7 @@ Return ONLY a JSON object with this exact structure:
   "headline": "Attention-grabbing headline (max 60 characters)",
   "body": "Main ad copy (3-5 paragraphs, use line breaks)",
   "cta": "Clear call-to-action (max 30 characters)",
-  "imagePrompt": "Detailed prompt for AI image generation${imageDescription ? ' that incorporates: ' + imageDescription : ' showing the transformation or result'}"
+  "imagePrompt": "Detailed, specific prompt for AI image generation${imageDescription ? ' that incorporates: ' + imageDescription : ` showing ${avatar.avatar_name} (${avatar.age_range}, ${avatar.gender}) in a realistic, relatable scenario that visually represents their main pain point or desired transformation. Avoid generic business imagery like charts or graphs. Focus on human emotion and specific context relevant to ${avatar.industry || 'their industry'}`}"
 }`;
 
       // Call Gemini AI
