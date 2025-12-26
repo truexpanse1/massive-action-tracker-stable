@@ -483,6 +483,30 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
         const groupData = () => {
             const numDays = data.length;
             
+            // Check if date range is exactly one calendar month
+            if (data.length > 0) {
+                const firstDate = new Date(data[0].date);
+                const lastDate = new Date(data[data.length - 1].date);
+                const firstDay = firstDate.getDate();
+                const lastDay = lastDate.getDate();
+                const sameMonth = firstDate.getMonth() === lastDate.getMonth() && firstDate.getFullYear() === lastDate.getFullYear();
+                
+                // If it starts on the 1st and ends on the last day of the month, show as single month bar
+                if (sameMonth && firstDay === 1) {
+                    const daysInMonth = new Date(firstDate.getFullYear(), firstDate.getMonth() + 1, 0).getDate();
+                    if (lastDay === daysInMonth) {
+                        const totalRevenue = data.reduce((sum, d) => sum + d.revenue, 0);
+                        const monthLabel = firstDate.toLocaleDateString('en-US', { month: 'short' });
+                        return [{
+                            label: monthLabel,
+                            revenue: totalRevenue,
+                            startDate: data[0].date,
+                            endDate: data[data.length - 1].date
+                        }];
+                    }
+                }
+            }
+            
             // 1-7 days: Show each day
             if (numDays <= 7) {
                 return data.map(d => ({
