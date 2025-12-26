@@ -172,17 +172,22 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
     }, [selectedProduct, transactions, dateRange]);
     
     // Handle date bar click
-    const handleDateClick = (date: string) => {
-        setSelectedDateForModal(date);
+    const handleDateClick = (startDate: string, endDate: string, label: string) => {
+        setSelectedDateForModal(JSON.stringify({ startDate, endDate, label }));
         setShowDateModal(true);
     };
     
-    // Get transactions for selected date
+    // Get transactions for selected date range
     const dateTransactions = useMemo(() => {
         if (!selectedDateForModal) return [];
-        return (transactions || [])
-            .filter(t => t.date === selectedDateForModal)
-            .sort((a, b) => a.clientName.localeCompare(b.clientName));
+        try {
+            const { startDate, endDate } = JSON.parse(selectedDateForModal);
+            return (transactions || [])
+                .filter(t => t.date >= startDate && t.date <= endDate)
+                .sort((a, b) => b.date.localeCompare(a.date) || a.clientName.localeCompare(b.clientName));
+        } catch {
+            return [];
+        }
     }, [selectedDateForModal, transactions]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -455,7 +460,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
     };
     const handleProductSelect = (productName: string) => { setProduct(productName); document.getElementById('clientNameInput')?.focus(); }
     
-     const LineChart: React.FC<{data: {date: string, revenue: number}[], onBarClick?: (date: string) => void}> = ({data, onBarClick}) => {
+     const LineChart: React.FC<{data: {date: string, revenue: number}[], onBarClick?: (startDate: string, endDate: string, label: string) => void}> = ({data, onBarClick}) => {
         if (data.length === 0) return <p className="text-center text-sm text-gray-500 py-8">No data for this period.</p>;
         
         // Smart grouping based on data length
@@ -466,23 +471,29 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             if (numDays <= 7) {
                 return data.map(d => ({
                     label: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
-                    revenue: d.revenue
+                    revenue: d.revenue,
+                    startDate: d.date,
+                    endDate: d.date
                 }));
             }
             
             // 8-30 days: Group by week
             if (numDays <= 30) {
-                const weeks: {label: string, revenue: number}[] = [];
+                const weeks: {label: string, revenue: number, startDate: string, endDate: string}[] = [];
                 let weekNum = 1;
                 let weekRevenue = 0;
                 let weekCount = 0;
+                let weekStartDate = '';
+                let weekEndDate = '';
                 
                 data.forEach((d, i) => {
+                    if (weekCount === 0) weekStartDate = d.date;
+                    weekEndDate = d.date;
                     weekRevenue += d.revenue;
                     weekCount++;
                     
                     if (weekCount === 7 || i === data.length - 1) {
-                        weeks.push({ label: `Week ${weekNum}`, revenue: weekRevenue });
+                        weeks.push({ label: `Week ${weekNum}`, revenue: weekRevenue, startDate: weekStartDate, endDate: weekEndDate });
                         weekNum++;
                         weekRevenue = 0;
                         weekCount = 0;
@@ -493,19 +504,21 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             
             // 31-90 days: Group by week with dates
             if (numDays <= 90) {
-                const weeks: {label: string, revenue: number}[] = [];
+                const weeks: {label: string, revenue: number, startDate: string, endDate: string}[] = [];
                 let weekRevenue = 0;
                 let weekCount = 0;
                 let weekStartDate = '';
+                let weekEndDate = '';
                 
                 data.forEach((d, i) => {
                     if (weekCount === 0) weekStartDate = d.date;
+                    weekEndDate = d.date;
                     weekRevenue += d.revenue;
                     weekCount++;
                     
                     if (weekCount === 7 || i === data.length - 1) {
                         const label = new Date(weekStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                        weeks.push({ label, revenue: weekRevenue });
+                        weeks.push({ label, revenue: weekRevenue, startDate: weekStartDate, endDate: weekEndDate });
                         weekRevenue = 0;
                         weekCount = 0;
                     }
@@ -515,29 +528,42 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             
             // 91-365 days: Group by month
             if (numDays <= 365) {
-                const monthsMap: Record<string, { revenue: number; monthNum: number }> = {};
+                const monthsMap: Record<string, { revenue: number; monthNum: number; startDate: string; endDate: string }> = {};
                 data.forEach(d => {
                     const date = new Date(d.date);
                     const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
                     const monthNum = date.getMonth(); // 0-11
                     if (!monthsMap[monthKey]) {
-                        monthsMap[monthKey] = { revenue: 0, monthNum };
+                        monthsMap[monthKey] = { revenue: 0, monthNum, startDate: d.date, endDate: d.date };
                     }
                     monthsMap[monthKey].revenue += d.revenue;
+                    // Update end date to the latest date in this month
+                    if (d.date > monthsMap[monthKey].endDate) {
+                        monthsMap[monthKey].endDate = d.date;
+                    }
+                    // Update start date to the earliest date in this month
+                    if (d.date < monthsMap[monthKey].startDate) {
+                        monthsMap[monthKey].startDate = d.date;
+                    }
                 });
                 // Sort by month number (January=0 to December=11)
                 return Object.entries(monthsMap)
                     .sort(([, a], [, b]) => a.monthNum - b.monthNum)
-                    .map(([label, data]) => ({ label, revenue: data.revenue }));
+                    .map(([label, data]) => ({ label, revenue: data.revenue, startDate: data.startDate, endDate: data.endDate }));
             }
             
             // 366+ days: Group by year
-            const years: Record<string, number> = {};
+            const years: Record<string, { revenue: number; startDate: string; endDate: string }> = {};
             data.forEach(d => {
                 const year = new Date(d.date).getFullYear().toString();
-                years[year] = (years[year] || 0) + d.revenue;
+                if (!years[year]) {
+                    years[year] = { revenue: 0, startDate: d.date, endDate: d.date };
+                }
+                years[year].revenue += d.revenue;
+                if (d.date > years[year].endDate) years[year].endDate = d.date;
+                if (d.date < years[year].startDate) years[year].startDate = d.date;
             });
-            return Object.entries(years).map(([label, revenue]) => ({ label, revenue }));
+            return Object.entries(years).map(([label, data]) => ({ label, revenue: data.revenue, startDate: data.startDate, endDate: data.endDate }));
         };
         
         const groupedData = groupData();
@@ -567,7 +593,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                     const y = height - padding - barHeight;
                     
                     return (
-                        <g key={i} className={onBarClick ? 'cursor-pointer' : ''} onClick={() => onBarClick?.(data[i].date)}>
+                        <g key={i} className={onBarClick ? 'cursor-pointer' : ''} onClick={() => onBarClick?.(d.startDate || d.label, d.endDate || d.label, d.label)}>
                             <rect 
                                 x={x} 
                                 y={y} 
@@ -727,7 +753,19 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                     <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
                         {/* Modal Header */}
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold text-brand-light-text dark:text-white">{new Date(selectedDateForModal + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h2>
+                            <h2 className="text-2xl font-bold text-brand-light-text dark:text-white">
+                                {(() => {
+                                    try {
+                                        const { startDate, endDate, label } = JSON.parse(selectedDateForModal);
+                                        if (startDate === endDate) {
+                                            return new Date(startDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+                                        }
+                                        return `${label} (${new Date(startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})`;
+                                    } catch {
+                                        return 'Transactions';
+                                    }
+                                })()}
+                            </h2>
                             <button
                                 onClick={() => setShowDateModal(false)}
                                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -759,6 +797,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                             <table className="w-full">
                                 <thead className="sticky top-0 bg-brand-light-card dark:bg-brand-navy">
                                     <tr className="border-b border-brand-light-border dark:border-brand-gray">
+                                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Date</th>
                                         <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Customer</th>
                                         <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Product</th>
                                         <th className="text-right py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Amount</th>
@@ -768,6 +807,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                                 <tbody>
                                     {dateTransactions.map((transaction) => (
                                         <tr key={transaction.id} className="border-b border-brand-light-border dark:border-brand-gray hover:bg-brand-light-bg dark:hover:bg-brand-ink">
+                                            <td className="py-2 px-3 text-sm text-gray-600 dark:text-gray-400">{new Date(transaction.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
                                             <td className="py-2 px-3 text-sm text-brand-light-text dark:text-white">{transaction.clientName}</td>
                                             <td className="py-2 px-3 text-sm text-gray-600 dark:text-gray-400">{transaction.product}</td>
                                             <td className="py-2 px-3 text-sm text-right font-semibold text-brand-lime">{formatCurrency(transaction.amount)}</td>
