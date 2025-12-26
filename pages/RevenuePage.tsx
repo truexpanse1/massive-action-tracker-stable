@@ -45,6 +45,10 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
     // Product drill-down modal state
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
     const [showProductModal, setShowProductModal] = useState(false);
+    
+    // Date drill-down modal state
+    const [selectedDateForModal, setSelectedDateForModal] = useState<string | null>(null);
+    const [showDateModal, setShowDateModal] = useState(false);
 
 
     const today = new Date().toISOString().split('T')[0];
@@ -166,6 +170,20 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             .filter(t => t.product === selectedProduct && t.date >= start && t.date <= end)
             .sort((a, b) => b.date.localeCompare(a.date)); // Most recent first
     }, [selectedProduct, transactions, dateRange]);
+    
+    // Handle date bar click
+    const handleDateClick = (date: string) => {
+        setSelectedDateForModal(date);
+        setShowDateModal(true);
+    };
+    
+    // Get transactions for selected date
+    const dateTransactions = useMemo(() => {
+        if (!selectedDateForModal) return [];
+        return (transactions || [])
+            .filter(t => t.date === selectedDateForModal)
+            .sort((a, b) => a.clientName.localeCompare(b.clientName));
+    }, [selectedDateForModal, transactions]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -437,7 +455,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
     };
     const handleProductSelect = (productName: string) => { setProduct(productName); document.getElementById('clientNameInput')?.focus(); }
     
-     const LineChart: React.FC<{data: {date: string, revenue: number}[]}> = ({data}) => {
+     const LineChart: React.FC<{data: {date: string, revenue: number}[], onBarClick?: (date: string) => void}> = ({data, onBarClick}) => {
         if (data.length === 0) return <p className="text-center text-sm text-gray-500 py-8">No data for this period.</p>;
         
         // Smart grouping based on data length
@@ -549,7 +567,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                     const y = height - padding - barHeight;
                     
                     return (
-                        <g key={i}>
+                        <g key={i} className={onBarClick ? 'cursor-pointer' : ''} onClick={() => onBarClick?.(data[i].date)}>
                             <rect 
                                 x={x} 
                                 y={y} 
@@ -558,6 +576,9 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                                 fill="#34D399" 
                                 className="hover:opacity-80 transition-opacity"
                             />
+                            {onBarClick && (
+                                <title>Click to view transactions for {d.label}</title>
+                            )}
                             {/* Value label on top of bar - angled at 45 degrees */}
                             {d.revenue > 0 && (
                                 <text 
@@ -694,9 +715,73 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                      </div>
                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray"><h3 className="text-lg font-bold mb-4 text-brand-light-text dark:text-white">Top Products by Revenue</h3><BarChart data={analysisData.productChartData.map(d => ({ name: d.product, revenue: d.revenue }))} onBarClick={handleProductClick} /></div>
-                        <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray"><h3 className="text-lg font-bold mb-4 text-brand-light-text dark:text-white">Revenue Over Time</h3><LineChart data={analysisData.timeChartData} /></div>
+                        <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray"><h3 className="text-lg font-bold mb-4 text-brand-light-text dark:text-white">Revenue Over Time</h3><LineChart data={analysisData.timeChartData} onBarClick={handleDateClick} /></div>
                      </div>
                      <RevenueAIEvaluator productData={analysisData.productChartData} timeframeText={`${dateRange.start} to ${dateRange.end}`} />
+                </div>
+            )}
+            
+            {/* Date Transaction Detail Modal */}
+            {showDateModal && selectedDateForModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowDateModal(false)}>
+                    <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-bold text-brand-light-text dark:text-white">{new Date(selectedDateForModal + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h2>
+                            <button
+                                onClick={() => setShowDateModal(false)}
+                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        {/* Summary Stats */}
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                            <div className="bg-brand-light-bg dark:bg-brand-ink p-3 rounded-lg text-center">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
+                                <p className="text-xl font-bold text-brand-lime">{formatCurrency(dateTransactions.reduce((sum, t) => sum + t.amount, 0))}</p>
+                            </div>
+                            <div className="bg-brand-light-bg dark:bg-brand-ink p-3 rounded-lg text-center">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Transactions</p>
+                                <p className="text-xl font-bold text-brand-light-text dark:text-white">{dateTransactions.length}</p>
+                            </div>
+                            <div className="bg-brand-light-bg dark:bg-brand-ink p-3 rounded-lg text-center">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Avg. Deal</p>
+                                <p className="text-xl font-bold text-brand-blue">{formatCurrency(dateTransactions.length > 0 ? dateTransactions.reduce((sum, t) => sum + t.amount, 0) / dateTransactions.length : 0)}</p>
+                            </div>
+                        </div>
+                        
+                        {/* Transaction List */}
+                        <div className="flex-1 overflow-auto">
+                            <table className="w-full">
+                                <thead className="sticky top-0 bg-brand-light-card dark:bg-brand-navy">
+                                    <tr className="border-b border-brand-light-border dark:border-brand-gray">
+                                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Customer</th>
+                                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Product</th>
+                                        <th className="text-right py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Amount</th>
+                                        <th className="text-center py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Recurring</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {dateTransactions.map((transaction) => (
+                                        <tr key={transaction.id} className="border-b border-brand-light-border dark:border-brand-gray hover:bg-brand-light-bg dark:hover:bg-brand-ink">
+                                            <td className="py-2 px-3 text-sm text-brand-light-text dark:text-white">{transaction.clientName}</td>
+                                            <td className="py-2 px-3 text-sm text-gray-600 dark:text-gray-400">{transaction.product}</td>
+                                            <td className="py-2 px-3 text-sm text-right font-semibold text-brand-lime">{formatCurrency(transaction.amount)}</td>
+                                            <td className="py-2 px-3 text-sm text-center">
+                                                {transaction.isRecurring && (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300">Recurring</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             )}
             
