@@ -145,11 +145,17 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
         });
 
         const productChartData = Object.entries(productBreakdown).map(([product, data]) => ({ product, ...data })).sort((a, b) => b.revenue - a.revenue);
-        const revenueOverTime: Record<string, number> = {};
-        const startDate = new Date(start + 'T00:00:00'), endDate = new Date(end + 'T00:00:00');
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) revenueOverTime[d.toISOString().split('T')[0]] = 0;
-        filtered.forEach(t => { revenueOverTime[t.date] = (revenueOverTime[t.date] || 0) + t.amount; });
-        const timeChartData = Object.entries(revenueOverTime).map(([date, revenue]) => ({ date, revenue }));
+        
+        // Group transactions by date and sum revenue (only include dates with transactions)
+        const revenueByDate: Record<string, number> = {};
+        filtered.forEach(t => {
+            revenueByDate[t.date] = (revenueByDate[t.date] || 0) + t.amount;
+        });
+        
+        // Convert to array and sort by date
+        const timeChartData = Object.entries(revenueByDate)
+            .map(([date, revenue]) => ({ date, revenue }))
+            .sort((a, b) => a.date.localeCompare(b.date));
 
         return { totalRevenue, totalTransactions: filtered.length, avgDealSize: filtered.length > 0 ? totalRevenue / filtered.length : 0, productChartData, timeChartData };
 
