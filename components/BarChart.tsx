@@ -3,6 +3,7 @@ import { formatCurrency } from '../types';
 
 interface BarChartProps {
   data: {name: string, revenue: number}[];
+  onBarClick?: (productName: string) => void;
 }
 
 // Consistent color palette for products
@@ -16,7 +17,7 @@ const getProductColor = (productName: string, index: number) => {
     return PRODUCT_COLORS[index % PRODUCT_COLORS.length];
 };
 
-const BarChart: React.FC<BarChartProps> = ({data}) => {
+const BarChart: React.FC<BarChartProps> = ({data, onBarClick}) => {
     const top5 = data.slice(0, 5);
     if (top5.length === 0) return <p className="text-center text-sm text-gray-500 py-8">No revenue data for this period.</p>;
     
@@ -25,8 +26,13 @@ const BarChart: React.FC<BarChartProps> = ({data}) => {
     return (
         <div className="space-y-4 animate-fade-in">
             {top5.map((item, index) => (
-                <div key={item.name} className="flex items-center gap-2">
-                    <div className="w-28 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 truncate" title={item.name}>
+                <div 
+                    key={item.name} 
+                    className={`flex items-center gap-2 ${onBarClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                    onClick={() => onBarClick?.(item.name)}
+                    title={onBarClick ? `Click to view ${item.name} transactions` : item.name}
+                >
+                    <div className="w-28 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 truncate">
                         {item.name}
                     </div>
                     <div className="flex-grow bg-gray-200 dark:bg-brand-gray rounded-full h-6">
