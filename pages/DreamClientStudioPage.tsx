@@ -198,6 +198,7 @@ interface AvatarCardProps {
 }
 
 const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user, onRefresh }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showContentGenerator, setShowContentGenerator] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -224,9 +225,12 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user, onRefresh }) => {
     }
   };
   return (
-    <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6 hover:shadow-lg transition-all duration-200 hover:border-purple-500">
-      {/* Avatar Header */}
-      <div className="flex items-start gap-4 mb-4">
+    <div className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray hover:shadow-lg transition-all duration-200 hover:border-purple-500">
+      {/* Avatar Header - Always Visible */}
+      <div 
+        className="flex items-start gap-4 p-6 cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center flex-shrink-0">
           {avatar.avatar_image_url ? (
             <img src={avatar.avatar_image_url} alt={avatar.avatar_name} className="w-full h-full rounded-full object-cover" />
@@ -246,8 +250,22 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user, onRefresh }) => {
             </p>
           )}
         </div>
+        {/* Expand/Collapse Icon */}
+        <div className="flex-shrink-0">
+          <svg 
+            className={`w-6 h-6 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </div>
 
+      {/* Expandable Content */}
+      {isExpanded && (
+      <div className="px-6 pb-6">
       {/* Demographics */}
       <div className="space-y-2 mb-4">
         {avatar.age_range && (
@@ -326,6 +344,9 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user, onRefresh }) => {
         </svg>
         Delete Avatar
       </button>
+
+      </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
