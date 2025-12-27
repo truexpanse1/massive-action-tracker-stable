@@ -586,8 +586,16 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                 const rangeEnd = new Date(data[data.length - 1].date);
                 
                 data.forEach(d => {
+                    // DEBUG: Log ALL data being processed to find missing Dec 1st
+                    if (d.date.startsWith('2025-12')) {
+                        console.log('[DEBUG] Processing Dec 2025 data point:', { date: d.date, revenue: d.revenue });
+                    }
+                    
                     // Only process entries that have revenue > 0
-                    if (d.revenue === 0) return;
+                    if (d.revenue === 0) {
+                        console.log('[DEBUG] SKIPPING zero revenue:', d.date);
+                        return;
+                    }
                     
                     const date = new Date(d.date);
                     const year = date.getFullYear();
@@ -596,7 +604,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                     
                     // DEBUG: Log December 2025 transactions
                     if (monthKey === 'Dec 2025') {
-                        console.log('[DEBUG] Dec 2025 transaction:', { date: d.date, revenue: d.revenue });
+                        console.log('[DEBUG] Dec 2025 transaction ADDED to monthsMap:', { date: d.date, revenue: d.revenue, monthKey });
                     }
                     
                     // Calculate actual calendar month boundaries
