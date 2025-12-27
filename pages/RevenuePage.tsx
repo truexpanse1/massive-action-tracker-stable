@@ -757,14 +757,14 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                                 onClick={() => {
                                     const currentMonth = selectedDate.getMonth();
                                     const currentYear = selectedDate.getFullYear();
-                                    const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                                    const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long' });
                                     const firstDay = new Date(currentYear, currentMonth, 1);
                                     const lastDay = new Date(currentYear, currentMonth + 1, 0);
-                                    setDateRange({
-                                        start: firstDay.toISOString().split('T')[0],
-                                        end: lastDay.toISOString().split('T')[0]
-                                    });
-                                    setViewMode('analysis');
+                                    const startDate = firstDay.toISOString().split('T')[0];
+                                    const endDate = lastDay.toISOString().split('T')[0];
+                                    const label = `${monthName} (${firstDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${lastDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})`;
+                                    setSelectedDateForModal(JSON.stringify({ startDate, endDate, label }));
+                                    setShowDateModal(true);
                                 }}
                                 className="w-full bg-brand-lime text-brand-navy font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm mb-3 flex items-center justify-center gap-2"
                             >
