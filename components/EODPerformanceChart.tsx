@@ -29,7 +29,7 @@ const METRIC_CONFIG = {
     label: 'New Revenue',
   },
   recurringRevenue: {
-    color: '#14B8A6',
+    color: '#60A5FA',
     yAxisId: 'left',
     strokeWidth: 4,
     label: 'Recurring Revenue',
