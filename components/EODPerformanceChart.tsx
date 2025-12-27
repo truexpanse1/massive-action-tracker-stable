@@ -22,11 +22,17 @@ interface EODPerformanceChartProps {
 type DateRangeType = 'week' | 'month' | 'custom';
 
 const METRIC_CONFIG = {
-  revenue: {
+  newRevenue: {
     color: '#10B981',
     yAxisId: 'left',
     strokeWidth: 4,
-    label: 'Revenue ($)',
+    label: 'New Revenue',
+  },
+  recurringRevenue: {
+    color: '#14B8A6',
+    yAxisId: 'left',
+    strokeWidth: 4,
+    label: 'Recurring Revenue',
   },
   appointments: {
     color: '#3B82F6',
@@ -61,7 +67,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="font-semibold text-gray-800 dark:text-white mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
-            {entry.name}: {entry.name === 'Revenue ($)'
+            {entry.name}: {entry.name.includes('Revenue')
               ? `$${entry.value.toLocaleString()}`
               : entry.value}
           </p>
@@ -82,7 +88,8 @@ export const EODPerformanceChart: React.FC<EODPerformanceChartProps> = ({
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [activeMetrics, setActiveMetrics] = useState({
-    revenue: true,
+    newRevenue: true,
+    recurringRevenue: true,
     appointments: true,
     calls: true,
     texts: false,
@@ -176,13 +183,32 @@ export const EODPerformanceChart: React.FC<EODPerformanceChartProps> = ({
         ).length;
       }
 
-      // Revenue from transactions
+      // Revenue from transactions - split into new and recurring
       const dayTransactions = transactions.filter(t => t.date === dateKey && t.userId === userId);
-      revenue = dayTransactions.reduce((sum, t) => sum + t.amount, 0);
+      
+      let newRevenue = 0;
+      let recurringRevenue = 0;
+      
+      dayTransactions.forEach(t => {
+        // Check if this is the client's first transaction ever
+        const clientFirstTransaction = transactions
+          .filter(tr => tr.clientName.toLowerCase() === t.clientName.toLowerCase())
+          .sort((a, b) => a.date.localeCompare(b.date))[0];
+        
+        if (clientFirstTransaction?.date === dateKey) {
+          newRevenue += t.amount;
+        } else {
+          recurringRevenue += t.amount;
+        }
+      });
+      
+      revenue = newRevenue + recurringRevenue;
 
       data.push({
         date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         revenue,
+        newRevenue,
+        recurringRevenue,
         appointments,
         calls,
         texts,
@@ -197,7 +223,11 @@ export const EODPerformanceChart: React.FC<EODPerformanceChartProps> = ({
 
   const hasActiveMetrics = Object.values(activeMetrics).some(v => v);
 
-  const leftAxisColor = activeMetrics.revenue ? METRIC_CONFIG.revenue.color : '#10B981';
+  const leftAxisColor = activeMetrics.newRevenue 
+    ? METRIC_CONFIG.newRevenue.color 
+    : activeMetrics.recurringRevenue 
+    ? METRIC_CONFIG.recurringRevenue.color 
+    : '#10B981';
   const rightAxisColor = activeMetrics.appointments
     ? METRIC_CONFIG.appointments.color
     : activeMetrics.calls
@@ -367,14 +397,27 @@ export const EODPerformanceChart: React.FC<EODPerformanceChartProps> = ({
                 iconType="line"
               />
 
-              {activeMetrics.revenue && (
+              {activeMetrics.newRevenue && (
                 <Line
                   yAxisId="left"
                   type="monotone"
-                  dataKey="revenue"
-                  stroke={METRIC_CONFIG.revenue.color}
-                  strokeWidth={METRIC_CONFIG.revenue.strokeWidth}
-                  name={METRIC_CONFIG.revenue.label}
+                  dataKey="newRevenue"
+                  stroke={METRIC_CONFIG.newRevenue.color}
+                  strokeWidth={METRIC_CONFIG.newRevenue.strokeWidth}
+                  name={METRIC_CONFIG.newRevenue.label}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              )}
+
+              {activeMetrics.recurringRevenue && (
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="recurringRevenue"
+                  stroke={METRIC_CONFIG.recurringRevenue.color}
+                  strokeWidth={METRIC_CONFIG.recurringRevenue.strokeWidth}
+                  name={METRIC_CONFIG.recurringRevenue.label}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}
                 />
