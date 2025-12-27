@@ -106,8 +106,33 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
         const quotesSent = proposalsSent; // Same as proposals sent
         const apptsSet = (currentData.prospectingContacts || []).filter(c => c.prospecting.SA).length;
         
-        // Results
+        // Results - Distinguish between new and existing clients
         const todaysTransactions = transactions.filter(t => t.date === currentDateKey);
+        
+        // Identify new vs existing clients
+        const newClientTransactions = todaysTransactions.filter(t => {
+            // Check if this client had any transactions before today
+            const clientFirstTransaction = transactions
+                .filter(tr => tr.clientName.toLowerCase() === t.clientName.toLowerCase())
+                .sort((a, b) => a.date.localeCompare(b.date))[0];
+            return clientFirstTransaction?.date === currentDateKey;
+        });
+        
+        const existingClientTransactions = todaysTransactions.filter(t => {
+            const clientFirstTransaction = transactions
+                .filter(tr => tr.clientName.toLowerCase() === t.clientName.toLowerCase())
+                .sort((a, b) => a.date.localeCompare(b.date))[0];
+            return clientFirstTransaction?.date !== currentDateKey;
+        });
+        
+        // New metrics
+        const newClosedDeals = newClientTransactions.length;
+        const newRevenue = newClientTransactions.reduce((sum, t) => sum + t.amount, 0);
+        const recurringRevenue = existingClientTransactions.reduce((sum, t) => sum + t.amount, 0);
+        const totalRevenue = newRevenue + recurringRevenue;
+        const percentNewRevenue = totalRevenue > 0 ? ((newRevenue / totalRevenue) * 100).toFixed(1) : '0';
+        
+        // Legacy metrics (kept for compatibility)
         const closedDeals = todaysTransactions.length;
         const revenueCollected = todaysTransactions.reduce((sum, t) => sum + t.amount, 0);
         const avgDeal = closedDeals > 0 ? revenueCollected / closedDeals : 0;
@@ -122,6 +147,7 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
             callsMade, proposalsSent, texts, socialMediaTouches,
             newLeads, demosHeld, quotesSent, apptsSet,
             closedDeals, revenueCollected, avgDeal, acv,
+            newClosedDeals, newRevenue, recurringRevenue, percentNewRevenue,
             callToApptRate, leadToApptRate, demoToCloseRate
         };
     }, [currentData, hotLeads, transactions, currentDateKey, contentPostedCount]);
@@ -176,10 +202,10 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
                         <KPI_Card label="Appts Set" value={dailyKpis.apptsSet} />
                     </Column>
                      <Column title="Results" subtitle="Outcome">
-                        <KPI_Card label="Closed Deals" value={dailyKpis.closedDeals} />
-                        <KPI_Card label="Revenue Collected" value={formatCurrency(dailyKpis.revenueCollected)} />
-                        <KPI_Card label="Call → Appt Rate" value={`${dailyKpis.callToApptRate}%`} />
-                        <KPI_Card label="Demo → Close Rate" value={`${dailyKpis.demoToCloseRate}%`} />
+                        <KPI_Card label="New Closed Deals" value={dailyKpis.newClosedDeals} />
+                        <KPI_Card label="New Revenue" value={formatCurrency(dailyKpis.newRevenue)} />
+                        <KPI_Card label="Recurring Revenue" value={formatCurrency(dailyKpis.recurringRevenue)} />
+                        <KPI_Card label="% New Revenue" value={`${dailyKpis.percentNewRevenue}%`} />
                     </Column>
                 </div>
             </div>
