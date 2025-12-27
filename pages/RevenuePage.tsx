@@ -575,6 +575,11 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             // 91-365 days: Group by month
             if (numDays <= 365) {
                 const monthsMap: Record<string, { revenue: number; monthNum: number; year: number; startDate: string; endDate: string }> = {};
+                
+                // Get the date range boundaries
+                const rangeStart = new Date(data[0].date);
+                const rangeEnd = new Date(data[data.length - 1].date);
+                
                 data.forEach(d => {
                     // Only process entries that have revenue > 0
                     if (d.revenue === 0) return;
@@ -595,18 +600,24 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                     }
                     monthsMap[monthKey].revenue += d.revenue;
                 });
+                
                 // Sort by year and month
-                return Object.entries(monthsMap)
+                const sortedMonths = Object.entries(monthsMap)
                     .sort(([, a], [, b]) => {
                         if (a.year !== b.year) return a.year - b.year;
                         return a.monthNum - b.monthNum;
-                    })
-                    .map(([label, data]) => ({ 
-                        label: label.split(' ')[0], // Just show month name (e.g., "Jan" not "Jan 2025")
-                        revenue: data.revenue, 
-                        startDate: data.startDate, 
-                        endDate: data.endDate 
-                    }));
+                    });
+                
+                // Check if we have multiple years in the data
+                const years = new Set(sortedMonths.map(([, data]) => data.year));
+                const hasMultipleYears = years.size > 1;
+                
+                return sortedMonths.map(([label, data]) => ({ 
+                    label: hasMultipleYears ? label : label.split(' ')[0], // Show year if multiple years exist
+                    revenue: data.revenue, 
+                    startDate: data.startDate, 
+                    endDate: data.endDate 
+                }));
             }
             
             // 366+ days: Group by year
@@ -741,7 +752,25 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                             </form>
                         </div>
                          <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
-                            <h3 className="text-lg font-bold mb-2 text-brand-light-text dark:text-white">Transactions for {selectedDate.toLocaleDateString()}</h3>
+                            <h3 className="text-lg font-bold mb-3 text-brand-light-text dark:text-white">Transactions for {selectedDate.toLocaleDateString()}</h3>
+                            <button 
+                                onClick={() => {
+                                    const currentMonth = selectedDate.getMonth();
+                                    const currentYear = selectedDate.getFullYear();
+                                    const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                                    const firstDay = new Date(currentYear, currentMonth, 1);
+                                    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+                                    setDateRange({
+                                        start: firstDay.toISOString().split('T')[0],
+                                        end: lastDay.toISOString().split('T')[0]
+                                    });
+                                    setViewMode('analysis');
+                                }}
+                                className="w-full bg-brand-lime text-brand-navy font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm mb-3 flex items-center justify-center gap-2"
+                            >
+                                <span>📊</span>
+                                <span>View All {selectedDate.toLocaleDateString('en-US', { month: 'long' })} Transactions</span>
+                            </button>
                             <div className="overflow-x-auto max-h-96">
                                  <table className="w-full text-sm text-left"><thead className="bg-brand-light-bg dark:bg-brand-gray/50 text-xs uppercase text-gray-500 dark:text-gray-400 sticky top-0"><tr><th className="p-2">Client</th><th className="p-2">Product</th><th className="p-2 text-right">Amount</th><th className="p-2 text-center">MCV</th><th className="p-2 text-right">ACV</th><th className="p-2 text-center">Actions</th></tr></thead>
                                     <tbody>{transactionsForSelectedDate.map(t => (<tr key={t.id} className="border-b border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white"><td className="p-2 font-medium">{t.clientName}</td><td className="p-2 text-gray-500 dark:text-gray-400">{t.product}</td><td className="p-2 text-right font-semibold text-brand-lime">{formatCurrency(t.amount)}</td><td className="p-2 text-center">{t.isRecurring ? '✅' : '-'}</td><td className="p-2 text-right text-gray-500 dark:text-gray-400">{t.isRecurring ? formatCurrency(t.amount * 12) : '-'}</td><td className="p-2 text-center space-x-2"><button onClick={() => handleEdit(t)} className="text-xs text-blue-400 hover:underline">Edit</button><button onClick={() => handleDelete(t.id)} className="text-xs text-red-400 hover:underline">Del</button></td></tr>))}
