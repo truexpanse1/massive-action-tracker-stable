@@ -597,8 +597,9 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                         return;
                     }
                     
-                    const date = new Date(d.date);
-                    const year = date.getFullYear();
+                    // Fix timezone issue: Parse date as local time, not UTC
+                    const [year, month, day] = d.date.split('-').map(Number);
+                    const date = new Date(year, month - 1, day); // month is 0-indexed
                     const monthNum = date.getMonth(); // 0-11
                     const monthKey = `${date.toLocaleDateString('en-US', { month: 'short' })} ${year}`;
                     
