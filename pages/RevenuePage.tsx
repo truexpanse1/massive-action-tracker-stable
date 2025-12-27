@@ -156,6 +156,11 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
         const timeChartData = Object.entries(revenueByDate)
             .map(([date, revenue]) => ({ date, revenue }))
             .sort((a, b) => a.date.localeCompare(b.date));
+        
+        // DEBUG: Log December 2025 raw data
+        const dec2025Data = timeChartData.filter(d => d.date.startsWith('2025-12'));
+        console.log('[DEBUG] Raw Dec 2025 data before grouping:', dec2025Data);
+        console.log('[DEBUG] Raw Dec 2025 total:', dec2025Data.reduce((sum, d) => sum + d.revenue, 0));
 
         return { totalRevenue, totalTransactions: filtered.length, avgDealSize: filtered.length > 0 ? totalRevenue / filtered.length : 0, productChartData, timeChartData };
 
@@ -589,6 +594,11 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                     const monthNum = date.getMonth(); // 0-11
                     const monthKey = `${date.toLocaleDateString('en-US', { month: 'short' })} ${year}`;
                     
+                    // DEBUG: Log December 2025 transactions
+                    if (monthKey === 'Dec 2025') {
+                        console.log('[DEBUG] Dec 2025 transaction:', { date: d.date, revenue: d.revenue });
+                    }
+                    
                     // Calculate actual calendar month boundaries
                     const firstDayOfMonth = new Date(year, monthNum, 1);
                     const lastDayOfMonth = new Date(year, monthNum + 1, 0);
@@ -600,6 +610,11 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                     }
                     monthsMap[monthKey].revenue += d.revenue;
                 });
+                
+                // DEBUG: Log final December 2025 total
+                if (monthsMap['Dec 2025']) {
+                    console.log('[DEBUG] Dec 2025 FINAL TOTAL:', monthsMap['Dec 2025'].revenue);
+                }
                 
                 // Sort by year and month
                 const sortedMonths = Object.entries(monthsMap)
@@ -613,7 +628,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                 const hasMultipleYears = years.size > 1;
                 
                 return sortedMonths.map(([label, data]) => ({ 
-                    label: hasMultipleYears ? label : label.split(' ')[0], // Show year if multiple years exist
+                    label: label.split(' ')[0], // Always show just month abbreviation (e.g., "Dec" instead of "Dec 2025")
                     revenue: data.revenue, 
                     startDate: data.startDate, 
                     endDate: data.endDate 
@@ -635,6 +650,9 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
         };
         
         const groupedData = groupData();
+        
+        // DEBUG: Log all grouped data
+        console.log('[DEBUG] All grouped chart data:', groupedData);
         const width = 500, height = 220, padding = 40;
         const maxRevenue = Math.max(...groupedData.map(d => d.revenue), 0);
         const yMax = maxRevenue === 0 ? 1000 : Math.ceil(maxRevenue * 1.1);
