@@ -217,7 +217,7 @@ const App: React.FC = () => {
 
         setUser(userProfile);
 
-        const userIdToFetch = userProfile.role === 'Manager' ? null : userProfile.id;
+        const userIdToFetch = (userProfile.role === 'Manager' || userProfile.role === 'Admin') ? null : userProfile.id;
 
         let dayDataQuery = supabase.from('day_data').select('*');
         let hotLeadsQuery = supabase.from('hot_leads').select('*');
