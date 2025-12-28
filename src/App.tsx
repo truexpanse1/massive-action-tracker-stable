@@ -226,11 +226,18 @@ const App: React.FC = () => {
         let quotesQuery = supabase.from('quotes').select('*');
 
         if (userIdToFetch) {
+          // Sales Rep: filter by user_id
           dayDataQuery = dayDataQuery.eq('user_id', userIdToFetch);
           hotLeadsQuery = hotLeadsQuery.eq('user_id', userIdToFetch);
           transactionsQuery = transactionsQuery.eq('user_id', userIdToFetch);
           clientsQuery = clientsQuery.eq('user_id', userIdToFetch);
           quotesQuery = quotesQuery.eq('user_id', userIdToFetch);
+        } else {
+          // Manager: filter by company_id to see all team data
+          dayDataQuery = dayDataQuery.eq('company_id', userProfile.company_id);
+          hotLeadsQuery = hotLeadsQuery.eq('company_id', userProfile.company_id);
+          transactionsQuery = transactionsQuery.eq('company_id', userProfile.company_id);
+          quotesQuery = quotesQuery.eq('company_id', userProfile.company_id);
         }
 
         const [dayDataRes, hotLeadsRes, transactionsRes, clientsRes, quotesRes, usersRes] =
