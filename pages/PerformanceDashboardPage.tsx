@@ -230,116 +230,155 @@ const InteractiveChart: React.FC<{
     const chartHeight = height - padding.top - padding.bottom;
 
     const maxValue = Math.max(...data.map(d => d.value), 0);
-    const yMax = maxValue === 0 ? 100 : Math.ceil(maxValue / 4 / 10) * 10 * 4;
-    const yTicks = [0, yMax / 4, yMax / 2, (yMax * 3) / 4, yMax];
-    
-    const stepX = chartWidth / (data.length > 1 ? data.length - 1 : 1);
+    const yScale = maxValue > 0 ? chartHeight / maxValue : 1;
 
-    const handleMouseOver = (e: React.MouseEvent, pointData: any, index: number) => {
+    const barWidth = data.length > 0 ? Math.max(chartWidth / data.length - 10, 20) : 20;
+
+    const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
         if (!svgRef.current) return;
-        const tooltipWidth = 160;
-        const svgRect = svgRef.current.getBoundingClientRect();
-        
-        let x = e.clientX - svgRect.left + 15;
-        let y = e.clientY - svgRect.top;
+        const rect = svgRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
 
-        if (x + tooltipWidth > svgRect.width) {
-            x = e.clientX - svgRect.left - tooltipWidth - 15;
+        const index = Math.floor((x - padding.left) / (chartWidth / data.length));
+        if (index >= 0 && index < data.length) {
+            const point = data[index];
+            setTooltip({
+                content: point,
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            });
+        } else {
+            setTooltip(null);
         }
-        
-        setTooltip({ content: pointData, x, y });
     };
-    
-    const xLabels = data.map(d => d.label);
-    let labelStep = 1;
-    if (data.length > 10) labelStep = 2;
-    if (data.length > 20) labelStep = 5;
+
+    const handleMouseLeave = () => setTooltip(null);
+
+    const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+        if (!svgRef.current || !onPointClick) return;
+        const rect = svgRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const index = Math.floor((x - padding.left) / (chartWidth / data.length));
+        if (index >= 0 && index < data.length) {
+            onPointClick(data[index]);
+        }
+    };
 
     return (
-        <div className="relative w-full h-full">
-            <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-                {yTicks.map(tick => {
-                    const y = padding.top + chartHeight - (tick / yMax) * chartHeight;
+        <div className="relative">
+            <svg
+                ref={svgRef}
+                viewBox={`0 0 ${width} ${height}`}
+                className="w-full h-auto cursor-pointer"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                onClick={handleClick}
+            >
+                {/* Y-axis */}
+                <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} stroke="currentColor" strokeWidth="1" className="text-gray-300 dark:text-gray-600" />
+                {/* X-axis */}
+                <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="currentColor" strokeWidth="1" className="text-gray-300 dark:text-gray-600" />
+
+                {/* Y-axis labels */}
+                {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+                    const value = maxValue * fraction;
+                    const yPos = height - padding.bottom - (chartHeight * fraction);
                     return (
-                        <g key={tick} className="text-gray-400 dark:text-gray-600 text-[10px]">
-                            <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="currentColor" strokeDasharray="2,2" />
-                            <text x={padding.left - 8} y={y + 3} textAnchor="end" className="fill-current">{formatValue(tick)}</text>
-                        </g>
-                    );
-                })}
-                
-                {data.map((d, i) => {
-                    const x = padding.left + i * stepX;
-                    return (
-                        <g key={`x-axis-${i}`}>
-                          <line x1={x} y1={padding.top} x2={x} y2={height - padding.bottom} stroke="currentColor" className="text-gray-200 dark:text-gray-800" strokeDasharray="2,2" />
-                          {i % labelStep === 0 && (
-                            <text x={x} y={height - 5} textAnchor="middle" className="text-gray-400 dark:text-gray-500 text-[10px] fill-current">{d.label.replace(' ', '\n')}</text>
-                          )}
+                        <g key={fraction}>
+                            <line x1={padding.left - 5} y1={yPos} x2={padding.left} y2={yPos} stroke="currentColor" strokeWidth="1" className="text-gray-300 dark:text-gray-600" />
+                            <text x={padding.left - 10} y={yPos + 4} textAnchor="end" className="text-xs fill-gray-500 dark:fill-gray-400">
+                                {formatValue(value)}
+                            </text>
                         </g>
                     );
                 })}
 
-                {/* Data points */}
-                {type === 'line' && (
-                    <polyline
-                        fill="none"
-                        stroke={color}
-                        strokeWidth="2"
-                        points={data.map((d, i) => {
-                            const x = padding.left + i * stepX;
-                            const y = yMax > 0 ? padding.top + chartHeight - (d.value / yMax) * chartHeight : padding.top + chartHeight;
-                            return `${x},${y}`;
-                        }).join(' ')}
-                    />
-                )}
-                {data.map((d, i) => {
-                    const x = padding.left + i * stepX;
-                    const y = yMax > 0 ? padding.top + chartHeight - (d.value / yMax) * chartHeight : padding.top + chartHeight;
-                    const barWidth = data.length > 1 ? stepX * 0.6 : chartWidth * 0.6;
-                    
-                    return (
-                        <g key={`data-${i}`}>
-                            {type === 'bar' && (
-                                <rect
-                                    x={x - barWidth / 2}
-                                    y={y}
-                                    width={barWidth}
-                                    height={padding.top + chartHeight - y}
-                                    fill={color}
-                                    className="opacity-70"
-                                    onMouseOver={(e) => handleMouseOver(e, d, i)}
-                                    onMouseOut={() => setTooltip(null)}
-                                    onClick={() => onPointClick && onPointClick(d)}
-                                />
-                            )}
-                             {type === 'line' && (
+                {/* Data visualization */}
+                {type === 'bar' ? (
+                    data.map((point, i) => {
+                        const x = padding.left + (i * chartWidth / data.length) + (chartWidth / data.length - barWidth) / 2;
+                        const barHeight = point.value * yScale;
+                        const y = height - padding.bottom - barHeight;
+                        return (
+                            <rect
+                                key={i}
+                                x={x}
+                                y={y}
+                                width={barWidth}
+                                height={barHeight}
+                                fill={color}
+                                className="transition-opacity hover:opacity-80"
+                            />
+                        );
+                    })
+                ) : (
+                    <>
+                        <polyline
+                            points={data.map((point, i) => {
+                                const x = padding.left + (i * chartWidth / (data.length - 1 || 1));
+                                const y = height - padding.bottom - (point.value * yScale);
+                                return `${x},${y}`;
+                            }).join(' ')}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth="2"
+                        />
+                        {data.map((point, i) => {
+                            const x = padding.left + (i * chartWidth / (data.length - 1 || 1));
+                            const y = height - padding.bottom - (point.value * yScale);
+                            return (
                                 <circle
+                                    key={i}
                                     cx={x}
                                     cy={y}
                                     r="4"
                                     fill={color}
-                                    className="cursor-pointer"
-                                    onMouseOver={(e) => handleMouseOver(e, d, i)}
-                                    onMouseOut={() => setTooltip(null)}
-                                    onClick={() => onPointClick && onPointClick(d)}
+                                    className="transition-all hover:r-6"
                                 />
-                             )}
-                        </g>
+                            );
+                        })}
+                    </>
+                )}
+
+                {/* X-axis labels */}
+                {data.map((point, i) => {
+                    const x = type === 'bar' 
+                        ? padding.left + (i * chartWidth / data.length) + (chartWidth / data.length) / 2
+                        : padding.left + (i * chartWidth / (data.length - 1 || 1));
+                    return (
+                        <text
+                            key={i}
+                            x={x}
+                            y={height - padding.bottom + 20}
+                            textAnchor="middle"
+                            className="text-xs fill-gray-500 dark:fill-gray-400"
+                        >
+                            {point.label}
+                        </text>
                     );
                 })}
             </svg>
+
+            {/* Tooltip */}
             {tooltip && (
-                <div 
-                    className="absolute bg-brand-navy text-white text-xs rounded p-2 shadow-lg pointer-events-none"
-                    style={{ left: tooltip.x, top: tooltip.y }}
+                <div
+                    className="absolute bg-brand-navy dark:bg-brand-light-card text-white dark:text-brand-light-text p-2 rounded shadow-lg text-xs pointer-events-none border border-brand-gray dark:border-brand-light-border z-10"
+                    style={{
+                        left: tooltip.x + 10,
+                        top: tooltip.y - 40,
+                        transform: 'translate(-50%, -100%)'
+                    }}
                 >
-                    <p className="font-bold">{tooltip.content.label}</p>
-                    <p>Value: {formatValue(tooltip.content.value)}</p>
-                    {showBreakdown && tooltip.content.breakdown && (
-                        <div className="mt-1 border-t border-brand-gray pt-1">
-                            {tooltip.content.breakdown.map((item: any) => (
-                                <p key={item.name}>{item.name}: {formatValue(item.value)}</p>
+                    <div className="font-bold">{tooltip.content.label}</div>
+                    <div>{formatValue(tooltip.content.value)}</div>
+                    {showBreakdown && tooltip.content.breakdown && tooltip.content.breakdown.length > 0 && (
+                        <div className="mt-1 pt-1 border-t border-gray-600 dark:border-gray-300">
+                            {tooltip.content.breakdown.map((item: any, idx: number) => (
+                                <div key={idx} className="flex justify-between gap-2">
+                                    <span>{item.name}:</span>
+                                    <span className="font-semibold">{formatValue(item.value)}</span>
+                                </div>
                             ))}
                         </div>
                     )}
@@ -349,135 +388,64 @@ const InteractiveChart: React.FC<{
     );
 };
 
-const TeamKPIAnalysis: React.FC<{ summaryData: HistoricalSummary[] }> = ({ summaryData }) => {
-    const [sortConfig, setSortConfig] = useState<{ key: keyof AnalysisData; direction: 'asc' | 'desc' }>({ key: 'revenue', direction: 'desc' });
-
-    const analysisTableData = useMemo(() => {
-        const data: AnalysisData[] = summaryData.map(summary => ({
-            ...summary,
-            avgDealSize: summary.deals > 0 ? summary.revenue / summary.deals : 0,
-            callToApptRate: summary.calls > 0 ? (summary.appts / summary.calls) * 100 : 0,
-            apptToDealRate: summary.appts > 0 ? (summary.deals / summary.appts) * 100 : 0,
-            leadToDealRate: summary.leads > 0 ? (summary.deals / summary.leads) * 100 : 0,
-        }));
-
-        data.sort((a, b) => {
-            if (a[sortConfig.key] < b[sortConfig.key]) {
-                return sortConfig.direction === 'asc' ? -1 : 1;
-            }
-            if (a[sortConfig.key] > b[sortConfig.key]) {
-                return sortConfig.direction === 'asc' ? 1 : -1;
-            }
-            return 0;
-        });
-        return data;
-    }, [summaryData, sortConfig]);
-
-    const requestSort = (key: keyof AnalysisData) => {
-        let direction: 'asc' | 'desc' = 'desc';
-        if (sortConfig.key === key && sortConfig.direction === 'desc') {
-            direction = 'asc';
-        }
-        setSortConfig({ key, direction });
-    };
-
-    const SortableHeader: React.FC<{ headerKey: keyof AnalysisData, label: string }> = ({ headerKey, label }) => {
-        const isSorted = sortConfig.key === headerKey;
-        const icon = isSorted ? (sortConfig.direction === 'desc' ? '▼' : '▲') : '';
-        return (
-            <th className="p-2 text-right cursor-pointer hover:bg-brand-light-bg dark:hover:bg-brand-gray/50" onClick={() => requestSort(headerKey)}>
-                {label} <span className="text-xs">{icon}</span>
-            </th>
-        );
-    };
-
-    return (
-        <ReportWidget title="Team KPI Analysis">
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase">
-                        <tr>
-                            <th className="p-2 cursor-pointer hover:bg-brand-light-bg dark:hover:bg-brand-gray/50" onClick={() => requestSort('userName')}>Rep Name</th>
-                            <SortableHeader headerKey="revenue" label="Revenue" />
-                            <SortableHeader headerKey="deals" label="Deals" />
-                            <SortableHeader headerKey="avgDealSize" label="Avg Deal" />
-                            <SortableHeader headerKey="calls" label="Calls" />
-                            <SortableHeader headerKey="appts" label="Appts" />
-                            <SortableHeader headerKey="callToApptRate" label="Call ▸ Appt %" />
-                            <SortableHeader headerKey="apptToDealRate" label="Appt ▸ Deal %" />
-                            <SortableHeader headerKey="leadToDealRate" label="Lead ▸ Deal %" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {analysisTableData.map(rep => (
-                            <tr key={rep.userId} className="border-t border-brand-light-border dark:border-brand-gray font-medium text-brand-light-text dark:text-white">
-                                <td className="p-2">{rep.userName}</td>
-                                <td className="p-2 text-right font-bold text-brand-lime">{formatCurrency(rep.revenue)}</td>
-                                <td className="p-2 text-right">{rep.deals}</td>
-                                <td className="p-2 text-right">{formatCurrency(rep.avgDealSize)}</td>
-                                <td className="p-2 text-right">{rep.calls}</td>
-                                <td className="p-2 text-right">{rep.appts}</td>
-                                <td className="p-2 text-right">{rep.callToApptRate.toFixed(1)}%</td>
-                                <td className="p-2 text-right">{rep.apptToDealRate.toFixed(1)}%</td>
-                                <td className="p-2 text-right">{rep.leadToDealRate.toFixed(1)}%</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </ReportWidget>
-    );
-};
-
-
 // --- MAIN COMPONENT ---
+
 interface PerformanceDashboardPageProps {
-    allData: { [key: string]: DayData };
+    allData: { [dateKey: string]: DayData };
     transactions: Transaction[];
     users: User[];
     contextualUserId: string | null;
-    setContextualUserId: (id: string | null) => void;
+    setContextualUserId: (userId: string | null) => void;
     eodSubmissions: EODSubmissions;
 }
 
-const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ allData, transactions, users, contextualUserId, setContextualUserId, eodSubmissions }) => {
-    const today = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(today.getDate() - 29);
-
-    const [dateRange, setDateRange] = useState({
-        start: thirtyDaysAgo.toISOString().split('T')[0],
-        end: today.toISOString().split('T')[0]
-    });
-
-    const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-    const [activeMetric, setActiveMetric] = useState<ChartMetric>('revenue');
+const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({
+    allData,
+    transactions,
+    users,
+    contextualUserId,
+    setContextualUserId,
+    eodSubmissions
+}) => {
+    const [selectedDateRange, setSelectedDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
+    const [chartMetric, setChartMetric] = useState<ChartMetric>('revenue');
     const [chartType, setChartType] = useState<ChartType>('line');
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'analysis'>('dashboard');
+    const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof AnalysisData | 'userName'; direction: 'asc' | 'desc' }>({ key: 'revenue', direction: 'desc' });
+    const [modalData, setModalData] = useState<{ label: string; metric: ChartMetric; data: RawDetailData; usersById: { [key: string]: User } } | null>(null);
+    const [alertsModalData, setAlertsModalData] = useState<{ userName: string; userId: string } | null>(null);
+    const [aiEvaluation, setAiEvaluation] = useState<string>('');
+    const [isEvaluating, setIsEvaluating] = useState(false);
 
+    // DEBUG: Log transactions when component receives them
+    useEffect(() => {
+        console.log('[PERF DASHBOARD] Received transactions:', transactions.length);
+        if (transactions.length > 0) {
+            console.log('[PERF DASHBOARD] First transaction:', transactions[0]);
+            console.log('[PERF DASHBOARD] Sample transaction dates:', transactions.slice(0, 5).map(t => t.date));
+        }
+    }, [transactions]);
 
-    // AI Evaluation State
-    const [aiEval, setAiEval] = useState<{ score: number; suggestions: string; } | null>(null);
-    const [isAiLoading, setIsAiLoading] = useState(false);
-    
-    // Modal State
-    const [detailModalData, setDetailModalData] = useState<{ label: string; metric: ChartMetric; data: RawDetailData, usersById: {[key: string]: User} } | null>(null);
-    const [alertsModalUser, setAlertsModalUser] = useState<User | null>(null);
+    const salesReps = useMemo(() => {
+        return users.filter(u => u.role === 'Sales Rep' && u.status === 'Active');
+    }, [users]);
 
-    const salesReps = useMemo(() => users.filter(u => u.role === 'Sales Rep' && u.status === 'Active'), [users]);
-    const usersById = useMemo(() => Object.fromEntries(users.map(u => [u.id, u])), [users]);
-    const userColors = useMemo(() => {
-        const colors = ['#2F81F7', '#34D399', '#FBBF24', '#A855F7', '#E53E3E', '#EC4899', '#06B6D4'];
-        return Object.fromEntries(salesReps.map((rep, i) => [rep.id, colors[i % colors.length]]));
+    // DEBUG: Log salesReps
+    useEffect(() => {
+        console.log('[PERF DASHBOARD] Sales Reps:', salesReps.map(r => ({ id: r.id, name: r.name })));
     }, [salesReps]);
 
-    // Set initial selected users
-    useEffect(() => {
+    const usersById = useMemo(() => {
+        const map: { [key: string]: User } = {};
+        users.forEach(u => { map[u.id] = u; });
+        return map;
+    }, [users]);
+
+    const focusedUser = useMemo(() => {
         if (contextualUserId) {
-            setSelectedUsers([contextualUserId]);
-        } else if (salesReps.length > 0) {
-            setSelectedUsers(salesReps.map(r => r.id));
+            return salesReps.find(u => u.id === contextualUserId) || null;
         }
+        return null;
     }, [contextualUserId, salesReps]);
 
     const handleUserSelection = (userId: string) => {
@@ -495,9 +463,9 @@ const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ all
             rawData[rep.id] = { revenue: [], appts: [], calls: [], leads: [] };
             summaryData[rep.id] = { userId: rep.id, userName: rep.name, revenue: 0, appts: 0, calls: 0, leads: 0, deals: 0 };
         });
-        
-        const startDate = new Date(start + 'T00:00:00');
-        const endDate = new Date(end + 'T00:00:00');
+
+        const startDate = new Date(start);
+        const endDate = new Date(end);
 
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
             const dateKey = d.toISOString().split('T')[0];
@@ -506,6 +474,16 @@ const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ all
             salesReps.forEach(rep => {
                 const dayData = allData[dateKey];
                 const userTransactions = transactions.filter(t => t.date === dateKey && t.userId === rep.id);
+                
+                // DEBUG: Log filtering results for first date
+                if (labels.length === 1) {
+                    console.log(`[PERF DASHBOARD] Date: ${dateKey}, Rep: ${rep.name} (${rep.id})`);
+                    console.log(`[PERF DASHBOARD] Matching transactions:`, userTransactions.length);
+                    console.log(`[PERF DASHBOARD] All transactions for this date:`, transactions.filter(t => t.date === dateKey).length);
+                    if (userTransactions.length > 0) {
+                        console.log(`[PERF DASHBOARD] First matching transaction:`, userTransactions[0]);
+                    }
+                }
                 
                 const dayRevenue = userTransactions.reduce((sum, t) => sum + t.amount, 0);
                 const userContacts = dayData?.prospectingContacts?.filter(c => c.userId === rep.id) || [];
@@ -525,207 +503,298 @@ const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ all
                 summaryData[rep.id].deals += userTransactions.length;
             });
         }
+        
+        // DEBUG: Log final summary
+        console.log('[PERF DASHBOARD] Final summary data:', summaryData);
+        
         return { labels, rawData, summaryData };
     };
 
-    const historicalData = useMemo(() => processData(dateRange.start, dateRange.end), [dateRange, allData, transactions]);
+    useEffect(() => {
+        const today = new Date();
+        const startOfYear = new Date(today.getFullYear(), 0, 1);
+        setSelectedDateRange({
+            start: startOfYear.toISOString().split('T')[0],
+            end: today.toISOString().split('T')[0]
+        });
+    }, []);
 
-    const chartData = useMemo((): HistoricalReport => {
-        const datasets = selectedUsers.map(userId => {
-            const user = salesReps.find(r => r.id === userId);
+    const historicalData = useMemo(() => {
+        if (!selectedDateRange.start || !selectedDateRange.end) {
+            return { labels: [], rawData: {}, summaryData: {} };
+        }
+        return processData(selectedDateRange.start, selectedDateRange.end);
+    }, [selectedDateRange, allData, transactions, salesReps]);
+
+    const chartData = useMemo(() => {
+        const { labels, rawData } = historicalData;
+        const usersToShow = selectedUsers.length > 0 ? selectedUsers : salesReps.map(r => r.id);
+
+        const datasets: HistoricalDataset[] = usersToShow.map(userId => {
+            const user = usersById[userId];
             return {
-                userId: userId,
+                userId,
                 userName: user?.name || 'Unknown',
-                color: userColors[userId],
-                data: historicalData.rawData[userId]?.[activeMetric] || [],
+                color: user?.color || '#10b981',
+                data: rawData[userId]?.[chartMetric] || []
             };
         });
-        
-        const summary = Object.keys(historicalData.summaryData)
-            .map(key => historicalData.summaryData[key])
-            .sort((a, b) => b.revenue - a.revenue);
 
-        return { labels: historicalData.labels.map(l => new Date(l + 'T00:00:00').toLocaleDateString('en-us', {month: 'short', day: 'numeric'})), datasets, summary };
-    }, [historicalData, selectedUsers, activeMetric, userColors, salesReps]);
-    
-    // AI Evaluation Logic
-    const handleAIEvaluation = async () => {
-        if (selectedUsers.length !== 1) {
-            alert("Please select exactly one sales rep to evaluate.");
-            return;
-        }
-        setIsAiLoading(true);
-        setAiEval(null);
+        return { labels, datasets };
+    }, [historicalData, chartMetric, selectedUsers, salesReps, usersById]);
 
-        const repId = selectedUsers[0];
-        const summary = historicalData.summaryData[repId];
-        const timeframeDays = (new Date(dateRange.end).getTime() - new Date(dateRange.start).getTime()) / (1000 * 3600 * 24) + 1;
-        
-        try {
-            const result = await getPerformanceEvaluation({
-                revenue: summary.revenue,
-                calls: summary.calls,
-                appts: summary.appts,
-                deals: summary.deals,
-                timeframeDays: Math.round(timeframeDays)
+    const interactiveChartData = useMemo(() => {
+        const { labels } = historicalData;
+        return labels.map((label, i) => {
+            let totalValue = 0;
+            const breakdown: { name: string; value: number }[] = [];
+            const details: RawDetailData = { revenue: [], appts: [], calls: [], leads: [] };
+
+            chartData.datasets.forEach(ds => {
+                const value = ds.data[i] || 0;
+                totalValue += value;
+                if (value > 0) {
+                    breakdown.push({ name: ds.userName, value });
+                }
             });
-            setAiEval(result);
+
+            const dateKey = label;
+            const usersToShow = selectedUsers.length > 0 ? selectedUsers : salesReps.map(r => r.id);
+            usersToShow.forEach(userId => {
+                const userTransactions = transactions.filter(t => t.date === dateKey && t.userId === userId);
+                details.revenue.push(...userTransactions);
+
+                const dayData = allData[dateKey];
+                const userContacts = dayData?.prospectingContacts?.filter(c => c.userId === userId) || [];
+                details.appts.push(...userContacts.filter(c => c.prospecting.SA));
+                details.calls.push(...userContacts.filter(c => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM));
+                details.leads.push(...userContacts.filter(c => c.name));
+            });
+
+            return { label, value: totalValue, breakdown, details };
+        });
+    }, [chartData, historicalData, transactions, allData, selectedUsers, salesReps]);
+
+    const analysisData = useMemo<AnalysisData[]>(() => {
+        return Object.values(historicalData.summaryData).map(summary => {
+            const avgDealSize = summary.deals > 0 ? summary.revenue / summary.deals : 0;
+            const callToApptRate = summary.calls > 0 ? (summary.appts / summary.calls) * 100 : 0;
+            const apptToDealRate = summary.appts > 0 ? (summary.deals / summary.appts) * 100 : 0;
+            const leadToDealRate = summary.leads > 0 ? (summary.deals / summary.leads) * 100 : 0;
+            return { ...summary, avgDealSize, callToApptRate, apptToDealRate, leadToDealRate };
+        });
+    }, [historicalData]);
+
+    const sortedAnalysisData = useMemo(() => {
+        const sorted = [...analysisData];
+        sorted.sort((a, b) => {
+            const aVal = a[sortConfig.key];
+            const bVal = b[sortConfig.key];
+            if (typeof aVal === 'string' && typeof bVal === 'string') {
+                return sortConfig.direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            }
+            return sortConfig.direction === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+        });
+        return sorted;
+    }, [analysisData, sortConfig]);
+
+    const requestSort = (key: keyof AnalysisData | 'userName') => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+
+    const SortableHeader: React.FC<{ headerKey: keyof AnalysisData; label: string }> = ({ headerKey, label }) => (
+        <th className="p-2 cursor-pointer hover:bg-brand-light-bg dark:hover:bg-brand-gray/50" onClick={() => requestSort(headerKey)}>
+            {label} {sortConfig.key === headerKey && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+        </th>
+    );
+
+    const handleEvaluatePerformance = async () => {
+        if (!focusedUser) return;
+        setIsEvaluating(true);
+        try {
+            const userSummary = historicalData.summaryData[focusedUser.id];
+            if (!userSummary) {
+                setAiEvaluation('No data available for this user in the selected date range.');
+                return;
+            }
+
+            const avgDealSize = userSummary.deals > 0 ? userSummary.revenue / userSummary.deals : 0;
+            const callToApptRate = userSummary.calls > 0 ? (userSummary.appts / userSummary.calls) * 100 : 0;
+            const apptToDealRate = userSummary.appts > 0 ? (userSummary.deals / userSummary.appts) * 100 : 0;
+
+            const evaluation = await getPerformanceEvaluation({
+                userName: focusedUser.name,
+                dateRange: `${selectedDateRange.start} to ${selectedDateRange.end}`,
+                revenue: userSummary.revenue,
+                deals: userSummary.deals,
+                avgDealSize,
+                calls: userSummary.calls,
+                appts: userSummary.appts,
+                leads: userSummary.leads,
+                callToApptRate,
+                apptToDealRate
+            });
+
+            setAiEvaluation(evaluation);
         } catch (error) {
-            console.error(error);
-            alert("Failed to get AI evaluation.");
+            console.error('Error getting AI evaluation:', error);
+            setAiEvaluation('Failed to generate evaluation. Please try again.');
         } finally {
-            setIsAiLoading(false);
+            setIsEvaluating(false);
         }
     };
-    
-    const alerts = useMemo(() => {
-        return salesReps.map(user => {
-            let missedReports = 0;
-            const today = new Date();
-            for (let i = 1; i <= 30; i++) {
-                const d = new Date();
-                d.setDate(today.getDate() - i);
-                if (d.getDay() === 0 || d.getDay() === 6) continue;
-                const dateKey = d.toISOString().split('T')[0];
-                if (!eodSubmissions[user.id]?.[dateKey]) {
-                    missedReports++;
-                }
-            }
-            return { user, missedReports };
-        }).filter(alert => alert.missedReports >= 3)
-        .sort((a,b) => b.missedReports - a.missedReports);
-    }, [salesReps, eodSubmissions]);
 
+    const handlePointClick = (data: any) => {
+        setModalData({ label: data.label, metric: chartMetric, data: data.details, usersById });
+    };
+
+    const metricFormatters: Record<ChartMetric, (value: number) => string> = {
+        revenue: (v) => formatCurrency(v),
+        appts: formatNumber,
+        calls: formatNumber,
+        leads: formatNumber
+    };
 
     return (
-        <>
-        <ActivityDetailModal isOpen={!!detailModalData} onClose={() => setDetailModalData(null)} modalData={detailModalData} />
-        <AlertsDetailModal isOpen={!!alertsModalUser} onClose={() => setAlertsModalUser(null)} userName={alertsModalUser?.name || ''} userId={alertsModalUser?.id || ''} eodSubmissions={eodSubmissions} />
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h1 className="text-2xl font-bold text-brand-light-text dark:text-white">Performance Dashboard</h1>
-                {contextualUserId && <button onClick={() => { setContextualUserId(null); setSelectedUsers(salesReps.map(r => r.id)); }} className="text-sm text-brand-blue hover:underline">&larr; Back to Full Dashboard</button>}
-                <div className="flex items-center gap-2">
-                    <DatePicker value={dateRange.start} onChange={value => setDateRange(prev => ({ ...prev, start: value }))} />
-                    <span className="font-semibold text-gray-500">to</span>
-                    <DatePicker value={dateRange.end} onChange={value => setDateRange(prev => ({ ...prev, end: value }))} />
-                </div>
+        <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
+            <ActivityDetailModal isOpen={!!modalData} onClose={() => setModalData(null)} modalData={modalData} />
+            <AlertsDetailModal
+                isOpen={!!alertsModalData}
+                onClose={() => setAlertsModalData(null)}
+                userName={alertsModalData?.userName || ''}
+                userId={alertsModalData?.userId || ''}
+                eodSubmissions={eodSubmissions}
+            />
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h1 className="text-3xl font-bold text-brand-light-text dark:text-white">
+                    {focusedUser ? `${focusedUser.name}'s Performance` : 'Team Performance Dashboard'}
+                </h1>
+                {focusedUser && (
+                    <button
+                        onClick={() => setContextualUserId(null)}
+                        className="px-4 py-2 bg-brand-light-card dark:bg-brand-navy border border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white rounded-lg hover:bg-brand-light-bg dark:hover:bg-brand-gray transition"
+                    >
+                        ← Back to Team View
+                    </button>
+                )}
             </div>
 
-            <div className="flex items-center border-b border-brand-light-border dark:border-brand-gray">
-                <button
-                    onClick={() => setActiveTab('dashboard')}
-                    className={`px-4 py-2 text-sm font-bold transition-colors ${activeTab === 'dashboard' ? 'border-b-2 border-brand-blue text-brand-blue' : 'text-gray-500 dark:text-gray-400 hover:text-brand-blue/80'}`}
-                >
-                    Dashboard
-                </button>
-                <button
-                    onClick={() => setActiveTab('analysis')}
-                    className={`px-4 py-2 text-sm font-bold transition-colors ${activeTab === 'analysis' ? 'border-b-2 border-brand-blue text-brand-blue' : 'text-gray-500 dark:text-gray-400 hover:text-brand-blue/80'}`}
-                >
-                    KPI Analysis
-                </button>
-            </div>
-            
-            {activeTab === 'dashboard' && (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
-                    <div className="lg:col-span-3 space-y-6">
-                        <ReportWidget title="Select Sales Reps">
-                            <div className="space-y-2">
-                            {salesReps.map(rep => (
-                                <label key={rep.id} className="flex items-center space-x-3 cursor-pointer">
-                                    <input type="checkbox" checked={selectedUsers.includes(rep.id)} onChange={() => handleUserSelection(rep.id)}
-                                        className="h-4 w-4 rounded border-gray-300 focus:ring-blue-500" style={{ accentColor: userColors[rep.id] }} />
-                                    <span className="text-sm font-medium text-brand-light-text dark:text-white">{rep.name}</span>
-                                </label>
-                            ))}
-                            </div>
-                        </ReportWidget>
+            <ReportWidget title="Date Range">
+                <DatePicker
+                    startDate={selectedDateRange.start}
+                    endDate={selectedDateRange.end}
+                    onStartDateChange={(date) => setSelectedDateRange(prev => ({ ...prev, start: date }))}
+                    onEndDateChange={(date) => setSelectedDateRange(prev => ({ ...prev, end: date }))}
+                />
+            </ReportWidget>
 
-                        <ReportWidget title="Alerts & Notifications">
-                            {alerts.length > 0 ? (
-                            <ul className="space-y-2">
-                                {alerts.map(({user, missedReports}) => (
-                                    <li key={user.id} className="text-sm flex justify-between items-center">
-                                        <span className="text-brand-light-text dark:text-gray-300">{user.name}</span>
-                                        <button onClick={() => setAlertsModalUser(user)} className="text-brand-red font-bold hover:underline">{missedReports} missed EODs</button>
-                                    </li>
-                                ))}
-                            </ul>
-                            ) : <p className="text-xs text-gray-500">No critical alerts.</p>}
-                        </ReportWidget>
-
-                        <ReportWidget title="AI Performance Coach">
-                            <div className="space-y-3">
-                                <p className="text-xs text-gray-500 dark:text-gray-400">Select one sales rep to generate an AI-powered performance evaluation for the selected date range.</p>
-                                <button onClick={handleAIEvaluation} disabled={isAiLoading || selectedUsers.length !== 1} className="w-full bg-brand-red text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition disabled:bg-brand-gray">
-                                    {isAiLoading ? 'Analyzing...' : 'Evaluate Performance'}
-                                </button>
-                                {aiEval && (
-                                    <div className="p-3 bg-brand-light-bg dark:bg-brand-gray/20 rounded-md animate-fade-in">
-                                        <div className="flex justify-between items-baseline">
-                                            <h4 className="font-bold text-brand-light-text dark:text-white">Activity Score:</h4>
-                                            <p className="text-2xl font-black text-brand-lime">{aiEval.score}<span className="text-base">/100</span></p>
-                                        </div>
-                                        <div className="mt-2 text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-                                            <h5 className="font-bold mb-1">Suggestions:</h5>
-                                            {aiEval.suggestions}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </ReportWidget>
-                    </div>
-                    <div className="lg:col-span-9 space-y-6">
-                        <ReportWidget title="Leaderboard">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-left">
-                                    <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase">
-                                        <tr>
-                                            <th className="p-2">Rep</th>
-                                            <th className="p-2 text-right">Revenue</th>
-                                            <th className="p-2 text-right">Deals</th>
-                                            <th className="p-2 text-right">Appts</th>
-                                            <th className="p-2 text-right">Calls</th>
-                                            <th className="p-2 text-right">Leads</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {chartData.summary.map(s => (
-                                            <tr key={s.userId} className={`border-t border-brand-light-border dark:border-brand-gray font-medium ${selectedUsers.includes(s.userId) ? 'text-brand-light-text dark:text-white' : 'text-gray-400 dark:text-gray-600'}`}>
-                                                <td className="p-2 flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{backgroundColor: userColors[s.userId]}}></span>{s.userName}</td>
-                                                <td className="p-2 text-right font-bold text-brand-lime">{formatCurrency(s.revenue)}</td>
-                                                <td className="p-2 text-right">{s.deals}</td>
-                                                <td className="p-2 text-right">{s.appts}</td>
-                                                <td className="p-2 text-right">{s.calls}</td>
-                                                <td className="p-2 text-right">{s.leads}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </ReportWidget>
-
-                                              <ReportWidget title="Activity Trends">
-                            <ActivityTrendsWidgetV2
-                                labels={chartData.labels}
-                                rawData={historicalData.rawData}
-                                selectedUsers={selectedUsers}
-                                userColors={userColors}
-                                usersById={usersById}
-                            />
-                        </ReportWidget>
-                    </div>
-                </div>
+            {focusedUser && (
+                <ReportWidget title="AI PERFORMANCE COACH">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        Select one sales rep to generate an AI-powered performance evaluation for the selected date range.
+                    </p>
+                    <button
+                        onClick={handleEvaluatePerformance}
+                        disabled={isEvaluating}
+                        className="w-full py-3 bg-brand-lime text-brand-navy font-bold rounded-lg hover:bg-brand-lime/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isEvaluating ? 'Evaluating...' : 'Evaluate Performance'}
+                    </button>
+                    {aiEvaluation && (
+                        <div className="mt-4 p-4 bg-brand-light-bg dark:bg-brand-gray/20 rounded-lg text-sm text-brand-light-text dark:text-white whitespace-pre-wrap">
+                            {aiEvaluation}
+                        </div>
+                    )}
+                </ReportWidget>
             )}
 
-            {activeTab === 'analysis' && (
-                <div className="animate-fade-in">
-                    <TeamKPIAnalysis summaryData={chartData.summary} />
+            <ReportWidget title="LEADERBOARD">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase">
+                            <tr>
+                                <th className="p-2 cursor-pointer hover:bg-brand-light-bg dark:hover:bg-brand-gray/50" onClick={() => requestSort('userName')}>Rep Name</th>
+                                <SortableHeader headerKey="revenue" label="Revenue" />
+                                <SortableHeader headerKey="deals" label="Deals" />
+                                <SortableHeader headerKey="avgDealSize" label="Avg Deal" />
+                                <SortableHeader headerKey="calls" label="Calls" />
+                                <SortableHeader headerKey="appts" label="Appts" />
+                                <SortableHeader headerKey="callToApptRate" label="Call ▸ Appt %" />
+                                <SortableHeader headerKey="apptToDealRate" label="Appt ▸ Deal %" />
+                                <SortableHeader headerKey="leadToDealRate" label="Lead ▸ Deal %" />
+                                <th className="p-2">EOD Alerts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {sortedAnalysisData.map(row => {
+                                const user = usersById[row.userId];
+                                const missedEODs = (() => {
+                                    const today = new Date();
+                                    let count = 0;
+                                    for (let i = 0; i < 30; i++) {
+                                        const d = new Date();
+                                        d.setDate(today.getDate() - i);
+                                        const dayOfWeek = d.getDay();
+                                        if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+                                        const dateKey = d.toISOString().split('T')[0];
+                                        if (!eodSubmissions[row.userId]?.[dateKey]) count++;
+                                    }
+                                    return count;
+                                })();
+
+                                return (
+                                    <tr key={row.userId} className="border-t border-brand-light-border dark:border-brand-gray hover:bg-brand-light-bg dark:hover:bg-brand-gray/20">
+                                        <td className="p-2 flex items-center gap-2">
+                                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: user?.color || '#10b981' }}></span>
+                                            <span className="font-semibold text-brand-light-text dark:text-white">{row.userName}</span>
+                                        </td>
+                                        <td className="p-2 text-brand-lime font-bold">{formatCurrency(row.revenue)}</td>
+                                        <td className="p-2 text-brand-light-text dark:text-white">{row.deals}</td>
+                                        <td className="p-2 text-brand-light-text dark:text-white">{formatCurrency(row.avgDealSize)}</td>
+                                        <td className="p-2 text-brand-light-text dark:text-white">{row.calls}</td>
+                                        <td className="p-2 text-brand-light-text dark:text-white">{row.appts}</td>
+                                        <td className="p-2 text-brand-light-text dark:text-white">{row.callToApptRate.toFixed(1)}%</td>
+                                        <td className="p-2 text-brand-light-text dark:text-white">{row.apptToDealRate.toFixed(1)}%</td>
+                                        <td className="p-2 text-brand-light-text dark:text-white">{row.leadToDealRate.toFixed(1)}%</td>
+                                        <td className="p-2">
+                                            {missedEODs > 0 ? (
+                                                <button
+                                                    onClick={() => setAlertsModalData({ userName: row.userName, userId: row.userId })}
+                                                    className="px-3 py-1 bg-brand-red text-white text-xs font-bold rounded hover:bg-brand-red/90 transition"
+                                                >
+                                                    {missedEODs} missed EODs
+                                                </button>
+                                            ) : (
+                                                <span className="text-brand-lime text-xs font-bold">✓ All Clear</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
-            )}
+            </ReportWidget>
+
+            <ReportWidget title="ACTIVITY TRENDS">
+                <ActivityTrendsWidgetV2
+                    chartMetric={chartMetric}
+                    setChartMetric={setChartMetric}
+                    chartType={chartType}
+                    setChartType={setChartType}
+                    selectedUsers={selectedUsers}
+                    handleUserSelection={handleUserSelection}
+                    salesReps={salesReps}
+                    interactiveChartData={interactiveChartData}
+                    metricFormatters={metricFormatters}
+                    handlePointClick={handlePointClick}
+                />
+            </ReportWidget>
         </div>
-        </>
     );
 };
 

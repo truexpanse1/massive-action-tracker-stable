@@ -674,7 +674,7 @@ const App: React.FC = () => {
   const handleSaveTransaction = async (transData: Transaction) => {
     if (!user) throw new Error('User not authenticated');
     const payload = {
-      user_id: user.id,
+      user_id: transData.userId || user.id,
       company_id: user.company_id,
       date: transData.date,
       client_name: transData.clientName,
@@ -1046,6 +1046,7 @@ const App: React.FC = () => {
             initialState={revenuePageInitialState}
             onInitialStateConsumed={() => setRevenuePageInitialState(null)}
             loggedInUser={user}
+            users={users}
             companyId={user.company_id || ''}
           />
         );

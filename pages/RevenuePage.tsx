@@ -21,10 +21,11 @@ interface RevenuePageProps {
   initialState: { viewMode: 'daily' | 'analysis', dateRange?: { start: string, end: string }} | null;
   onInitialStateConsumed: () => void;
   loggedInUser: User;
+  users: User[];
   companyId: string;
 }
 
-const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransaction, onDeleteTransaction, selectedDate, onDateChange, initialState, onInitialStateConsumed, loggedInUser, companyId }) => {
+const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransaction, onDeleteTransaction, selectedDate, onDateChange, initialState, onInitialStateConsumed, loggedInUser, users, companyId }) => {
     const [viewMode, setViewMode] = useState<'daily' | 'analysis'>('daily');
     
     const [clientName, setClientName] = useState('');
@@ -32,6 +33,7 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
     const [amount, setAmount] = useState('');
     const [isRecurring, setIsRecurring] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [selectedUserId, setSelectedUserId] = useState<string>(loggedInUser.id);
     const [userProducts, setUserProducts] = useState<string[]>(() => Array.from(new Set(transactions.map(t => t.product))));
     const [analyzedProduct, setAnalyzedProduct] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -227,7 +229,8 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
         const transactionData: Transaction = {
             id: editingId || `new-${Date.now()}`,
             date: getDateKey(selectedDate),
-            clientName, product, amount: numericAmount, isRecurring
+            clientName, product, amount: numericAmount, isRecurring,
+            userId: selectedUserId
         };
         
         try {
@@ -755,6 +758,23 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
                             <form onSubmit={handleSubmit} className="space-y-3">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3"><input id="clientNameInput" type="text" placeholder="Client / Company Name" value={clientName} onChange={e => setClientName(e.target.value)} required className="w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white text-sm p-1 focus:outline-none focus:border-brand-blue focus:border-solid" /><div><input list="product-list" type="text" placeholder="Product / Service" value={product} onChange={e => setProduct(e.target.value)} className="w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white text-sm p-1 focus:outline-none focus:border-brand-blue focus:border-solid" /><datalist id="product-list">{userProducts.map(p => <option key={p} value={p} />)}</datalist></div></div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center"><input type="number" placeholder="Amount" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white text-sm p-1 focus:outline-none focus:border-brand-blue focus:border-solid" /><label className="flex items-center space-x-2 cursor-pointer text-sm text-gray-500 dark:text-gray-400"><input type="checkbox" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} className="h-4 w-4 rounded bg-brand-light-border dark:bg-brand-gray border-gray-300 dark:border-gray-600 text-brand-lime focus:ring-brand-lime" /><span>Recurring (MCV)</span></label></div>
+                                {(loggedInUser.role === 'Admin' || loggedInUser.role === 'Manager') && (
+                                  <div className="grid grid-cols-1 gap-3">
+                                    <div>
+                                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Assign to Sales Rep</label>
+                                      <select 
+                                        value={selectedUserId}
+                                        onChange={(e) => setSelectedUserId(e.target.value)}
+                                        className="w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white text-sm p-1 focus:outline-none focus:border-brand-blue focus:border-solid"
+                                      >
+                                        <option value={loggedInUser.id}>Me ({loggedInUser.name})</option>
+                                        {users.filter(u => u.role === 'Sales Rep' && u.status === 'Active').map(u => (
+                                          <option key={u.id} value={u.id}>{u.name}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+                                )}
                                 <div className="flex items-center gap-2 pt-2"><button type="submit" disabled={isSubmitting} className="flex-grow bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm disabled:bg-brand-gray">{isSubmitting ? 'Saving...' : (editingId ? 'Update Transaction' : 'Add Transaction')}</button>{editingId && <button type="button" onClick={resetForm} className="bg-brand-gray text-white font-bold py-2 px-4 rounded-lg hover:bg-brand-light-gray transition text-sm">Cancel</button>}</div>
                             </form>
                         </div>
