@@ -121,6 +121,7 @@ export interface Transaction {
     amount: number;
     isRecurring: boolean;
     userId?: string;
+    company_id?: string; // Added for manager view support
 }
 
 export interface NewClient {

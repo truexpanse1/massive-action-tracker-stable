@@ -234,12 +234,14 @@ const App: React.FC = () => {
           quotesQuery = quotesQuery.eq('user_id', userIdToFetch);
         } else {
           // Manager: filter by company_id to see all team data
+          console.log('[DEBUG] Manager mode - filtering by company_id:', userProfile.company_id);
           dayDataQuery = dayDataQuery.eq('company_id', userProfile.company_id);
           hotLeadsQuery = hotLeadsQuery.eq('company_id', userProfile.company_id);
           transactionsQuery = transactionsQuery.eq('company_id', userProfile.company_id);
           quotesQuery = quotesQuery.eq('company_id', userProfile.company_id);
         }
 
+        console.log('[DEBUG] Executing queries...');
         const [dayDataRes, hotLeadsRes, transactionsRes, clientsRes, quotesRes, usersRes] =
           await Promise.all([
             dayDataQuery,
@@ -250,6 +252,14 @@ const App: React.FC = () => {
             supabase.from('users').select('*'),
           ]);
 
+        console.log('[DEBUG] Query results:');
+        console.log('  - dayDataRes:', dayDataRes.data?.length, 'rows');
+        console.log('  - hotLeadsRes:', hotLeadsRes.data?.length, 'rows');
+        console.log('  - transactionsRes:', transactionsRes.data?.length, 'rows');
+        console.log('  - clientsRes:', clientsRes.data?.length, 'rows');
+        console.log('  - quotesRes:', quotesRes.data?.length, 'rows');
+        console.log('  - usersRes:', usersRes.data?.length, 'rows');
+
         for (const res of [
           dayDataRes,
           hotLeadsRes,
@@ -258,7 +268,10 @@ const App: React.FC = () => {
           quotesRes,
           usersRes,
         ]) {
-          if (res.error) throw res.error;
+          if (res.error) {
+            console.error('[DEBUG] Query error:', res.error);
+            throw res.error;
+          }
         }
 
         if (dayDataRes.data)
