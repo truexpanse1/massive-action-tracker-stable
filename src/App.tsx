@@ -296,16 +296,18 @@ const App: React.FC = () => {
               userId: lead.user_id,
             }))
           );
-        if (transactionsRes.data)
-          setTransactions(
-            transactionsRes.data.map((t: any) => ({
-              ...t,
-              id: String(t.id),
-              clientName: t.client_name,
-              isRecurring: t.is_recurring,
-              userId: t.user_id,
-            }))
-          );
+        if (transactionsRes.data) {
+          const mappedTransactions = transactionsRes.data.map((t: any) => ({
+            ...t,
+            id: String(t.id),
+            clientName: t.client_name,
+            isRecurring: t.is_recurring,
+            userId: t.user_id,
+          }));
+          console.log('[DEBUG] Setting transactions state:', mappedTransactions.length, 'transactions');
+          console.log('[DEBUG] First 3 transactions:', mappedTransactions.slice(0, 3));
+          setTransactions(mappedTransactions);
+        }
         if (clientsRes.data)
           setNewClients(
             clientsRes.data.map((c: any) => ({
