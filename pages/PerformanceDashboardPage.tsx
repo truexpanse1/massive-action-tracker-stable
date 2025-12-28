@@ -487,6 +487,12 @@ const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ all
     };
 
     const processData = (start: string, end: string): RawHistoricalData => {
+        console.log('[PERF DEBUG] ===== processData called =====');
+        console.log('[PERF DEBUG] Date range:', start, 'to', end);
+        console.log('[PERF DEBUG] Total transactions:', transactions.length);
+        console.log('[PERF DEBUG] Sales Reps:', salesReps.map(r => ({ id: r.id, name: r.name, role: r.role, status: r.status })));
+        console.log('[PERF DEBUG] First 3 transactions:', transactions.slice(0, 3).map(t => ({ id: t.id, date: t.date, amount: t.amount, userId: t.userId, user_id: t.user_id })));
+        
         const labels: string[] = [];
         const rawData: Record<string, Record<ChartMetric, number[]>> = {};
         const summaryData: Record<string, HistoricalSummary> = {};
@@ -507,6 +513,10 @@ const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ all
                 const dayData = allData[dateKey];
                 const userTransactions = transactions.filter(t => t.date === dateKey && t.userId === rep.id);
                 
+                if (dateKey === labels[0] && userTransactions.length > 0) {
+                    console.log(`[PERF DEBUG] ${rep.name} (${rep.id}) on ${dateKey}: ${userTransactions.length} transactions, $${userTransactions.reduce((sum, t) => sum + t.amount, 0)}`);
+                }
+                
                 const dayRevenue = userTransactions.reduce((sum, t) => sum + t.amount, 0);
                 const userContacts = dayData?.prospectingContacts?.filter(c => c.userId === rep.id) || [];
                 const dayAppts = userContacts.filter(c => c.prospecting.SA).length;
@@ -525,6 +535,7 @@ const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ all
                 summaryData[rep.id].deals += userTransactions.length;
             });
         }
+        console.log('[PERF DEBUG] Summary data:', Object.values(summaryData).map(s => ({ name: s.userName, revenue: s.revenue, deals: s.deals })));
         return { labels, rawData, summaryData };
     };
 
