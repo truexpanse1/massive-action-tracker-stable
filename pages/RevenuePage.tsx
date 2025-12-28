@@ -226,12 +226,18 @@ const RevenuePage: React.FC<RevenuePageProps> = ({ transactions, onSaveTransacti
             return;
         }
 
+        console.log('[REVENUE DEBUG] Creating transaction with:');
+        console.log('[REVENUE DEBUG] loggedInUser:', { id: loggedInUser.id, name: loggedInUser.name, email: loggedInUser.email, role: loggedInUser.role });
+        console.log('[REVENUE DEBUG] selectedUserId:', selectedUserId);
+        
         const transactionData: Transaction = {
             id: editingId || `new-${Date.now()}`,
             date: getDateKey(selectedDate),
             clientName, product, amount: numericAmount, isRecurring,
             userId: selectedUserId
         };
+        
+        console.log('[REVENUE DEBUG] transactionData.userId:', transactionData.userId);
         
         try {
             await onSaveTransaction(transactionData);
