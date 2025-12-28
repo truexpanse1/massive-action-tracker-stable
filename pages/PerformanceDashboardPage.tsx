@@ -493,6 +493,13 @@ const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ all
         console.log('[PERF DEBUG] Sales Reps:', salesReps.map(r => ({ id: r.id, name: r.name, role: r.role, status: r.status })));
         console.log('[PERF DEBUG] First 3 transactions:', transactions.slice(0, 3).map(t => ({ id: t.id, date: t.date, amount: t.amount, userId: t.userId, user_id: t.user_id })));
         
+        // Find who owns these transactions
+        const mysteryUserId = transactions[0]?.userId;
+        if (mysteryUserId) {
+            const mysteryUser = users.find(u => u.id === mysteryUserId);
+            console.log('[PERF DEBUG] Transaction owner:', mysteryUser ? { id: mysteryUser.id, name: mysteryUser.name, email: mysteryUser.email, role: mysteryUser.role, status: mysteryUser.status } : 'USER NOT FOUND IN USERS ARRAY');
+        }
+        
         const labels: string[] = [];
         const rawData: Record<string, Record<ChartMetric, number[]>> = {};
         const summaryData: Record<string, HistoricalSummary> = {};
