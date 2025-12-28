@@ -464,7 +464,7 @@ const PerformanceDashboardPage: React.FC<PerformanceDashboardPageProps> = ({ all
     const [detailModalData, setDetailModalData] = useState<{ label: string; metric: ChartMetric; data: RawDetailData, usersById: {[key: string]: User} } | null>(null);
     const [alertsModalUser, setAlertsModalUser] = useState<User | null>(null);
 
-    const salesReps = useMemo(() => users.filter(u => u.role === 'Sales Rep' && u.status === 'Active'), [users]);
+    const salesReps = useMemo(() => users.filter(u => u.status === 'Active'), [users]);
     const usersById = useMemo(() => Object.fromEntries(users.map(u => [u.id, u])), [users]);
     const userColors = useMemo(() => {
         const colors = ['#2F81F7', '#34D399', '#FBBF24', '#A855F7', '#E53E3E', '#EC4899', '#06B6D4'];
