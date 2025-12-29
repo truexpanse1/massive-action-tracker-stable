@@ -6,6 +6,7 @@ interface SavedContent {
     id: string;
     template: string;
     content: string;
+    title: string;
     createdAt: string;
 }
 
@@ -85,7 +86,9 @@ const AIContentPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [savedContent, setSavedContent] = useState<SavedContent[]>([]);
-    const [selectedSavedContent, setSelectedSavedContent] = useState<SavedContent | null>(null);
+    const [showSavedContent, setShowSavedContent] = useState(false);
+    const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Load saved content from localStorage on mount
     useEffect(() => {
@@ -152,10 +155,15 @@ const AIContentPage: React.FC = () => {
             return;
         }
 
+        // Extract first line as title (up to 60 chars)
+        const firstLine = generatedContent.split('\n')[0].substring(0, 60);
+        const title = firstLine || selectedTemplate;
+
         const newSaved: SavedContent = {
             id: Date.now().toString(),
             template: selectedTemplate,
             content: generatedContent,
+            title: title,
             createdAt: new Date().toISOString(),
         };
 
@@ -166,8 +174,8 @@ const AIContentPage: React.FC = () => {
     };
 
     const handleLoadSaved = (saved: SavedContent) => {
-        setSelectedSavedContent(saved);
         setGeneratedContent(saved.content);
+        setShowSavedContent(false);
     };
 
     const handleDeleteSaved = (id: string) => {
@@ -176,11 +184,39 @@ const AIContentPage: React.FC = () => {
         const updated = savedContent.filter(item => item.id !== id);
         setSavedContent(updated);
         localStorage.setItem('aiContentSaved', JSON.stringify(updated));
-        
-        if (selectedSavedContent?.id === id) {
-            setSelectedSavedContent(null);
-        }
     };
+
+    const toggleExpanded = (id: string) => {
+        const newExpanded = new Set(expandedItems);
+        if (newExpanded.has(id)) {
+            newExpanded.delete(id);
+        } else {
+            newExpanded.add(id);
+        }
+        setExpandedItems(newExpanded);
+    };
+
+    // Filter saved content by search query
+    const filteredContent = useMemo(() => {
+        if (!searchQuery.trim()) return savedContent;
+        const query = searchQuery.toLowerCase();
+        return savedContent.filter(item => 
+            item.title.toLowerCase().includes(query) ||
+            item.template.toLowerCase().includes(query) ||
+            item.content.toLowerCase().includes(query)
+        );
+    }, [savedContent, searchQuery]);
+
+    // Group by date
+    const groupedContent = useMemo(() => {
+        const groups: Record<string, SavedContent[]> = {};
+        filteredContent.forEach(item => {
+            const date = new Date(item.createdAt).toLocaleDateString();
+            if (!groups[date]) groups[date] = [];
+            groups[date].push(item);
+        });
+        return groups;
+    }, [filteredContent]);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -250,88 +286,149 @@ const AIContentPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Saved Content List */}
-                {savedContent.length > 0 && (
-                    <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
-                        <h3 className="text-lg font-bold mb-3 text-brand-light-text dark:text-white">
-                            Saved Content ({savedContent.length})
-                        </h3>
-                        <div className="space-y-2 max-h-96 overflow-y-auto">
-                            {savedContent.map(item => (
-                                <div
-                                    key={item.id}
-                                    className={`p-3 rounded-lg border transition ${
-                                        selectedSavedContent?.id === item.id
-                                            ? 'bg-brand-blue/10 border-brand-blue'
-                                            : 'bg-brand-light-bg dark:bg-brand-ink border-brand-light-border dark:border-brand-gray hover:border-brand-blue'
-                                    }`}
-                                >
-                                    <div className="flex justify-between items-start gap-2">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-brand-light-text dark:text-white truncate">
-                                                {item.template}
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                {new Date(item.createdAt).toLocaleDateString()} {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </p>
-                                        </div>
-                                        <div className="flex gap-1">
-                                            <button
-                                                onClick={() => handleLoadSaved(item)}
-                                                className="px-2 py-1 text-xs bg-brand-blue text-white rounded hover:bg-blue-700 transition"
-                                            >
-                                                Load
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteSaved(item.id)}
-                                                className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition"
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                {/* View Saved Content Button */}
+                <button
+                    onClick={() => setShowSavedContent(!showSavedContent)}
+                    className="w-full bg-brand-blue text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                    <span>📁</span>
+                    <span>{showSavedContent ? 'Hide' : 'View'} Saved Content ({savedContent.length})</span>
+                </button>
             </div>
 
             <div className="lg:col-span-2">
-                <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold text-brand-light-text dark:text-white">
-                            Generated Content
-                        </h2>
-                        <div className="flex gap-2">
+                {showSavedContent ? (
+                    /* Saved Content View */
+                    <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-brand-light-text dark:text-white">
+                                Saved Content Library
+                            </h2>
                             <button
-                                onClick={handleSave}
-                                disabled={!generatedContent || isLoading}
-                                className="text-xs bg-green-600 text-white font-bold py-1 px-3 rounded-md hover:bg-green-700 transition disabled:bg-brand-gray"
+                                onClick={() => setShowSavedContent(false)}
+                                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                             >
-                                Save Content
-                            </button>
-                            <button
-                                onClick={handleCopy}
-                                disabled={!generatedContent || isLoading}
-                                className="text-xs bg-brand-blue text-white font-bold py-1 px-3 rounded-md hover:bg-blue-700 transition disabled:bg-brand-gray"
-                            >
-                                Copy Text
+                                ✕ Close
                             </button>
                         </div>
+
+                        {/* Search Bar */}
+                        <div className="mb-4">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search saved content..."
+                                className="w-full bg-brand-light-bg dark:bg-brand-ink border border-brand-light-border dark:border-brand-gray rounded-md text-brand-light-text dark:text-white text-sm p-3 focus:outline-none focus:border-brand-blue"
+                            />
+                        </div>
+
+                        {/* Saved Content List */}
+                        <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+                            {Object.keys(groupedContent).length === 0 ? (
+                                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                                    No saved content found.
+                                </p>
+                            ) : (
+                                Object.entries(groupedContent).map(([date, items]) => (
+                                    <div key={date} className="space-y-2">
+                                        <h3 className="text-sm font-bold text-gray-600 dark:text-gray-400 sticky top-0 bg-brand-light-card dark:bg-brand-navy py-2">
+                                            📅 {date}
+                                        </h3>
+                                        {items.map(item => {
+                                            const isExpanded = expandedItems.has(item.id);
+                                            return (
+                                                <div
+                                                    key={item.id}
+                                                    className="bg-brand-light-bg dark:bg-brand-ink border border-brand-light-border dark:border-brand-gray rounded-lg overflow-hidden"
+                                                >
+                                                    {/* Header - Always Visible */}
+                                                    <div className="p-3 flex items-center justify-between gap-2">
+                                                        <button
+                                                            onClick={() => toggleExpanded(item.id)}
+                                                            className="flex-1 text-left flex items-center gap-2 hover:text-brand-blue transition"
+                                                        >
+                                                            <span className="text-lg">{isExpanded ? '▼' : '▶'}</span>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-semibold text-brand-light-text dark:text-white truncate">
+                                                                    {item.title}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {item.template} • {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                </p>
+                                                            </div>
+                                                        </button>
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                onClick={() => handleLoadSaved(item)}
+                                                                className="px-3 py-1 text-xs bg-brand-blue text-white rounded hover:bg-blue-700 transition"
+                                                            >
+                                                                Load
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteSaved(item.id)}
+                                                                className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Expanded Content - Scrollable */}
+                                                    {isExpanded && (
+                                                        <div className="border-t border-brand-light-border dark:border-brand-gray p-3 bg-white dark:bg-gray-900">
+                                                            <div className="max-h-64 overflow-y-auto">
+                                                                <pre className="text-xs text-brand-light-text dark:text-gray-300 whitespace-pre-wrap font-sans">
+                                                                    {item.content}
+                                                                </pre>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
-                    <div className="w-full bg-brand-light-bg dark:bg-brand-ink border border-brand-light-border dark:border-brand-gray rounded-md p-4 min-h-[60vh] max-h-[80vh] overflow-y-auto">
-                        {isLoading ? (
-                            <div className="flex justify-center items-center h-full">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-blue"></div>
+                ) : (
+                    /* Generated Content View */
+                    <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-brand-light-text dark:text-white">
+                                Generated Content
+                            </h2>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleSave}
+                                    disabled={!generatedContent || isLoading}
+                                    className="text-xs bg-green-600 text-white font-bold py-1 px-3 rounded-md hover:bg-green-700 transition disabled:bg-brand-gray"
+                                >
+                                    💾 Save
+                                </button>
+                                <button
+                                    onClick={handleCopy}
+                                    disabled={!generatedContent || isLoading}
+                                    className="text-xs bg-brand-blue text-white font-bold py-1 px-3 rounded-md hover:bg-blue-700 transition disabled:bg-brand-gray"
+                                >
+                                    📋 Copy
+                                </button>
                             </div>
-                        ) : (
-                            <pre className="text-sm text-brand-light-text dark:text-gray-300 whitespace-pre-wrap font-sans">
-                                {generatedContent || 'Your AI-generated content will appear here...'}
-                            </pre>
-                        )}
+                        </div>
+                        <div className="w-full bg-brand-light-bg dark:bg-brand-ink border border-brand-light-border dark:border-brand-gray rounded-md p-4 min-h-[60vh] max-h-[80vh] overflow-y-auto">
+                            {isLoading ? (
+                                <div className="flex justify-center items-center h-full">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-blue"></div>
+                                </div>
+                            ) : (
+                                <pre className="text-sm text-brand-light-text dark:text-gray-300 whitespace-pre-wrap font-sans">
+                                    {generatedContent || 'Your AI-generated content will appear here...'}
+                                </pre>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );
