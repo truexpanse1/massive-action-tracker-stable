@@ -96,14 +96,14 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
     const dailyKpis = useMemo(() => {
         // Activity
         const callsMade = (currentData.prospectingContacts || []).filter(c => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM).length;
-        const proposalsSent = (currentData.prospectingContacts || []).filter(c => c.prospecting.EP).length;
+        const prospectsCollected = (currentData.prospectingContacts || []).filter(c => c.name).length; // All imported prospects
         const texts = (currentData.prospectingContacts || []).filter(c => c.prospecting.ST).length;
         const socialMediaTouches = contentPostedCount; // Synced with Scorecard Content Posted metric
 
         // Pipeline
         const newLeads = hotLeads.filter(l => l.dateAdded && l.dateAdded.startsWith(currentDateKey)).length;
         const demosHeld = (currentData.events || []).filter(e => e.type === 'Appointment' && e.conducted).length;
-        const quotesSent = proposalsSent; // Same as proposals sent
+        const proposalsSent = (currentData.prospectingContacts || []).filter(c => c.prospecting.EP).length; // EP button clicks
         const apptsSet = (currentData.prospectingContacts || []).filter(c => c.prospecting.SA).length;
         
         // Results - Distinguish between new and existing clients
@@ -144,8 +144,8 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
         const demoToCloseRate = demosHeld > 0 ? ((closedDeals / demosHeld) * 100).toFixed(1) : '0';
 
         return {
-            callsMade, proposalsSent, texts, socialMediaTouches,
-            newLeads, demosHeld, quotesSent, apptsSet,
+            callsMade, prospectsCollected, texts, socialMediaTouches,
+            newLeads, demosHeld, proposalsSent, apptsSet,
             closedDeals, revenueCollected, avgDeal, acv,
             newClosedDeals, newRevenue, recurringRevenue, percentNewRevenue,
             callToApptRate, leadToApptRate, demoToCloseRate
@@ -191,14 +191,14 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <Column title="Activity" subtitle="Input">
                         <KPI_Card label="Calls Made" value={dailyKpis.callsMade} />
-                        <KPI_Card label="Proposals Sent" value={dailyKpis.proposalsSent} />
+                        <KPI_Card label="Prospects Collected" value={dailyKpis.prospectsCollected} />
                         <KPI_Card label="Texts Sent" value={dailyKpis.texts} />
                         <KPI_Card label="Social Media Posts" value={dailyKpis.socialMediaTouches} />
                     </Column>
                     <Column title="Pipeline" subtitle="Progress">
                         <KPI_Card label="New Leads" value={dailyKpis.newLeads} />
                         <KPI_Card label="Demos Held" value={dailyKpis.demosHeld} />
-                        <KPI_Card label="Quotes Sent" value={dailyKpis.quotesSent} />
+                        <KPI_Card label="Proposals Sent" value={dailyKpis.proposalsSent} />
                         <KPI_Card label="Appts Set" value={dailyKpis.apptsSet} />
                     </Column>
                      <Column title="Results" subtitle="Outcome">

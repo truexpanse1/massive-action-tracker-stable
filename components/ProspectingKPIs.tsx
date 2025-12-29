@@ -25,9 +25,9 @@ const ProspectingKPIs: React.FC<ProspectingKPIsProps> = ({ contacts, events }) =
       (e) => e.type === 'Appointment' && e.conducted
     ).length;
 
-    const newLeads = contacts.filter((c) => c.name).length;
+    const prospectsCollected = contacts.filter((c) => c.name).length;
 
-    return { callsMade, textsSent, emailsSent, apptsSet, demosHeld, newLeads };
+    return { callsMade, textsSent, emailsSent, apptsSet, demosHeld, prospectsCollected };
   }, [contacts, events]);
 
   return (
@@ -57,8 +57,8 @@ const ProspectingKPIs: React.FC<ProspectingKPIsProps> = ({ contacts, events }) =
           <p className="text-xs text-gray-500 dark:text-gray-400">Emails Sent</p>
         </div>
         <div className="text-center">
-          <p className="text-3xl font-black text-brand-lime">{metrics.newLeads}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">New Leads</p>
+          <p className="text-3xl font-black text-brand-lime">{metrics.prospectsCollected}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Prospects Collected</p>
         </div>
       </div>
     </div>
