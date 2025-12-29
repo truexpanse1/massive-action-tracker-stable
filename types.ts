@@ -37,6 +37,20 @@ export interface User {
 
 export type EODSubmissions = Record<string, Record<string, boolean>>;
 
+export interface SavedAIContent {
+  id: string;
+  user_id: string;
+  company_id: string;
+  content_date: string;
+  template_type: string;
+  title: string;
+  content_text: string;
+  content_html?: string;
+  tags?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 //
 // Data Models
 //

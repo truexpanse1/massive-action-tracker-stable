@@ -1,13 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ContentTemplatesCard from '../components/ContentTemplatesCard';
 import { generateBusinessContent } from '../services/geminiService';
+import { supabase } from '../services/supabaseClient';
+import { SavedAIContent } from '../types';
 
-interface SavedContent {
-    id: string;
-    template: string;
-    content: string;
-    title: string;
-    createdAt: string;
+interface SavedContentDisplay extends SavedAIContent {
+    isExpanded?: boolean;
 }
 
 const templateFields: Record<string, { label: string; name: string; placeholder: string }[]> = {
@@ -55,7 +53,6 @@ const templateFields: Record<string, { label: string; name: string; placeholder:
     ],
 };
 
-// Templates that should show a free-form description box
 const templatesRequiringDescription = [
     'Mastermind Group Invitation',
     'Company Newsletter',
@@ -85,350 +82,387 @@ const AIContentPage: React.FC = () => {
     const [generatedContent, setGeneratedContent] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [savedContent, setSavedContent] = useState<SavedContent[]>([]);
+    
+    // Saved content state
+    const [savedContent, setSavedContent] = useState<SavedContentDisplay[]>([]);
     const [showSavedContent, setShowSavedContent] = useState(false);
-    const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const [datesWithContent, setDatesWithContent] = useState<Set<string>>(new Set());
+    const [isLoadingSaved, setIsLoadingSaved] = useState(false);
 
-    // Load saved content from localStorage on mount
+    // Load saved content from Supabase
     useEffect(() => {
-        const saved = localStorage.getItem('aiContentSaved');
-        if (saved) {
-            try {
-                setSavedContent(JSON.parse(saved));
-            } catch (e) {
-                console.error('Failed to parse saved content:', e);
-            }
-        }
+        loadSavedContent();
     }, []);
 
-    const currentFields = useMemo(() => {
-        // reset fields + description whenever template changes
-        setFormDetails({});
-        setDescription('');
-        return templateFields[selectedTemplate] || [];
-    }, [selectedTemplate]);
+    const loadSavedContent = async () => {
+        setIsLoadingSaved(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
 
-    const handleInputChange = (name: string, value: string) => {
-        setFormDetails(prev => ({ ...prev, [name]: value }));
+            const { data, error } = await supabase
+                .from('saved_ai_content')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (data) {
+                setSavedContent(data.map(item => ({ ...item, isExpanded: false })));
+                
+                // Build set of dates with content
+                const dates = new Set(data.map(item => item.content_date));
+                setDatesWithContent(dates);
+            }
+        } catch (err) {
+            console.error('Error loading saved content:', err);
+        } finally {
+            setIsLoadingSaved(false);
+        }
     };
-    
+
     const handleGenerate = async () => {
         setIsLoading(true);
         setError(null);
-        setGeneratedContent('');
         try {
-            const payload: Record<string, string> = {
-                ...formDetails,
-            };
-
-            // include description for targeted templates
-            if (templatesRequiringDescription.includes(selectedTemplate) && description.trim()) {
-                payload.description = description.trim();
-            }
-
-            const content = await generateBusinessContent(selectedTemplate, payload);
+            const content = await generateBusinessContent(selectedTemplate, { ...formDetails, description });
             setGeneratedContent(content);
         } catch (err) {
-            console.error(err);
             setError('Failed to generate content. Please try again.');
+            console.error(err);
         } finally {
             setIsLoading(false);
         }
     };
-    
-    const handleCopy = () => {
-        navigator.clipboard.writeText(generatedContent).then(
-            () => {
-                alert('Content copied to clipboard!');
-            },
-            (err) => {
-                console.error('Could not copy text: ', err);
-                alert('Failed to copy content.');
+
+    const handleSaveContent = async () => {
+        if (!generatedContent) return;
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                alert('Please log in to save content');
+                return;
             }
+
+            const { data: userData } = await supabase
+                .from('users')
+                .select('company_id')
+                .eq('id', user.id)
+                .single();
+
+            if (!userData?.company_id) {
+                alert('Company ID not found');
+                return;
+            }
+
+            const title = generatedContent.substring(0, 60) + (generatedContent.length > 60 ? '...' : '');
+            
+            const { error } = await supabase
+                .from('saved_ai_content')
+                .insert({
+                    user_id: user.id,
+                    company_id: userData.company_id,
+                    content_date: new Date().toISOString().split('T')[0],
+                    template_type: selectedTemplate,
+                    title: title,
+                    content_text: generatedContent,
+                    tags: [selectedTemplate]
+                });
+
+            if (error) throw error;
+
+            alert('Content saved successfully!');
+            await loadSavedContent();
+        } catch (err) {
+            console.error('Error saving content:', err);
+            alert('Failed to save content');
+        }
+    };
+
+    const handleDeleteContent = async (id: string) => {
+        if (!confirm('Delete this saved content?')) return;
+
+        try {
+            const { error } = await supabase
+                .from('saved_ai_content')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            await loadSavedContent();
+        } catch (err) {
+            console.error('Error deleting content:', err);
+            alert('Failed to delete content');
+        }
+    };
+
+    const toggleExpand = (id: string) => {
+        setSavedContent(prev =>
+            prev.map(item =>
+                item.id === id ? { ...item, isExpanded: !item.isExpanded } : item
+            )
         );
     };
 
-    const handleSave = () => {
-        if (!generatedContent) {
-            alert('No content to save!');
-            return;
-        }
-
-        // Extract first line as title (up to 60 chars)
-        const firstLine = generatedContent.split('\n')[0].substring(0, 60);
-        const title = firstLine || selectedTemplate;
-
-        const newSaved: SavedContent = {
-            id: Date.now().toString(),
-            template: selectedTemplate,
-            content: generatedContent,
-            title: title,
-            createdAt: new Date().toISOString(),
-        };
-
-        const updated = [newSaved, ...savedContent];
-        setSavedContent(updated);
-        localStorage.setItem('aiContentSaved', JSON.stringify(updated));
-        alert('Content saved successfully!');
-    };
-
-    const handleLoadSaved = (saved: SavedContent) => {
-        setGeneratedContent(saved.content);
-        setShowSavedContent(false);
-    };
-
-    const handleDeleteSaved = (id: string) => {
-        if (!confirm('Are you sure you want to delete this saved content?')) return;
+    const filteredContent = savedContent.filter(item => {
+        const matchesSearch = searchQuery === '' || 
+            item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.template_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.content_text.toLowerCase().includes(searchQuery.toLowerCase());
         
-        const updated = savedContent.filter(item => item.id !== id);
-        setSavedContent(updated);
-        localStorage.setItem('aiContentSaved', JSON.stringify(updated));
-    };
+        const selectedDateStr = selectedDate.toISOString().split('T')[0];
+        const matchesDate = item.content_date === selectedDateStr;
+        
+        return matchesSearch && matchesDate;
+    });
 
-    const toggleExpanded = (id: string) => {
-        const newExpanded = new Set(expandedItems);
-        if (newExpanded.has(id)) {
-            newExpanded.delete(id);
-        } else {
-            newExpanded.add(id);
+    // Calendar rendering
+    const renderCalendar = () => {
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDayOfWeek = firstDay.getDay();
+
+        const days = [];
+        for (let i = 0; i < startingDayOfWeek; i++) {
+            days.push(<div key={`empty-${i}`} className="h-8"></div>);
         }
-        setExpandedItems(newExpanded);
-    };
 
-    // Filter saved content by search query
-    const filteredContent = useMemo(() => {
-        if (!searchQuery.trim()) return savedContent;
-        const query = searchQuery.toLowerCase();
-        return savedContent.filter(item => 
-            item.title.toLowerCase().includes(query) ||
-            item.template.toLowerCase().includes(query) ||
-            item.content.toLowerCase().includes(query)
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const hasContent = datesWithContent.has(dateStr);
+            const isSelected = selectedDate.getDate() === day;
+
+            days.push(
+                <button
+                    key={day}
+                    onClick={() => setSelectedDate(new Date(year, month, day))}
+                    className={`h-8 w-8 rounded-full flex items-center justify-center text-sm relative
+                        ${isSelected ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}
+                        ${hasContent ? 'font-bold' : ''}`}
+                >
+                    {day}
+                    {hasContent && (
+                        <span className="absolute bottom-0 w-1 h-1 bg-blue-500 rounded-full"></span>
+                    )}
+                </button>
+            );
+        }
+
+        return (
+            <div className="bg-white p-4 rounded-lg shadow">
+                <div className="flex justify-between items-center mb-4">
+                    <button
+                        onClick={() => setSelectedDate(new Date(year, month - 1, 1))}
+                        className="text-gray-600 hover:text-gray-900"
+                    >
+                        ←
+                    </button>
+                    <div className="font-semibold">
+                        {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </div>
+                    <button
+                        onClick={() => setSelectedDate(new Date(year, month + 1, 1))}
+                        className="text-gray-600 hover:text-gray-900"
+                    >
+                        →
+                    </button>
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 mb-2">
+                    <div>S</div>
+                    <div>M</div>
+                    <div>T</div>
+                    <div>W</div>
+                    <div>T</div>
+                    <div>F</div>
+                    <div>S</div>
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                    {days}
+                </div>
+            </div>
         );
-    }, [savedContent, searchQuery]);
-
-    // Group by date
-    const groupedContent = useMemo(() => {
-        const groups: Record<string, SavedContent[]> = {};
-        filteredContent.forEach(item => {
-            const date = new Date(item.createdAt).toLocaleDateString();
-            if (!groups[date]) groups[date] = [];
-            groups[date].push(item);
-        });
-        return groups;
-    }, [filteredContent]);
+    };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1 space-y-8">
-                <ContentTemplatesCard
-                    selectedTemplate={selectedTemplate}
-                    setSelectedTemplate={setSelectedTemplate}
-                />
+        <div className="p-6 max-w-7xl mx-auto">
+            <div className="flex gap-6">
+                {/* Left Sidebar */}
+                <div className="w-64 flex-shrink-0 space-y-4">
+                    <ContentTemplatesCard
+                        selectedTemplate={selectedTemplate}
+                        onSelectTemplate={setSelectedTemplate}
+                    />
+                    
+                    <button
+                        onClick={() => setShowSavedContent(!showSavedContent)}
+                        className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
+                    >
+                        {showSavedContent ? 'Generate New' : `Saved Content (${savedContent.length})`}
+                    </button>
 
-                <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
-                    <h3 className="text-lg font-bold mb-2 text-brand-light-text dark:text-white">
-                        Template Details
-                    </h3>
-                    <div className="space-y-4">
-                        {currentFields.length > 0 ? (
-                            currentFields.map(field => (
-                                <div key={field.name}>
-                                    <label className="block text-sm font-bold text-gray-600 dark:text-gray-300 mb-1">
-                                        {field.label}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formDetails[field.name] || ''}
-                                        onChange={e => handleInputChange(field.name, e.target.value)}
-                                        placeholder={field.placeholder}
-                                        className="w-full bg-transparent border-b-2 border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white p-1 focus:outline-none focus:border-brand-blue"
-                                    />
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-sm text-center text-gray-500 py-4">
-                                This template has no structured fields. Use the description box below to guide the AI.
-                            </p>
-                        )}
-
-                        {/* Description box for specific templates */}
-                        {templatesRequiringDescription.includes(selectedTemplate) && (
-                            <div>
-                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-300 mb-1">
-                                    Description of what to create
-                                </label>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                    {getDescriptionHelperText(selectedTemplate)}
-                                </p>
-                                <textarea
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    rows={4}
-                                    className="w-full bg-transparent border border-brand-light-border dark:border-brand-gray rounded-md text-brand-light-text dark:text-white text-sm p-2 focus:outline-none focus:border-brand-blue"
-                                    placeholder="Type a clear description here (who it\'s for, context, key points, tone, etc.)..."
+                    {showSavedContent && (
+                        <>
+                            {renderCalendar()}
+                            
+                            <div className="bg-white p-4 rounded-lg shadow">
+                                <input
+                                    type="text"
+                                    placeholder="Search content..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                                 />
                             </div>
-                        )}
-
-                        <button
-                            onClick={handleGenerate}
-                            disabled={isLoading}
-                            className="w-full bg-brand-red text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition disabled:bg-brand-gray"
-                        >
-                            {isLoading ? 'Generating...' : 'Generate Content'}
-                        </button>
-                        {error && (
-                            <p className="text-sm text-red-500 text-center">
-                                {error}
-                            </p>
-                        )}
-                    </div>
+                        </>
+                    )}
                 </div>
 
-                {/* View Saved Content Button */}
-                <button
-                    onClick={() => setShowSavedContent(!showSavedContent)}
-                    className="w-full bg-brand-blue text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
-                >
-                    <span>📁</span>
-                    <span>{showSavedContent ? 'Hide' : 'View'} Saved Content ({savedContent.length})</span>
-                </button>
-            </div>
+                {/* Main Content Area */}
+                <div className="flex-1">
+                    {!showSavedContent ? (
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <h2 className="text-2xl font-bold mb-4">CONTENT TEMPLATES</h2>
+                            
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Select a Template</label>
+                                <select
+                                    value={selectedTemplate}
+                                    onChange={(e) => setSelectedTemplate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                >
+                                    {Object.keys(templateFields).map(template => (
+                                        <option key={template} value={template}>{template}</option>
+                                    ))}
+                                    {templatesRequiringDescription.map(template => (
+                                        <option key={template} value={template}>{template}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-            <div className="lg:col-span-2">
-                {showSavedContent ? (
-                    /* Saved Content View */
-                    <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-brand-light-text dark:text-white">
-                                Saved Content Library
-                            </h2>
-                            <button
-                                onClick={() => setShowSavedContent(false)}
-                                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                            >
-                                ✕ Close
-                            </button>
-                        </div>
-
-                        {/* Search Bar */}
-                        <div className="mb-4">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search saved content..."
-                                className="w-full bg-brand-light-bg dark:bg-brand-ink border border-brand-light-border dark:border-brand-gray rounded-md text-brand-light-text dark:text-white text-sm p-3 focus:outline-none focus:border-brand-blue"
-                            />
-                        </div>
-
-                        {/* Saved Content List */}
-                        <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-                            {Object.keys(groupedContent).length === 0 ? (
-                                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                                    No saved content found.
-                                </p>
+                            {templateFields[selectedTemplate] ? (
+                                <div className="space-y-4">
+                                    {templateFields[selectedTemplate].map(field => (
+                                        <div key={field.name}>
+                                            <label className="block text-sm font-medium mb-2">{field.label}</label>
+                                            <input
+                                                type="text"
+                                                placeholder={field.placeholder}
+                                                value={formDetails[field.name] || ''}
+                                                onChange={(e) => setFormDetails({ ...formDetails, [field.name]: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                Object.entries(groupedContent).map(([date, items]) => (
-                                    <div key={date} className="space-y-2">
-                                        <h3 className="text-sm font-bold text-gray-600 dark:text-gray-400 sticky top-0 bg-brand-light-card dark:bg-brand-navy py-2">
-                                            📅 {date}
-                                        </h3>
-                                        {items.map(item => {
-                                            const isExpanded = expandedItems.has(item.id);
-                                            return (
-                                                <div
-                                                    key={item.id}
-                                                    className="bg-brand-light-bg dark:bg-brand-ink border border-brand-light-border dark:border-brand-gray rounded-lg overflow-hidden"
-                                                >
-                                                    {/* Header - Always Visible */}
-                                                    <div className="p-3 flex items-center justify-between gap-2">
-                                                        <button
-                                                            onClick={() => toggleExpanded(item.id)}
-                                                            className="flex-1 text-left flex items-center gap-2 hover:text-brand-blue transition"
-                                                        >
-                                                            <span className="text-lg">{isExpanded ? '▼' : '▶'}</span>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-semibold text-brand-light-text dark:text-white truncate">
-                                                                    {item.title}
-                                                                </p>
-                                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                    {item.template} • {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                </p>
-                                                            </div>
-                                                        </button>
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() => handleLoadSaved(item)}
-                                                                className="px-3 py-1 text-xs bg-brand-blue text-white rounded hover:bg-blue-700 transition"
-                                                            >
-                                                                Load
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteSaved(item.id)}
-                                                                className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Description of what to create</label>
+                                    <p className="text-sm text-gray-600 mb-2">{getDescriptionHelperText(selectedTemplate)}</p>
+                                    <textarea
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg h-32"
+                                    />
+                                </div>
+                            )}
 
-                                                    {/* Expanded Content - Scrollable */}
-                                                    {isExpanded && (
-                                                        <div className="border-t border-brand-light-border dark:border-brand-gray p-3 bg-white dark:bg-gray-900">
-                                                            <div className="max-h-64 overflow-y-auto">
-                                                                <pre className="text-xs text-brand-light-text dark:text-gray-300 whitespace-pre-wrap font-sans">
-                                                                    {item.content}
-                                                                </pre>
+                            <button
+                                onClick={handleGenerate}
+                                disabled={isLoading}
+                                className="w-full mt-4 bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 disabled:bg-gray-400"
+                            >
+                                {isLoading ? 'Generating...' : 'Generate Content'}
+                            </button>
+
+                            {error && <div className="mt-4 text-red-500">{error}</div>}
+
+                            {generatedContent && (
+                                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="font-semibold">Generated Content:</h3>
+                                        <div className="space-x-2">
+                                            <button
+                                                onClick={() => navigator.clipboard.writeText(generatedContent)}
+                                                className="text-blue-500 hover:text-blue-700"
+                                            >
+                                                Copy
+                                            </button>
+                                            <button
+                                                onClick={handleSaveContent}
+                                                className="text-green-500 hover:text-green-700"
+                                            >
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="whitespace-pre-wrap">{generatedContent}</div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <h2 className="text-2xl font-bold mb-4">
+                                Saved Content for {selectedDate.toLocaleDateString()}
+                            </h2>
+                            
+                            {isLoadingSaved ? (
+                                <div>Loading...</div>
+                            ) : filteredContent.length === 0 ? (
+                                <div className="text-gray-500">No saved content for this date</div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {filteredContent.map(item => (
+                                        <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <button
+                                                        onClick={() => toggleExpand(item.id)}
+                                                        className="flex items-center gap-2 text-left w-full"
+                                                    >
+                                                        <span>{item.isExpanded ? '▼' : '▶'}</span>
+                                                        <div>
+                                                            <div className="font-semibold">{item.title}</div>
+                                                            <div className="text-sm text-gray-500">
+                                                                {item.template_type} • {new Date(item.created_at).toLocaleTimeString()}
                                                             </div>
+                                                        </div>
+                                                    </button>
+                                                    {item.isExpanded && (
+                                                        <div className="mt-3 pl-6 max-h-64 overflow-y-auto whitespace-pre-wrap text-sm">
+                                                            {item.content_text}
                                                         </div>
                                                     )}
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    /* Generated Content View */
-                    <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-brand-light-text dark:text-white">
-                                Generated Content
-                            </h2>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={handleSave}
-                                    disabled={!generatedContent || isLoading}
-                                    className="text-xs bg-green-600 text-white font-bold py-1 px-3 rounded-md hover:bg-green-700 transition disabled:bg-brand-gray"
-                                >
-                                    💾 Save
-                                </button>
-                                <button
-                                    onClick={handleCopy}
-                                    disabled={!generatedContent || isLoading}
-                                    className="text-xs bg-brand-blue text-white font-bold py-1 px-3 rounded-md hover:bg-blue-700 transition disabled:bg-brand-gray"
-                                >
-                                    📋 Copy
-                                </button>
-                            </div>
-                        </div>
-                        <div className="w-full bg-brand-light-bg dark:bg-brand-ink border border-brand-light-border dark:border-brand-gray rounded-md p-4 min-h-[60vh] max-h-[80vh] overflow-y-auto">
-                            {isLoading ? (
-                                <div className="flex justify-center items-center h-full">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-blue"></div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => navigator.clipboard.writeText(item.content_text)}
+                                                        className="text-blue-500 hover:text-blue-700 text-sm"
+                                                    >
+                                                        Copy
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteContent(item.id)}
+                                                        className="text-red-500 hover:text-red-700 text-sm"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ) : (
-                                <pre className="text-sm text-brand-light-text dark:text-gray-300 whitespace-pre-wrap font-sans">
-                                    {generatedContent || 'Your AI-generated content will appear here...'}
-                                </pre>
                             )}
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
