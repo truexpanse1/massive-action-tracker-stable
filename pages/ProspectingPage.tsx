@@ -603,14 +603,14 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
         onClose={() => setIsTargetsModalOpen(false)}
         onSave={handleSaveTargets}
         initialValues={
-          userTargets
+          userTargets && userTargets.annual_revenue !== undefined
             ? {
-                annualRevenue: userTargets.annual_revenue.toString(),
-                avgSaleAmount: userTargets.avg_sale_amount.toString(),
-                closeRate: userTargets.close_rate.toString(),
-                showRate: userTargets.show_rate.toString(),
-                contactToApptRate: userTargets.contact_to_appt_rate.toString(),
-                callToContactRate: userTargets.call_to_contact_rate.toString(),
+                annualRevenue: (userTargets.annual_revenue || 0).toString(),
+                avgSaleAmount: (userTargets.avg_sale_amount || 0).toString(),
+                closeRate: (userTargets.close_rate || 0).toString(),
+                showRate: (userTargets.show_rate || 0).toString(),
+                contactToApptRate: (userTargets.contact_to_appt_rate || 0).toString(),
+                callToContactRate: (userTargets.call_to_contact_rate || 0).toString(),
               }
             : undefined
         }
