@@ -55,7 +55,7 @@ export default function MassiveActionTargetsPage() {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-brand-lime mb-2">Massive Action Targets</h1>
-          <p className="text-gray-400">Reverse-engineer your revenue into daily action steps</p>
+          <p className="text-gray-400">Turn your money goal into a daily to-do list</p>
         </div>
 
         {/* Two Column Layout */}
@@ -70,7 +70,7 @@ export default function MassiveActionTargetsPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Annual Revenue Target ($)</label>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">How much money do you want to make this year?</label>
                   <input
                     type="number"
                     value={annualRevenue}
@@ -80,17 +80,18 @@ export default function MassiveActionTargetsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Average Sale Amount ($)</label>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">How much is one sale worth?</label>
                   <input
                     type="number"
                     value={avgSaleAmount}
                     onChange={(e) => setAvgSaleAmount(e.target.value)}
                     className="w-full bg-gray-900 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-brand-lime"
-                    placeholder="5000"
+                    placeholder="9000"
                   />
+                  <p className="text-xs text-gray-500 mt-1">For monthly plans, use the yearly value</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Close Rate (%)</label>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">How many demos to close 1 sale?</label>
                   <input
                     type="number"
                     value={closeRate}
@@ -98,10 +99,10 @@ export default function MassiveActionTargetsPage() {
                     className="w-full bg-gray-900 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-brand-lime"
                     placeholder="30"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Presentations to close 1 deal</p>
+                  <p className="text-xs text-gray-500 mt-1">Example: 3 demos = 1 sale = 33%</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Show Rate (%)</label>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">How many people actually show up?</label>
                   <input
                     type="number"
                     value={showRate}
@@ -109,29 +110,29 @@ export default function MassiveActionTargetsPage() {
                     className="w-full bg-gray-900 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-brand-lime"
                     placeholder="70"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Appointments to get 1 show-up</p>
+                  <p className="text-xs text-gray-500 mt-1">Example: 7 out of 10 show up = 70%</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Contact → Appt Rate (%)</label>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">How many talks to book 1 meeting?</label>
                   <input
                     type="number"
                     value={contactToApptRate}
                     onChange={(e) => setContactToApptRate(e.target.value)}
                     className="w-full bg-gray-900 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-brand-lime"
-                    placeholder="40"
+                    placeholder="10"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Contacts to set 1 appointment</p>
+                  <p className="text-xs text-gray-500 mt-1">Example: Talk to 10 people, 1 books = 10%</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Call → Contact Rate (%)</label>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">How many calls to talk to 1 person?</label>
                   <input
                     type="number"
                     value={callToContactRate}
                     onChange={(e) => setCallToContactRate(e.target.value)}
                     className="w-full bg-gray-900 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-brand-lime"
-                    placeholder="25"
+                    placeholder="14"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Calls to have 1 conversation</p>
+                  <p className="text-xs text-gray-500 mt-1">Example: Call 70 people, talk to 10 = 14%</p>
                 </div>
               </div>
               
@@ -146,7 +147,7 @@ export default function MassiveActionTargetsPage() {
                       : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  {hasInputs ? '🎯 Calculate My Action Plan' : '⬆️ Fill in all fields above'}
+                  {hasInputs ? '🎯 Show Me What To Do' : '⬆️ Fill in all boxes above'}
                 </button>
               </div>
             </div>
@@ -157,18 +158,18 @@ export default function MassiveActionTargetsPage() {
                 
                 {/* Your Numbers Summary */}
                 <div className="bg-gray-800 rounded-lg p-6 border border-brand-lime">
-                  <h2 className="text-xl font-bold text-brand-lime mb-4">📊 Your Numbers at a Glance</h2>
+                  <h2 className="text-xl font-bold text-brand-lime mb-4">📊 Your Daily Numbers</h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
-                      <div className="text-xs text-gray-400 mb-1">DAILY CALLS</div>
+                      <div className="text-xs text-gray-400 mb-1">CALLS</div>
                       <div className="text-2xl font-bold text-brand-lime">{targets.dailyCalls}</div>
                     </div>
                     <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
-                      <div className="text-xs text-gray-400 mb-1">CONTACTS</div>
+                      <div className="text-xs text-gray-400 mb-1">TALKS</div>
                       <div className="text-2xl font-bold text-brand-lime">{targets.dailyContacts}</div>
                     </div>
                     <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
-                      <div className="text-xs text-gray-400 mb-1">APPOINTMENTS</div>
+                      <div className="text-xs text-gray-400 mb-1">MEETINGS</div>
                       <div className="text-2xl font-bold text-brand-lime">{targets.dailyAppts}</div>
                     </div>
                     <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
@@ -180,72 +181,72 @@ export default function MassiveActionTargetsPage() {
 
                 {/* Daily Action Steps */}
                 <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                  <h2 className="text-xl font-bold text-white mb-4">✅ Your Daily Action Steps</h2>
+                  <h2 className="text-xl font-bold text-white mb-4">✅ What To Do Every Day</h2>
                   <div className="space-y-4">
                     
-                    {/* Step 1: Morning Prospecting Block */}
+                    {/* Step 1: Morning Calls */}
                     <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-blue-500">
                       <div className="flex items-start gap-3">
                         <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">1</div>
                         <div className="flex-1">
-                          <h3 className="font-bold text-white mb-2">Morning Prospecting Block (9am - 12pm)</h3>
+                          <h3 className="font-bold text-white mb-2">Morning: Make Your Calls (9am - 12pm)</h3>
                           <div className="space-y-2 text-sm text-gray-300">
-                            <p>• <strong className="text-brand-lime">Make {targets.dailyCalls} calls</strong> to reach {targets.dailyContacts} contacts</p>
-                            <p>• Use the <strong>Prospecting page</strong> to log each call (SW/NA/LM codes)</p>
-                            <p>• Goal: Set <strong className="text-brand-lime">{targets.dailyAppts} appointments</strong> for this week</p>
-                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Block this time on your calendar. No meetings, no distractions.</p>
+                            <p>• Call <strong className="text-brand-lime">{targets.dailyCalls} people</strong></p>
+                            <p>• You will talk to about <strong className="text-brand-lime">{targets.dailyContacts} people</strong></p>
+                            <p>• Book <strong className="text-brand-lime">{targets.dailyAppts} meetings</strong> for later this week</p>
+                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Do this first thing in the morning. No emails or other work yet.</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Step 2: Appointment Execution */}
+                    {/* Step 2: Run Meetings */}
                     <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-green-500">
                       <div className="flex items-start gap-3">
                         <div className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">2</div>
                         <div className="flex-1">
-                          <h3 className="font-bold text-white mb-2">Run Your Appointments (Afternoon)</h3>
+                          <h3 className="font-bold text-white mb-2">Afternoon: Do Your Demos</h3>
                           <div className="space-y-2 text-sm text-gray-300">
-                            <p>• Deliver <strong className="text-brand-lime">{targets.dailyDemos} presentations/demos</strong> today</p>
-                            <p>• Track show rate: Expect {Math.ceil(targets.dailyDemos / (parseFloat(showRate) / 100))} scheduled to get {targets.dailyDemos} shows</p>
-                            <p>• Close <strong className="text-brand-lime">{targets.dailyDeals} deal(s)</strong> to hit ${parseInt(targets.dailyRevenue).toLocaleString()} daily revenue</p>
-                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Log outcomes immediately in Hot Leads page</p>
+                            <p>• Run <strong className="text-brand-lime">{targets.dailyDemos} demos</strong> today</p>
+                            <p>• Close <strong className="text-brand-lime">{targets.dailyDeals} sale(s)</strong> to make ${parseInt(targets.dailyRevenue).toLocaleString()}</p>
+                            <p>• Write down what happens after each demo</p>
+                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Some people won't show up. That's normal. Keep going.</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Step 3: Follow-Up & Pipeline Management */}
+                    {/* Step 3: Follow Up */}
                     <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-purple-500">
                       <div className="flex items-start gap-3">
                         <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">3</div>
                         <div className="flex-1">
-                          <h3 className="font-bold text-white mb-2">Follow-Up & Pipeline Management</h3>
+                          <h3 className="font-bold text-white mb-2">Evening: Check On People</h3>
                           <div className="space-y-2 text-sm text-gray-300">
-                            <p>• Review <strong>Hot Leads</strong> page for follow-ups</p>
-                            <p>• Send follow-up messages to no-shows and pending decisions</p>
-                            <p>• Update deal stages in pipeline</p>
-                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Set reminders for next touchpoints</p>
+                            <p>• Message people who didn't show up</p>
+                            <p>• Message people who said "maybe"</p>
+                            <p>• Plan tomorrow's calls</p>
+                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Send a quick text or email. Keep it short.</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Step 4: EOD Tracking */}
+                    {/* Step 4: Track It */}
                     <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-yellow-500">
                       <div className="flex items-start gap-3">
                         <div className="bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">4</div>
                         <div className="flex-1">
-                          <h3 className="font-bold text-white mb-2">End of Day Review (5pm)</h3>
+                          <h3 className="font-bold text-white mb-2">Before Bed: Write It Down (5pm)</h3>
                           <div className="space-y-2 text-sm text-gray-300">
-                            <p>• Complete <strong>EOD Report</strong> to track today's metrics</p>
-                            <p>• Compare actual vs targets:</p>
+                            <p>• Fill out your EOD Report</p>
+                            <p>• Check: Did you hit your numbers?</p>
                             <div className="ml-4 text-xs text-gray-400">
-                              <p>- Calls: Did you hit {targets.dailyCalls}?</p>
-                              <p>- Appointments set: Did you hit {targets.dailyAppts}?</p>
-                              <p>- Deals closed: Did you hit {targets.dailyDeals}?</p>
+                              <p>- Calls: {targets.dailyCalls}?</p>
+                              <p>- Meetings booked: {targets.dailyAppts}?</p>
+                              <p>- Sales: {targets.dailyDeals}?</p>
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">💡 Tip: If you missed targets, adjust tomorrow's activity</p>
+                            <p className="text-xs text-gray-500 mt-2">💡 Tip: If you missed your numbers, do more tomorrow.</p>
                           </div>
                         </div>
                       </div>
@@ -254,35 +255,34 @@ export default function MassiveActionTargetsPage() {
                   </div>
                 </div>
 
-                {/* Weekly Implementation */}
+                {/* Weekly Plan */}
                 <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                  <h2 className="text-xl font-bold text-white mb-4">📅 Weekly Implementation Plan</h2>
+                  <h2 className="text-xl font-bold text-white mb-4">📅 Your Week</h2>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="text-brand-lime font-bold">Mon-Fri:</div>
-                      <div className="text-sm text-gray-300">Execute daily action steps above. Track everything in MAT.</div>
+                      <div className="text-sm text-gray-300">Do steps 1-4 above every day.</div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <div className="text-brand-lime font-bold">Friday EOD:</div>
-                      <div className="text-sm text-gray-300">Review weekly totals. Did you hit ${parseInt(targets.weeklyRevenue).toLocaleString()}?</div>
+                      <div className="text-brand-lime font-bold">Friday:</div>
+                      <div className="text-sm text-gray-300">Add up your week. Did you make ${parseInt(targets.weeklyRevenue).toLocaleString()}?</div>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="text-brand-lime font-bold">Weekend:</div>
-                      <div className="text-sm text-gray-300">Plan next week's appointments. Prep materials for demos.</div>
+                      <div className="text-sm text-gray-300">Get ready for next week. Make a list of people to call.</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Reality Check */}
                 <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-6">
-                  <h3 className="text-lg font-bold text-red-400 mb-3">⚡ Reality Check</h3>
+                  <h3 className="text-lg font-bold text-red-400 mb-3">⚡ The Truth</h3>
                   <p className="text-white text-sm mb-3">
-                    To hit <span className="text-brand-lime font-bold">${parseInt(annualRevenue).toLocaleString()}</span> this year, 
-                    you need to make <span className="text-brand-lime font-bold">{targets.dailyCalls} calls every single day</span>.
+                    To make <span className="text-brand-lime font-bold">${parseInt(annualRevenue).toLocaleString()}</span> this year, 
+                    you need to call <span className="text-brand-lime font-bold">{targets.dailyCalls} people every day</span>.
                   </p>
                   <p className="text-gray-300 text-sm">
-                    Are you currently doing that? If not, your revenue target is just a wish. 
-                    Use this action plan to turn it into reality.
+                    Are you doing that now? If not, you won't hit your goal. It's that simple.
                   </p>
                 </div>
 
@@ -294,67 +294,64 @@ export default function MassiveActionTargetsPage() {
           {/* Right Column - Info Cards */}
           <div className="space-y-6">
             
-            {/* Why Targets Matter */}
+            {/* Why This Matters */}
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-bold text-brand-lime mb-3">Why Targets Matter</h3>
+              <h3 className="text-lg font-bold text-brand-lime mb-3">Why This Works</h3>
               <p className="text-sm text-gray-300 mb-3">
-                Most salespeople fail not because they lack skill, but because they lack a <strong className="text-white">target</strong>.
+                Most people fail because they don't have a <strong className="text-white">plan</strong>.
               </p>
               <p className="text-sm text-gray-300">
-                <strong className="text-brand-lime">Targets drive everything forward.</strong> They set the vision, 
-                provide inspiration, and establish accountability.
+                This calculator gives you a plan. Follow it every day and you will hit your goal.
               </p>
             </div>
 
-            {/* Three-Part System */}
+            {/* The Three Parts */}
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-bold text-white mb-4">The Three-Part System</h3>
+              <h3 className="text-lg font-bold text-white mb-4">Three Things You Need</h3>
               <div className="space-y-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs">1</div>
-                    <div className="font-semibold text-white">Revenue Targets</div>
+                    <div className="font-semibold text-white">Money Goal</div>
                   </div>
-                  <p className="text-xs text-gray-400 ml-8">Annual → Weekly → Daily revenue goals</p>
+                  <p className="text-xs text-gray-400 ml-8">How much you want to make</p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <div className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs">2</div>
-                    <div className="font-semibold text-white">Activity Targets</div>
+                    <div className="font-semibold text-white">Daily Actions</div>
                   </div>
-                  <p className="text-xs text-gray-400 ml-8">Calls, appointments, presentations needed</p>
+                  <p className="text-xs text-gray-400 ml-8">Calls and meetings you need to do</p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <div className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs">3</div>
-                    <div className="font-semibold text-white">People Targets</div>
+                    <div className="font-semibold text-white">People List</div>
                   </div>
-                  <p className="text-xs text-gray-400 ml-8">Prospects and relationships in pipeline</p>
+                  <p className="text-xs text-gray-400 ml-8">Names of people to call</p>
                 </div>
               </div>
             </div>
 
-            {/* Fatal Mistake */}
+            {/* Big Mistake */}
             <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-6">
-              <h3 className="text-lg font-bold text-red-400 mb-3">The Fatal Mistake</h3>
+              <h3 className="text-lg font-bold text-red-400 mb-3">Don't Do This</h3>
               <p className="text-sm text-gray-300 mb-3">
-                The biggest mistake is setting targets <strong className="text-red-400">too low</strong>. 
-                Low targets create low thinking.
+                Don't set your goal <strong className="text-red-400">too small</strong>. 
               </p>
               <p className="text-sm text-gray-300">
-                <strong className="text-brand-lime">Massive targets force you to think differently</strong> and 
-                drive the level of thinking required to actually impact revenue.
+                Small goals make you lazy. <strong className="text-brand-lime">Big goals make you work harder and think smarter.</strong>
               </p>
             </div>
 
-            {/* Quick Tip */}
+            {/* What To Do Next */}
             <div className="bg-brand-lime/10 border border-brand-lime/30 rounded-lg p-6">
-              <h3 className="text-lg font-bold text-brand-lime mb-3">💡 Next Steps</h3>
+              <h3 className="text-lg font-bold text-brand-lime mb-3">💡 What To Do Now</h3>
               <div className="space-y-2 text-sm text-gray-300">
-                <p>1. <strong className="text-white">Save these numbers</strong> - screenshot or write them down</p>
-                <p>2. <strong className="text-white">Block your calendar</strong> for morning prospecting</p>
-                <p>3. <strong className="text-white">Track daily</strong> in EOD Report</p>
-                <p>4. <strong className="text-white">Review weekly</strong> and adjust</p>
+                <p>1. <strong className="text-white">Save your numbers</strong> - take a screenshot</p>
+                <p>2. <strong className="text-white">Block your morning</strong> for calls (no meetings!)</p>
+                <p>3. <strong className="text-white">Track it daily</strong> in EOD Report</p>
+                <p>4. <strong className="text-white">Check every Friday</strong> - did you hit your week?</p>
               </div>
             </div>
 
