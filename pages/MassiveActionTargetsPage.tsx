@@ -7,6 +7,7 @@ export default function MassiveActionTargetsPage() {
   const [showRate, setShowRate] = useState('');
   const [contactToApptRate, setContactToApptRate] = useState('');
   const [callToContactRate, setCallToContactRate] = useState('');
+  const [showResults, setShowResults] = useState(false);
 
   const calculateTargets = () => {
     const annual = parseFloat(annualRevenue) || 0;
@@ -35,8 +36,6 @@ export default function MassiveActionTargetsPage() {
     };
   };
 
-  const [showResults, setShowResults] = useState(false);
-
   const targets = calculateTargets();
   const hasInputs = annualRevenue && avgSaleAmount && closeRate && showRate && contactToApptRate && callToContactRate;
 
@@ -56,7 +55,7 @@ export default function MassiveActionTargetsPage() {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-brand-lime mb-2">Massive Action Targets</h1>
-          <p className="text-gray-400">Reverse-engineer your revenue with mathematical precision</p>
+          <p className="text-gray-400">Reverse-engineer your revenue into daily action steps</p>
         </div>
 
         {/* Two Column Layout */}
@@ -147,98 +146,149 @@ export default function MassiveActionTargetsPage() {
                       : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  {hasInputs ? '🎯 Calculate My Targets' : '⬆️ Fill in all fields above'}
+                  {hasInputs ? '🎯 Calculate My Action Plan' : '⬆️ Fill in all fields above'}
                 </button>
               </div>
             </div>
 
-            {/* Results Card */}
+            {/* Action Plan Results */}
             {hasInputs && showResults && (
-              <div className="bg-gray-800 rounded-lg p-6 border border-brand-lime">
-                <h2 className="text-xl font-bold text-brand-lime mb-4">Your Daily Action Plan</h2>
+              <div className="space-y-6">
                 
-                {/* Big Numbers Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-1">DAILY CALLS</div>
-                    <div className="text-3xl font-bold text-brand-lime">{targets.dailyCalls}</div>
-                  </div>
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-1">CONTACTS</div>
-                    <div className="text-3xl font-bold text-brand-lime">{targets.dailyContacts}</div>
-                  </div>
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-1">APPOINTMENTS</div>
-                    <div className="text-3xl font-bold text-brand-lime">{targets.dailyAppts}</div>
-                  </div>
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-1">DEMOS</div>
-                    <div className="text-3xl font-bold text-brand-lime">{targets.dailyDemos}</div>
+                {/* Your Numbers Summary */}
+                <div className="bg-gray-800 rounded-lg p-6 border border-brand-lime">
+                  <h2 className="text-xl font-bold text-brand-lime mb-4">📊 Your Numbers at a Glance</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                      <div className="text-xs text-gray-400 mb-1">DAILY CALLS</div>
+                      <div className="text-2xl font-bold text-brand-lime">{targets.dailyCalls}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                      <div className="text-xs text-gray-400 mb-1">CONTACTS</div>
+                      <div className="text-2xl font-bold text-brand-lime">{targets.dailyContacts}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                      <div className="text-xs text-gray-400 mb-1">APPOINTMENTS</div>
+                      <div className="text-2xl font-bold text-brand-lime">{targets.dailyAppts}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                      <div className="text-xs text-gray-400 mb-1">DEMOS</div>
+                      <div className="text-2xl font-bold text-brand-lime">{targets.dailyDemos}</div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Revenue Breakdown */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-1">WEEKLY REVENUE</div>
-                    <div className="text-2xl font-bold text-white">${parseInt(targets.weeklyRevenue).toLocaleString()}</div>
+                {/* Daily Action Steps */}
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h2 className="text-xl font-bold text-white mb-4">✅ Your Daily Action Steps</h2>
+                  <div className="space-y-4">
+                    
+                    {/* Step 1: Morning Prospecting Block */}
+                    <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-blue-500">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">1</div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-white mb-2">Morning Prospecting Block (9am - 12pm)</h3>
+                          <div className="space-y-2 text-sm text-gray-300">
+                            <p>• <strong className="text-brand-lime">Make {targets.dailyCalls} calls</strong> to reach {targets.dailyContacts} contacts</p>
+                            <p>• Use the <strong>Prospecting page</strong> to log each call (SW/NA/LM codes)</p>
+                            <p>• Goal: Set <strong className="text-brand-lime">{targets.dailyAppts} appointments</strong> for this week</p>
+                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Block this time on your calendar. No meetings, no distractions.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Appointment Execution */}
+                    <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-green-500">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">2</div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-white mb-2">Run Your Appointments (Afternoon)</h3>
+                          <div className="space-y-2 text-sm text-gray-300">
+                            <p>• Deliver <strong className="text-brand-lime">{targets.dailyDemos} presentations/demos</strong> today</p>
+                            <p>• Track show rate: Expect {Math.ceil(targets.dailyDemos / (parseFloat(showRate) / 100))} scheduled to get {targets.dailyDemos} shows</p>
+                            <p>• Close <strong className="text-brand-lime">{targets.dailyDeals} deal(s)</strong> to hit ${parseInt(targets.dailyRevenue).toLocaleString()} daily revenue</p>
+                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Log outcomes immediately in Hot Leads page</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3: Follow-Up & Pipeline Management */}
+                    <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-purple-500">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">3</div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-white mb-2">Follow-Up & Pipeline Management</h3>
+                          <div className="space-y-2 text-sm text-gray-300">
+                            <p>• Review <strong>Hot Leads</strong> page for follow-ups</p>
+                            <p>• Send follow-up messages to no-shows and pending decisions</p>
+                            <p>• Update deal stages in pipeline</p>
+                            <p className="text-xs text-gray-500 mt-2">💡 Tip: Set reminders for next touchpoints</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 4: EOD Tracking */}
+                    <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-yellow-500">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">4</div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-white mb-2">End of Day Review (5pm)</h3>
+                          <div className="space-y-2 text-sm text-gray-300">
+                            <p>• Complete <strong>EOD Report</strong> to track today's metrics</p>
+                            <p>• Compare actual vs targets:</p>
+                            <div className="ml-4 text-xs text-gray-400">
+                              <p>- Calls: Did you hit {targets.dailyCalls}?</p>
+                              <p>- Appointments set: Did you hit {targets.dailyAppts}?</p>
+                              <p>- Deals closed: Did you hit {targets.dailyDeals}?</p>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">💡 Tip: If you missed targets, adjust tomorrow's activity</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-1">DAILY REVENUE</div>
-                    <div className="text-2xl font-bold text-white">${parseInt(targets.dailyRevenue).toLocaleString()}</div>
-                  </div>
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-1">DAILY DEALS</div>
-                    <div className="text-2xl font-bold text-white">{targets.dailyDeals}</div>
+                </div>
+
+                {/* Weekly Implementation */}
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h2 className="text-xl font-bold text-white mb-4">📅 Weekly Implementation Plan</h2>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="text-brand-lime font-bold">Mon-Fri:</div>
+                      <div className="text-sm text-gray-300">Execute daily action steps above. Track everything in MAT.</div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="text-brand-lime font-bold">Friday EOD:</div>
+                      <div className="text-sm text-gray-300">Review weekly totals. Did you hit ${parseInt(targets.weeklyRevenue).toLocaleString()}?</div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="text-brand-lime font-bold">Weekend:</div>
+                      <div className="text-sm text-gray-300">Plan next week's appointments. Prep materials for demos.</div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Reality Check */}
-                <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4">
-                  <p className="text-white font-bold mb-2">⚡ Reality Check</p>
-                  <p className="text-gray-300 text-sm">
+                <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-red-400 mb-3">⚡ Reality Check</h3>
+                  <p className="text-white text-sm mb-3">
                     To hit <span className="text-brand-lime font-bold">${parseInt(annualRevenue).toLocaleString()}</span> this year, 
-                    you need <span className="text-brand-lime font-bold">{targets.dailyCalls} calls every day</span>. 
-                    Are you doing that right now?
+                    you need to make <span className="text-brand-lime font-bold">{targets.dailyCalls} calls every single day</span>.
+                  </p>
+                  <p className="text-gray-300 text-sm">
+                    Are you currently doing that? If not, your revenue target is just a wish. 
+                    Use this action plan to turn it into reality.
                   </p>
                 </div>
+
               </div>
             )}
 
-            {/* Implementation Plan */}
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <h2 className="text-xl font-bold text-white mb-4">30-Day Implementation</h2>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
-                  <div>
-                    <div className="font-semibold text-white">Week 1: Baseline</div>
-                    <div className="text-sm text-gray-400">Track all metrics to establish your baseline numbers</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
-                  <div>
-                    <div className="font-semibold text-white">Week 2: Set Targets</div>
-                    <div className="text-sm text-gray-400">Calculate and commit to your daily activity targets</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
-                  <div>
-                    <div className="font-semibold text-white">Week 3: Execute</div>
-                    <div className="text-sm text-gray-400">Hit your daily targets and adjust as needed</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
-                  <div>
-                    <div className="font-semibold text-white">Week 4: Review & Scale</div>
-                    <div className="text-sm text-gray-400">Analyze results and increase targets if successful</div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right Column - Info Cards */}
@@ -299,11 +349,13 @@ export default function MassiveActionTargetsPage() {
 
             {/* Quick Tip */}
             <div className="bg-brand-lime/10 border border-brand-lime/30 rounded-lg p-6">
-              <h3 className="text-lg font-bold text-brand-lime mb-3">💡 Pro Tip</h3>
-              <p className="text-sm text-gray-300">
-                Track your daily progress in the <strong className="text-white">EOD Report</strong> to ensure 
-                you're hitting these targets consistently.
-              </p>
+              <h3 className="text-lg font-bold text-brand-lime mb-3">💡 Next Steps</h3>
+              <div className="space-y-2 text-sm text-gray-300">
+                <p>1. <strong className="text-white">Save these numbers</strong> - screenshot or write them down</p>
+                <p>2. <strong className="text-white">Block your calendar</strong> for morning prospecting</p>
+                <p>3. <strong className="text-white">Track daily</strong> in EOD Report</p>
+                <p>4. <strong className="text-white">Review weekly</strong> and adjust</p>
+              </div>
             </div>
 
           </div>
