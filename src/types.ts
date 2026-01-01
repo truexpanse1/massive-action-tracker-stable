@@ -20,7 +20,8 @@ export type View =
   | 'account-settings'
   | 'ghl-integration'
   | 'dream-avatars'
-  | 'scorecard-dashboard';
+  | 'scorecard-dashboard'
+  | 'massive-action-targets';
 
 export type Role = 'Sales Rep' | 'Manager';
 export type UserStatus = 'Active' | 'Inactive';

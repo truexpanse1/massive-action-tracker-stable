@@ -8,6 +8,7 @@ import RevenuePage from './pages/RevenuePage';
 import CoachingPage from './pages/CoachingPage';
 import AIImagesPageEnhanced from './pages/AIImagesPageEnhanced';
 import AIContentPage from './pages/AIContentPage';
+import MassiveActionTargetsPage from './pages/MassiveActionTargetsPage';
 import AddClientModal from './components/AddClientModal'; // Import the modal
 
 // Mock Data for Demo
@@ -152,6 +153,8 @@ const App: React.FC = () => {
         return <AIImagesPageEnhanced />;
       case 'ai-content':
         return <AIContentPage />;
+      case 'massive-action-targets':
+        return <MassiveActionTargetsPage />;
       default:
         return <DayView user={user!} onDataChange={handleUpsertDayData} allData={allData} selectedDate={selectedDate} onDateChange={setSelectedDate} onAddWin={handleAddWin} onAddHotLead={handleAddHotLead} onUpdateHotLead={handleUpdateHotLead} hotLeads={hotLeads} transactions={transactions} users={teamUsers} onNavigateToRevenue={() => setView('revenue')} />;
     }

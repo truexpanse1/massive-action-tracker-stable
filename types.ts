@@ -21,7 +21,8 @@ export type View =
   | 'eod-report'
   | 'dream-avatars'
   | 'scorecard-dashboard'
-  | 'billing-plans';
+  | 'billing-plans'
+  | 'massive-action-targets';
 
 export type Role = 'Sales Rep' | 'Manager';
 export type UserStatus = 'Active' | 'Inactive';
