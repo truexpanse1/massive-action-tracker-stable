@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   DayData,
   Contact,
@@ -13,6 +13,8 @@ import QuickActions from '../components/QuickActions';
 import CSVImporter from '../components/CSVImporter';
 import Calendar from '../components/Calendar';
 import ProspectingKPIs from '../components/ProspectingKPIs';
+import TargetsModal, { CalculatedTargets } from '../components/TargetsModal';
+import { fetchUserTargets, saveUserTargets, UserTargets } from '../services/targetsService';
 
 interface ProspectingPageProps {
   allData: { [key: string]: DayData };
@@ -26,6 +28,7 @@ interface ProspectingPageProps {
     date: Date
   ) => void;
   hotLeads: Contact[];
+  user: { id: string; name: string; email: string };
 }
 
 const ProspectingPage: React.FC<ProspectingPageProps> = ({
@@ -37,11 +40,81 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
   onAddWin,
   handleSetAppointment,
   hotLeads,
+  user,
 }) => {
   const getDateKey = (date: Date): string => date.toISOString().split('T')[0];
   const currentDateKey = getDateKey(selectedDate);
 
   const currentData: DayData = allData[currentDateKey] || getInitialDayData();
+
+  // Targets state
+  const [userTargets, setUserTargets] = useState<UserTargets | null>(null);
+  const [isTargetsModalOpen, setIsTargetsModalOpen] = useState(false);
+  const [targetsLoading, setTargetsLoading] = useState(true);
+
+  // Load user targets on mount
+  useEffect(() => {
+    const loadTargets = async () => {
+      try {
+        const userId = user.id;
+        const targets = await fetchUserTargets(userId);
+        setUserTargets(targets);
+      } catch (error) {
+        console.error('Error loading targets:', error);
+      } finally {
+        setTargetsLoading(false);
+      }
+    };
+    loadTargets();
+  }, []);
+
+  // Calculate today's progress
+  const calculateProgress = () => {
+    const contacts = currentData.prospectingContacts || [];
+    const callsMade = contacts.filter(
+      (c) => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM
+    ).length;
+    const spokeWith = contacts.filter((c) => c.prospecting.SW).length;
+    const appointmentsSet = contacts.filter((c) => c.prospecting.SA).length;
+    // Demos would come from EOD report or another source
+    const demos = 0; // TODO: Get from actual data source
+
+    return { callsMade, spokeWith, appointmentsSet, demos };
+  };
+
+  const progress = calculateProgress();
+
+  // Handle saving targets
+  const handleSaveTargets = async (targets: CalculatedTargets) => {
+    try {
+      const userId = user.id;
+      const companyId = 'company-1'; // TODO: Get from company context
+
+      const savedTargets = await saveUserTargets({
+        user_id: userId,
+        company_id: companyId,
+        annual_revenue: targets.annualRevenue,
+        avg_sale_amount: targets.avgSaleAmount,
+        close_rate: targets.closeRate,
+        show_rate: targets.showRate,
+        contact_to_appt_rate: targets.contactToApptRate,
+        call_to_contact_rate: targets.callToContactRate,
+        daily_calls: targets.dailyCalls,
+        daily_contacts: targets.dailyContacts,
+        daily_appts: targets.dailyAppts,
+        daily_demos: targets.dailyDemos,
+        daily_deals: targets.dailyDeals,
+        daily_revenue: targets.dailyRevenue,
+        weekly_revenue: targets.weeklyRevenue,
+      });
+
+      setUserTargets(savedTargets);
+      alert('Targets saved successfully!');
+    } catch (error) {
+      console.error('Error saving targets:', error);
+      alert('Failed to save targets. Please try again.');
+    }
+  };
 
   useEffect(() => {
     const contacts = currentData.prospectingContacts || [];
@@ -377,6 +450,132 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
             </table>
           </div>
 
+          {/* Targets Section */}
+          {!targetsLoading && (
+            <div className="mt-4 pt-4 border-t border-brand-light-border dark:border-brand-gray">
+              {userTargets ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-sm font-bold text-brand-lime">📊 Your Targets at a Glance</h4>
+                    <button
+                      onClick={() => setIsTargetsModalOpen(true)}
+                      className="text-xs text-gray-400 hover:text-brand-lime transition-colors"
+                    >
+                      ⚙️ Change Targets
+                    </button>
+                  </div>
+
+                  {/* Targets Grid with Progress Bars */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {/* Calls */}
+                    <div className="bg-brand-light-bg dark:bg-brand-gray/30 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">CALLS</div>
+                      <div className="text-xl font-bold text-brand-lime mb-2">
+                        {progress.callsMade}/{userTargets.daily_calls}
+                      </div>
+                      <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            progress.callsMade >= userTargets.daily_calls
+                              ? 'bg-green-500'
+                              : 'bg-brand-lime'
+                          }`}
+                          style={{
+                            width: `${Math.min(
+                              (progress.callsMade / userTargets.daily_calls) * 100,
+                              100
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Talks/Contacts */}
+                    <div className="bg-brand-light-bg dark:bg-brand-gray/30 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">TALKS</div>
+                      <div className="text-xl font-bold text-brand-lime mb-2">
+                        {progress.spokeWith}/{userTargets.daily_contacts}
+                      </div>
+                      <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            progress.spokeWith >= userTargets.daily_contacts
+                              ? 'bg-green-500'
+                              : 'bg-brand-lime'
+                          }`}
+                          style={{
+                            width: `${Math.min(
+                              (progress.spokeWith / userTargets.daily_contacts) * 100,
+                              100
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Meetings */}
+                    <div className="bg-brand-light-bg dark:bg-brand-gray/30 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">MEETINGS</div>
+                      <div className="text-xl font-bold text-brand-lime mb-2">
+                        {progress.appointmentsSet}/{userTargets.daily_appts}
+                      </div>
+                      <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            progress.appointmentsSet >= userTargets.daily_appts
+                              ? 'bg-green-500'
+                              : 'bg-brand-lime'
+                          }`}
+                          style={{
+                            width: `${Math.min(
+                              (progress.appointmentsSet / userTargets.daily_appts) * 100,
+                              100
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Demos */}
+                    <div className="bg-brand-light-bg dark:bg-brand-gray/30 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">DEMOS</div>
+                      <div className="text-xl font-bold text-brand-lime mb-2">
+                        {progress.demos}/{userTargets.daily_demos}
+                      </div>
+                      <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            progress.demos >= userTargets.daily_demos
+                              ? 'bg-green-500'
+                              : 'bg-brand-lime'
+                          }`}
+                          style={{
+                            width: `${Math.min(
+                              (progress.demos / userTargets.daily_demos) * 100,
+                              100
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    Set your daily targets to track progress
+                  </p>
+                  <button
+                    onClick={() => setIsTargetsModalOpen(true)}
+                    className="bg-brand-lime text-gray-900 px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-400 transition-colors"
+                  >
+                    🎯 Set My Targets
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Code legend */}
           <div className="mt-4 pt-2 border-t border-brand-light-border dark:border-brand-gray">
             <h4 className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2">
@@ -397,6 +596,25 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Targets Modal */}
+      <TargetsModal
+        isOpen={isTargetsModalOpen}
+        onClose={() => setIsTargetsModalOpen(false)}
+        onSave={handleSaveTargets}
+        initialValues={
+          userTargets
+            ? {
+                annualRevenue: userTargets.annual_revenue.toString(),
+                avgSaleAmount: userTargets.avg_sale_amount.toString(),
+                closeRate: userTargets.close_rate.toString(),
+                showRate: userTargets.show_rate.toString(),
+                contactToApptRate: userTargets.contact_to_appt_rate.toString(),
+                callToContactRate: userTargets.call_to_contact_rate.toString(),
+              }
+            : undefined
+        }
+      />
     </div>
   );
 };

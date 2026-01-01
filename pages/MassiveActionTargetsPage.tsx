@@ -158,7 +158,7 @@ export default function MassiveActionTargetsPage() {
                 
                 {/* Your Numbers Summary */}
                 <div className="bg-gray-800 rounded-lg p-6 border border-brand-lime">
-                  <h2 className="text-xl font-bold text-brand-lime mb-4">📊 Your Daily Numbers</h2>
+                  <h2 className="text-xl font-bold text-brand-lime mb-4">📊 Your Targets at a Glance</h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
                       <div className="text-xs text-gray-400 mb-1">CALLS</div>

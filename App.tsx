@@ -9,6 +9,7 @@ import CoachingPage from './pages/CoachingPage';
 import AIImagesPageEnhanced from './pages/AIImagesPageEnhanced';
 import AIContentPage from './pages/AIContentPage';
 import MassiveActionTargetsPage from './pages/MassiveActionTargetsPage';
+import ProspectingPage from './pages/ProspectingPage';
 import AddClientModal from './components/AddClientModal'; // Import the modal
 
 // Mock Data for Demo
@@ -155,6 +156,20 @@ const App: React.FC = () => {
         return <AIContentPage />;
       case 'massive-action-targets':
         return <MassiveActionTargetsPage />;
+      case 'prospecting':
+        return (
+          <ProspectingPage
+            allData={allData}
+            onDataChange={handleUpsertDayData}
+            selectedDate={new Date(selectedDate)}
+            onDateChange={(date) => setSelectedDate(date.toISOString().split('T')[0])}
+            onAddHotLead={handleAddHotLead}
+            onAddWin={handleAddWin}
+            handleSetAppointment={handleSetAppointment}
+            hotLeads={hotLeads}
+            user={user!}
+          />
+        );
       default:
         return <DayView user={user!} onDataChange={handleUpsertDayData} allData={allData} selectedDate={selectedDate} onDateChange={setSelectedDate} onAddWin={handleAddWin} onAddHotLead={handleAddHotLead} onUpdateHotLead={handleUpdateHotLead} hotLeads={hotLeads} transactions={transactions} users={teamUsers} onNavigateToRevenue={() => setView('revenue')} />;
     }
