@@ -35,8 +35,19 @@ export default function MassiveActionTargetsPage() {
     };
   };
 
+  const [showResults, setShowResults] = useState(false);
+
   const targets = calculateTargets();
   const hasInputs = annualRevenue && avgSaleAmount && closeRate && showRate && contactToApptRate && callToContactRate;
+
+  // Auto-show results when all inputs are filled
+  React.useEffect(() => {
+    if (hasInputs) {
+      setShowResults(true);
+    } else {
+      setShowResults(false);
+    }
+  }, [hasInputs]);
 
   return (
     <div className="min-h-screen bg-brand-ink text-white p-6">
@@ -124,10 +135,25 @@ export default function MassiveActionTargetsPage() {
                   <p className="text-xs text-gray-500 mt-1">Calls to have 1 conversation</p>
                 </div>
               </div>
+              
+              {/* Calculate Button */}
+              <div className="mt-6">
+                <button
+                  onClick={() => setShowResults(true)}
+                  disabled={!hasInputs}
+                  className={`w-full py-3 px-6 rounded-lg font-bold text-lg transition-all ${
+                    hasInputs
+                      ? 'bg-brand-lime text-gray-900 hover:bg-green-400 cursor-pointer'
+                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {hasInputs ? '🎯 Calculate My Targets' : '⬆️ Fill in all fields above'}
+                </button>
+              </div>
             </div>
 
             {/* Results Card */}
-            {hasInputs && (
+            {hasInputs && showResults && (
               <div className="bg-gray-800 rounded-lg p-6 border border-brand-lime">
                 <h2 className="text-xl font-bold text-brand-lime mb-4">Your Daily Action Plan</h2>
                 
