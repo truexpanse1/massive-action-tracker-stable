@@ -56,17 +56,23 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
   useEffect(() => {
     const loadTargets = async () => {
       try {
-        const userId = user.id;
+        const userId = user?.id || 'user-1';
+        console.log('[ProspectingPage] Loading targets for userId:', userId);
         const targets = await fetchUserTargets(userId);
-        setUserTargets(targets);
+        if (targets) {
+          console.log('[ProspectingPage] ✅ Loaded targets:', targets);
+          setUserTargets(targets);
+        } else {
+          console.log('[ProspectingPage] No targets found');
+        }
       } catch (error) {
-        console.error('Error loading targets:', error);
+        console.error('[ProspectingPage] ❌ Error loading targets:', error);
       } finally {
         setTargetsLoading(false);
       }
     };
     loadTargets();
-  }, []);
+  }, [user]);
 
   // Calculate today's progress
   const calculateProgress = () => {
