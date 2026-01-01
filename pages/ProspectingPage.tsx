@@ -87,8 +87,19 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
   // Handle saving targets
   const handleSaveTargets = async (targets: CalculatedTargets) => {
     try {
+      console.log('[ProspectingPage] handleSaveTargets called with:', targets);
+      console.log('[ProspectingPage] user object:', user);
+      
+      if (!user || !user.id) {
+        console.error('[ProspectingPage] User or user.id is undefined!');
+        alert('Error: User not found. Please refresh the page.');
+        return;
+      }
+      
       const userId = user.id;
       const companyId = 'company-1'; // TODO: Get from company context
+      
+      console.log('[ProspectingPage] Calling saveUserTargets with userId:', userId);
 
       const savedTargets = await saveUserTargets({
         user_id: userId,
@@ -108,11 +119,12 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
         weekly_revenue: targets.weeklyRevenue,
       });
 
+      console.log('[ProspectingPage] Targets saved successfully:', savedTargets);
       setUserTargets(savedTargets);
-      alert('Targets saved successfully!');
+      alert('✅ Targets saved successfully!');
     } catch (error) {
-      console.error('Error saving targets:', error);
-      alert('Failed to save targets. Please try again.');
+      console.error('[ProspectingPage] Error saving targets:', error);
+      alert('❌ Failed to save targets: ' + (error as Error).message);
     }
   };
 
