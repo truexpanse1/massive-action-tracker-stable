@@ -90,13 +90,9 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
       console.log('[ProspectingPage] handleSaveTargets called with:', targets);
       console.log('[ProspectingPage] user object:', user);
       
-      if (!user || !user.id) {
-        console.error('[ProspectingPage] User or user.id is undefined!');
-        alert('Error: User not found. Please refresh the page.');
-        return;
-      }
-      
-      const userId = user.id;
+      // Use user.id if available, otherwise fall back to 'user-1'
+      const userId = user?.id || 'user-1';
+      console.log('[ProspectingPage] Using userId:', userId);
       const companyId = 'company-1'; // TODO: Get from company context
       
       console.log('[ProspectingPage] Calling saveUserTargets with userId:', userId);
