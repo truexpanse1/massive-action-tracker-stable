@@ -1,10 +1,10 @@
 # MAT Changelog
 
-## v1.0-stable (2026-01-01) - GOLDEN MASTER 🔒
+## v1.0-stable (2026-01-02) - GOLDEN MASTER 🔒
 
-**Commit:** 6ab6ca90  
+**Commit:** 17c0b10e  
 **Deployed:** https://truexpansemat.com  
-**Status:** LOCKED - DO NOT MODIFY
+**Status:** LOCKED - FULLY TESTED
 
 ### ✅ Confirmed Working Features
 
@@ -32,10 +32,11 @@
 
 #### Massive Action Targets
 - Calculator for daily/weekly targets
-- Progress bars for: Calls, Talks, Appts, Demos, Deals
+- Progress bars for: Calls, Talks, Meetings, Demos, Deals
 - Real-time progress tracking
+- **Persists across logout/login sessions** (Supabase storage)
 - Displays above Code Legend
-- Persistent storage in Supabase
+- Syncs across devices
 
 #### Core Functionality
 - Prospecting page with editable table
@@ -43,14 +44,21 @@
 - KPI tracking
 - Code buttons (SW, NA, LM, ST, EP, SA)
 - Hot lead conversion
-- All data persists in localStorage and Supabase
+- All data persists in Supabase
 
 ### 🔧 Technical Details
 - Framework: React + TypeScript
 - Styling: Tailwind CSS
-- Storage: localStorage + Supabase
+- Storage: Supabase (targets, day data, hot leads)
 - Deployment: Netlify
 - Repository: https://github.com/truexpanse1/massive-action-tracker-stable
+
+### 🐛 Fixes in This Version
+- Fixed: Lead Converter now works with localStorage data structure
+- Fixed: Flame button enabled for company-only prospects
+- Fixed: User prop passed to ProspectingPage
+- Fixed: Targets now save to Supabase (not localStorage)
+- Fixed: Targets persist across logout/login
 
 ### 📦 Restore Instructions
 
@@ -63,12 +71,21 @@ npm install
 npm run build
 ```
 
-Or rollback in Netlify to commit: 6ab6ca90
+Or rollback in Netlify to commit: 17c0b10e
+
+---
+
+## Future Development
+
+**v1.1 (In Development)**
+- Feature: "Move to Next Day" button for prospects
+- Feature: Auto-rollover uncontacted prospects at midnight
+- Feature: Hybrid manual + automatic prospect management
 
 ---
 
 **⚠️ IMPORTANT:** This is the GOLDEN MASTER version. All future changes must be:
-1. Developed in a separate branch
+1. Developed in a separate branch (e.g., feature/move-to-next-day)
 2. Tested thoroughly
 3. Reviewed before merging to main
 4. Tagged with a new version number
