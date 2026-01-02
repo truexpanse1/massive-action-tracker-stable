@@ -62,15 +62,14 @@ const PLANS: Record<string, PlanInfo> = {
     description: 'The ultimate solution for large organizations needing full visibility and control.',
     features: [
       'Up to 10 User Accounts',
-      'All Team Engine Features',
-      'GoHighLevel CRM Integration',
-      'Automated Contact Sync',
-      'Calendar Integration',
-      'Activity Logging to GHL',
-      'Custom Reporting & Analytics',
-      'Dedicated Support',
-      'API Access',
-      'Priority Feature Requests'
+      'All Solo Closer Features',
+      'Team Leaderboards & Rankings',
+      'Manager Dashboard',
+      'Team Control Panel',
+      'Shared Prospecting Lists',
+      'Team Performance Comparison',
+      'Coaching Notes & Feedback',
+      'Multi-User Analytics'
     ],
   },
 };
