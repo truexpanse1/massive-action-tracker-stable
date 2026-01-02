@@ -478,7 +478,7 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                     <td className="p-2 text-center">
                       <button
                         onClick={() => handleMarkAsHotLead(contact)}
-                        disabled={!contact.name}
+                        disabled={!contact.name && !contact.company}
                         className="text-lg disabled:opacity-40 disabled:cursor-not-allowed hover:scale-110 transition-transform"
                         title="Mark as Hot Lead"
                       >
