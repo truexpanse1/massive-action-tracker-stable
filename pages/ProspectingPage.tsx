@@ -85,7 +85,7 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
       (c) => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM
     ).length;
     const spokeWith = contacts.filter((c) => c.prospecting.SW).length;
-    const appointmentsSet = contacts.filter((c) => c.prospecting.SA).length;
+    const appointmentsSet = 0; // Appointments tracked via Hot Leads page
     // Demos would come from EOD report or another source
     const demos = 0; // TODO: Get from actual data source
 
@@ -178,28 +178,81 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
 
   const handleDeleteContact = (index: number) => {
     const contact = currentData.prospectingContacts[index];
-    const hasData = contact.name || contact.phone || contact.email || contact.company;
+    const hasData = contact.name || contact.company || contact.phone || contact.email;
     
     if (hasData) {
       const confirmDelete = window.confirm(
-        `Are you sure you want to delete ${contact.name || 'this prospect'}?`
+        `Are you sure you want to delete this prospect?\n${contact.name || contact.company || 'Unnamed'}`
       );
       if (!confirmDelete) return;
     }
 
     const newContacts = [...currentData.prospectingContacts];
-    // Reset the contact to empty state
     newContacts[index] = {
-      id: contact.id,
+      id: `contact-${Date.now()}-${Math.random()}`,
       name: '',
       company: '',
       phone: '',
       email: '',
-      date: '',
+      interestLevel: 5,
       prospecting: {},
-      interestLevel: 0,
     };
     updateCurrentData({ prospectingContacts: newContacts });
+  };
+
+  const handleMoveToNextDay = (index: number) => {
+    const contact = currentData.prospectingContacts[index];
+    
+    // Must have at least company or name to move
+    if (!contact.name && !contact.company) {
+      alert('Cannot move empty prospect. Add a company name first.');
+      return;
+    }
+
+    // Get next day's date
+    const nextDay = new Date(selectedDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const nextDateKey = nextDay.toISOString().split('T')[0];
+
+    // Get next day's data
+    const nextDayData = allData[nextDateKey] || getInitialDayData();
+    const nextDayContacts = [...nextDayData.prospectingContacts];
+
+    // Find first empty slot in next day
+    const emptyIndex = nextDayContacts.findIndex(
+      (c) => !c.name && !c.company && !c.phone && !c.email
+    );
+
+    if (emptyIndex === -1) {
+      alert('Tomorrow\'s prospecting list is full. Clear some slots first.');
+      return;
+    }
+
+    // Move contact to next day (keep all data and codes)
+    nextDayContacts[emptyIndex] = { ...contact };
+
+    // Save next day's data
+    onDataChange(nextDateKey, {
+      ...nextDayData,
+      prospectingContacts: nextDayContacts,
+    });
+
+    // Clear from today
+    const todayContacts = [...currentData.prospectingContacts];
+    todayContacts[index] = {
+      id: `contact-${Date.now()}-${Math.random()}`,
+      name: '',
+      company: '',
+      phone: '',
+      email: '',
+      interestLevel: 5,
+      prospecting: {},
+    };
+    updateCurrentData({ prospectingContacts: todayContacts });
+
+    // Show success message
+    const displayName = contact.name || contact.company;
+    alert(`✅ Moved "${displayName}" to tomorrow (${nextDay.toLocaleDateString()})`);
   };
 
   const handleProspectingChange = (contactIndex: number, code: ProspectingCode) => {
@@ -211,25 +264,11 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
     newContacts[contactIndex] = { ...contact, prospecting: newProspecting };
     updateCurrentData({ prospectingContacts: newContacts });
 
-    if (code === 'SA' && isBeingChecked && contact.name) {
-      const isAlreadyHot = hotLeads.some(
-        (lead) =>
-          lead.name === contact.name &&
-          lead.phone === contact.phone &&
-          lead.email === contact.email
-      );
-
-      if (!isAlreadyHot) {
-        onAddHotLead({
-          ...contact,
-          dateAdded: new Date().toISOString(),
-          completedFollowUps: {},
-        }).then((newLead) => {
-          if (newLead) {
-            onAddWin(currentDateKey, `Added ${contact.name} to Hot Leads.`);
-          }
-        });
-      }
+    // Handle Move to Next Day
+    if (code === 'MV' && isBeingChecked) {
+      handleMoveToNextDay(contactIndex);
+      // Don't actually toggle MV - it's an action, not a state
+      return;
     }
   };
 
@@ -421,14 +460,14 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                             onClick={() => handleProspectingChange(index, code)}
                             title={prospectingCodeDescriptions[code]}
                             className={`w-6 h-6 flex items-center justify-center rounded text-[10px] font-mono transition-colors ${
-                              contact.prospecting[code]
-                                ? code === 'SA'
-                                  ? 'bg-brand-blue text-white'
-                                  : 'bg-brand-red text-white'
+                              code === 'MV'
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : contact.prospecting[code]
+                                ? 'bg-brand-red text-white'
                                 : 'bg-gray-200 dark:bg-brand-gray text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-brand-gray/50'
                             }`}
                           >
-                            {code}
+                            {code === 'MV' ? '>' : code}
                           </button>
                         ))}
                       </div>
@@ -495,14 +534,14 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                             onClick={() => handleProspectingChange(index, code)}
                             title={prospectingCodeDescriptions[code]}
                             className={`w-6 h-6 flex items-center justify-center rounded text-[10px] font-mono transition-colors ${
-                              contact.prospecting[code]
-                                ? code === 'SA'
-                                  ? 'bg-brand-blue text-white'
-                                  : 'bg-brand-red text-white'
+                              code === 'MV'
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : contact.prospecting[code]
+                                ? 'bg-brand-red text-white'
                                 : 'bg-gray-200 dark:bg-brand-gray text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-brand-gray/50'
                             }`}
                           >
-                            {code}
+                            {code === 'MV' ? '>' : code}
                           </button>
                         ))}
                       </div>
