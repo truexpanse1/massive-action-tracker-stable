@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import supabase from '../lib/supabaseClient';
+import { supabase } from '../src/services/supabaseClient';
 
 interface LeadConverterModalProps {
   isOpen: boolean;
