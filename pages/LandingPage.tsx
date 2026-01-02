@@ -612,7 +612,7 @@ export default function LandingPage() {
               </p>
             </div>
             <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/HAJnAsRVWQxIpIei.jpg"
+              src="/images/revene_graphic.jpg"
               alt="Revenue Center"
               className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
             />
@@ -621,7 +621,7 @@ export default function LandingPage() {
           {/* Feature 3: New Clients List */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
             <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/TKIMNfRJfmBDifrH.jpg"
+              src="/images/newClientPage.jpg"
               alt="New Clients List"
               className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
             />
@@ -655,7 +655,7 @@ export default function LandingPage() {
           {/* Feature 5: Prospecting List */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
             <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/FkVOuvmuxkkghaMP.jpg"
+              src="/images/prospectingList.jpg"
               alt="Prospecting List"
               className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
             />
