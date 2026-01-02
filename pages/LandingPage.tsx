@@ -517,28 +517,91 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================ */}
+      {/* WHY SALES TEAMS FAIL SECTION */}
+      {/* ============================================ */}
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-gray-900">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+            <div>
+              <h2 className="text-3xl md:text-5xl font-black mb-6 text-white">
+                Why Sales Teams Fail
+              </h2>
+              <p className="text-lg md:text-xl text-gray-300 mb-8">
+                87% of sales professionals struggle with fragmented tools. Teams juggle 8-12 different tools daily, 63% of leads fall through the cracks, revenue tracking is reactive not proactive, and content creation takes 4-6 hours per piece.
+              </p>
+            </div>
+            <img
+              src="/whySalesTeamFail.jpg"
+              alt="Why Sales Teams Fail"
+              className="rounded-3xl shadow-2xl border border-gray-700 object-cover w-full h-full"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* ONE PLATFORM SECTION */}
+      {/* ============================================ */}
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-gradient-to-br from-blue-900 to-purple-900">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+            <img
+              src="/one_platform.jpg"
+              alt="One Platform Complete Control"
+              className="rounded-3xl shadow-2xl border border-blue-700 object-cover w-full h-full"
+            />
+            <div>
+              <h2 className="text-3xl md:text-5xl font-black mb-6 text-white">
+                One Platform, Complete Control
+              </h2>
+              <p className="text-lg md:text-xl text-blue-100 mb-8">
+                Replace 8-12 fragmented tools with one unified system. AI-powered efficiency, automated accountability, and real-time revenue intelligence — all in one place.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
       {/* FEATURES SECTION */}
       {/* ============================================ */}
       <section className="py-16 md:py-24 px-4 md:px-6 bg-white">
         <div className="max-w-7xl mx-auto space-y-20 md:space-y-32">
-          {/* Feature 1: EOD Report */}
+          {/* Feature 1: Activity Dashboard */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
             <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/uGojrZQFwEYwfaXX.jpg"
-              alt="End of Day Report"
+              src="/activity_dashboard.jpg"
+              alt="Activity Dashboard"
               className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
             />
             <div>
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
-                Your Daily Win Report
+                Activity Dashboard
               </h3>
               <p className="text-lg md:text-xl text-gray-600">
-                See everything you did today in one simple report. It tracks every call, text, and win. You will know exactly what works to make you win more. You can even look back at any day you want!
+                Daily accountability that drives results. Track 6 critical KPIs, real-time revenue intelligence, focus on top 6 targets, automated roll-forward, and daily reflection. Everything you need to stay on track and hit your goals.
               </p>
             </div>
           </div>
 
-          {/* Feature 2: Revenue Center */}
+          {/* Feature 2: End of Day Report */}
+          <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+            <div>
+              <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
+                End of Day Report
+              </h3>
+              <p className="text-lg md:text-xl text-gray-600">
+                Data-driven performance insights. Track input vs. output, visual performance trends, multi-metric comparison, and historical data access. See exactly what's working and what needs adjustment.
+              </p>
+            </div>
+            <img
+              src="/eod-report2.jpg"
+              alt="End of Day Report"
+              className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
+            />
+          </div>
+
+          {/* Feature 3: Revenue Center */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
             <div>
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
@@ -606,19 +669,19 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Feature 6: AI Image Generation */}
+          {/* Feature 6: AI Content Generator */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
             <div>
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
-                Create Like a Pro — Instantly
+                AI Content Generator
               </h3>
               <p className="text-lg md:text-xl text-gray-600">
-                Quickly make great images for social media, emails, and flyers. This tool is in the Marketing section. It helps you make eye-catching posts fast, so you can spend more time selling and less time designing.
+                Professional business content 10X faster. 12+ professional templates, one-click PDF export, clean plain-text output, and save 20+ hours per week. Create emails, LinkedIn posts, and proposals in minutes.
               </p>
             </div>
             <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/ixKXRwlQLvplwOFZ.jpg"
-              alt="AI Image Generation"
+              src="/aiImage_creator.jpg"
+              alt="AI Content Generator"
               className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
             />
           </div>
