@@ -578,9 +578,15 @@ export default function LandingPage() {
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
                 Activity Dashboard
               </h3>
-              <p className="text-lg md:text-xl text-gray-600">
+              <p className="text-lg md:text-xl text-gray-600 mb-6">
                 Daily accountability that drives results. Track 6 critical KPIs, real-time revenue intelligence, focus on top 6 targets, automated roll-forward, and daily reflection. Everything you need to stay on track and hit your goals.
               </p>
+              <button
+                onClick={() => handleGetStarted('solo')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Start Tracking Now →
+              </button>
             </div>
           </div>
 
@@ -607,9 +613,15 @@ export default function LandingPage() {
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
                 Know Your Money Flow
               </h3>
-              <p className="text-lg md:text-xl text-gray-600">
+              <p className="text-lg md:text-xl text-gray-600 mb-6">
                 See your money grow in real-time! Find out which products sell the best and when. You can change the dates to see trends and know what to sell next. This helps you sell smarter, not just harder.
               </p>
+              <button
+                onClick={() => handleGetStarted('solo')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Track Your Revenue →
+              </button>
             </div>
             <img
               src="/images/revene_graphic.jpg"
@@ -629,9 +641,15 @@ export default function LandingPage() {
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
                 Meet Your New Clients Page
               </h3>
-              <p className="text-lg md:text-xl text-gray-600">
-                See all your new clients on one simple page. This is a list of every client your team has closed. You can see the exact day they became a paying client. It’s the perfect way to celebrate and keep track of your wins!
+              <p className="text-lg md:text-xl text-gray-600 mb-6">
+                See all your new clients on one simple page. This is a list of every client your team has closed. You can see the exact day they became a paying client. It's the perfect way to celebrate and keep track of your wins!
               </p>
+              <button
+                onClick={() => handleGetStarted('solo')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Celebrate Your Wins →
+              </button>
             </div>
           </div>
 
@@ -646,7 +664,7 @@ export default function LandingPage() {
               </p>
             </div>
             <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/PRyIpAjeiuhiPTeR.jpg"
+              src="/images/performanceTrends.jpg"
               alt="Performance Dashboard"
               className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
             />
@@ -663,9 +681,15 @@ export default function LandingPage() {
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
                 Build Your Money Pipeline
               </h3>
-              <p className="text-lg md:text-xl text-gray-600">
+              <p className="text-lg md:text-xl text-gray-600 mb-6">
                 This is where you build your future money. Every time you click a button here, it saves the data forever. This helps you build a strong list of future customers that will bring in steady money. It's simple: track your work, and the money will follow.
               </p>
+              <button
+                onClick={() => handleGetStarted('solo')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Build Your Pipeline →
+              </button>
             </div>
           </div>
 
@@ -675,15 +699,44 @@ export default function LandingPage() {
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
                 AI Content Generator
               </h3>
-              <p className="text-lg md:text-xl text-gray-600">
+              <p className="text-lg md:text-xl text-gray-600 mb-6">
                 Professional business content 10X faster. 12+ professional templates, one-click PDF export, clean plain-text output, and save 20+ hours per week. Create emails, LinkedIn posts, and proposals in minutes.
               </p>
+              <button
+                onClick={() => handleGetStarted('solo')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Generate Content Now →
+              </button>
             </div>
             <img
               src="/aiImage_creator.jpg"
               alt="AI Content Generator"
               className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
             />
+          </div>
+
+          {/* Feature 7: Dream Client Studio */}
+          <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+            <img
+              src="/images/dreamClientstudio.jpg"
+              alt="Dream Client Studio"
+              className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
+            />
+            <div>
+              <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
+                Dream Client Studio
+              </h3>
+              <p className="text-lg md:text-xl text-gray-600 mb-6">
+                Create detailed buyer avatars and generate high-converting content that attracts your ideal clients. Build multiple client profiles, save generated content, and never run out of marketing ideas. Turn your dream clients into reality.
+              </p>
+              <button
+                onClick={() => handleGetStarted('solo')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Create Your Avatar →
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -868,6 +921,37 @@ export default function LandingPage() {
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* FINAL CTA SECTION */}
+      {/* ============================================ */}
+      <section className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl md:text-6xl font-black mb-6">
+            Ready to Take Massive Action?
+          </h2>
+          <p className="text-xl md:text-2xl mb-10 text-blue-100">
+            Join thousands of sales professionals who are crushing their goals with MAT. Start your free trial today—no credit card required.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button
+              onClick={() => handleGetStarted('solo')}
+              className="px-10 py-5 rounded-full bg-white text-blue-600 hover:bg-gray-100 font-black text-xl shadow-2xl transform hover:scale-105 transition-all duration-200"
+            >
+              Start Free Trial →
+            </button>
+            <button
+              onClick={() => setIsLoginModalOpen(true)}
+              className="px-10 py-5 rounded-full bg-transparent border-2 border-white text-white hover:bg-white/10 font-bold text-xl transition-all duration-200"
+            >
+              Sign In
+            </button>
+          </div>
+          <p className="text-sm text-blue-200 mt-6">
+            ✓ No credit card required  ✓ Setup in 2 minutes  ✓ Cancel anytime
+          </p>
         </div>
       </section>
 
