@@ -527,7 +527,7 @@ export default function LandingPage() {
                 Why Sales Teams Fail
               </h2>
               <p className="text-lg md:text-xl text-gray-300 mb-8">
-                87% of sales professionals struggle with fragmented tools. Teams juggle 8-12 different tools daily, 63% of leads fall through the cracks, revenue tracking is reactive not proactive, and content creation takes 4-6 hours per piece.
+                Most sales teams are drowning in complexity. Switching between countless apps kills momentum, important follow-ups get forgotten, and valuable selling time gets wasted on admin work. The result? Missed quotas and burned-out reps.
               </p>
             </div>
             <img
@@ -555,7 +555,7 @@ export default function LandingPage() {
                 One Platform, Complete Control
               </h2>
               <p className="text-lg md:text-xl text-blue-100 mb-8">
-                Replace 8-12 fragmented tools with one unified system. AI-powered efficiency, automated accountability, and real-time revenue intelligence — all in one place.
+                Everything your sales team needs in one powerful system. Track activity, manage your pipeline, close deals, and measure results without switching apps. Built by sales professionals who understand what actually moves the needle.
               </p>
             </div>
           </div>
