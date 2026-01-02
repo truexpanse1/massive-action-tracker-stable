@@ -877,7 +877,7 @@ export default function LandingPage() {
       <footer className="py-12 md:py-16 bg-gray-800 text-white">
         <div className="max-w-7xl mx-auto px-4 md:px-6 text-center">
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} TRUEXPANS. All rights reserved.
+            &copy; {new Date().getFullYear()} TrueXpanse. All rights reserved.
           </p>
         </div>
       </footer>
