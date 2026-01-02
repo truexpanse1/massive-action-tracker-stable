@@ -684,11 +684,33 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
       <LeadConverterModal
         isOpen={isLeadConverterOpen}
         onClose={() => setIsLeadConverterOpen(false)}
-        onLeadsAdded={() => {
-          // Refresh the page data after leads are added
-          window.location.reload();
+        onLeadsAdded={(companies: string[]) => {
+          // Add companies to prospecting contacts
+          const newContacts = [...currentData.prospectingContacts];
+          let addedCount = 0;
+
+          for (const company of companies) {
+            // Find first empty slot
+            const emptyIndex = newContacts.findIndex(
+              (c) => !c.name && !c.phone && !c.email && !c.company
+            );
+            
+            if (emptyIndex !== -1) {
+              newContacts[emptyIndex] = {
+                ...newContacts[emptyIndex],
+                company: company,
+                name: '', // Leave name blank for user to fill
+                date: new Date().toISOString().split('T')[0],
+              };
+              addedCount++;
+            } else {
+              break; // No more empty slots
+            }
+          }
+
+          updateCurrentData({ prospectingContacts: newContacts });
+          alert(`Successfully added ${addedCount} prospects to the list!`);
         }}
-        userId={user?.id || 'user-1'}
       />
     </div>
   );

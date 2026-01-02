@@ -1,22 +1,19 @@
 import React, { useState } from 'react';
-import { supabase } from '../src/services/supabaseClient';
+import { Contact } from '../types';
 
 interface LeadConverterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLeadsAdded: () => void;
-  userId: string;
+  onLeadsAdded: (companies: string[]) => void;
 }
 
 const LeadConverterModal: React.FC<LeadConverterModalProps> = ({
   isOpen,
   onClose,
   onLeadsAdded,
-  userId,
 }) => {
   const [pastedText, setPastedText] = useState('');
   const [preview, setPreview] = useState<string[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   // Ignore list for Google Maps junk data
   const IGNORE_LIST = [
@@ -71,6 +68,12 @@ const LeadConverterModal: React.FC<LeadConverterModalProps> = ({
       // Skip if it's a URL
       if (/^https?:\/\//.test(line)) continue;
 
+      // Skip if it starts with bullet points or special chars
+      if (/^[•\-\*]/.test(line)) continue;
+
+      // Skip if it looks like an email
+      if (/@/.test(line) && /\.(com|net|org)/.test(line)) continue;
+
       // If it passes all filters, it's likely a company name
       if (line.length > 2 && line.length < 100) {
         companies.push(line);
@@ -90,39 +93,16 @@ const LeadConverterModal: React.FC<LeadConverterModalProps> = ({
     setPreview(parsed);
   };
 
-  const handleAddToProspectingList = async () => {
+  const handleAddToProspectingList = () => {
     if (preview.length === 0) return;
 
-    setIsProcessing(true);
-
-    try {
-      // Add each company to the prospects table
-      const prospectsToAdd = preview.map(company => ({
-        user_id: userId,
-        company: company,
-        name: '', // Leave name blank for user to fill
-        stage: 'Prospect',
-        created_at: new Date().toISOString(),
-      }));
-
-      const { error } = await supabase
-        .from('prospects')
-        .insert(prospectsToAdd);
-
-      if (error) throw error;
-
-      // Success - close modal and refresh
-      alert(`Successfully added ${preview.length} prospects!`);
-      setPastedText('');
-      setPreview([]);
-      onLeadsAdded();
-      onClose();
-    } catch (error) {
-      console.error('Error adding prospects:', error);
-      alert('Failed to add prospects. Please try again.');
-    } finally {
-      setIsProcessing(false);
-    }
+    // Pass the companies back to the parent component
+    onLeadsAdded(preview);
+    
+    // Clear and close
+    setPastedText('');
+    setPreview([]);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -204,10 +184,10 @@ const LeadConverterModal: React.FC<LeadConverterModalProps> = ({
           </button>
           <button
             onClick={handleAddToProspectingList}
-            disabled={preview.length === 0 || isProcessing}
+            disabled={preview.length === 0}
             className="px-6 py-2 bg-[#00d4ff] text-[#0a0e27] font-semibold rounded hover:bg-[#00b8e6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isProcessing ? 'Adding...' : `Add to Prospecting List (${preview.length})`}
+            Add to Prospecting List ({preview.length})
           </button>
         </div>
       </div>
