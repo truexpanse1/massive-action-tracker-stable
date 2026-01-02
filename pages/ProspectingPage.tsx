@@ -684,12 +684,12 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
       <LeadConverterModal
         isOpen={isLeadConverterOpen}
         onClose={() => setIsLeadConverterOpen(false)}
-        onLeadsAdded={(companies: string[]) => {
-          // Add companies to prospecting contacts
+        onLeadsAdded={(leads: Array<{company: string; phone: string; email: string}>) => {
+          // Add leads to prospecting contacts
           const newContacts = [...currentData.prospectingContacts];
           let addedCount = 0;
 
-          for (const company of companies) {
+          for (const lead of leads) {
             // Find first empty slot
             const emptyIndex = newContacts.findIndex(
               (c) => !c.name && !c.phone && !c.email && !c.company
@@ -698,7 +698,9 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
             if (emptyIndex !== -1) {
               newContacts[emptyIndex] = {
                 ...newContacts[emptyIndex],
-                company: company,
+                company: lead.company,
+                phone: lead.phone,
+                email: lead.email,
                 name: '', // Leave name blank for user to fill
                 date: new Date().toISOString().split('T')[0],
               };
