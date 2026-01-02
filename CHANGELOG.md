@@ -1,5 +1,41 @@
 # MAT Changelog
 
+## v1.1-stable (2026-01-02) - Move to Next Day Feature 🚀
+
+**Commit:** 462c3602  
+**Deployed:** https://truexpansemat.com  
+**Status:** LOCKED - FULLY TESTED
+
+### ✨ New Feature: Move to Next Day
+
+**Green ">" Button** - Replaces SA (Set Appointment)
+- One-click move prospect to tomorrow
+- Keeps all data: company, phone, email
+- Keeps all codes: SW, NA, LM, ST, EP
+- Moves to first empty slot in next day's list
+- Shows success message with date
+- Does NOT count as new prospect collected (honest KPI tracking)
+
+**Why This Feature Matters:**
+- No more lost leads - every prospect gets follow-up
+- Maintains momentum on uncontacted prospects
+- One click vs multiple steps (speed wins)
+- Keeps full context (you see "I left a message yesterday")
+- SA was redundant (flame button → hot leads → set appointment)
+
+**Button Order:** SW | NA | LM | ST | EP | **>**
+
+### ✅ All v1.0 Features Still Working
+
+- Lead Converter (Excel/CSV + Google Maps)
+- Flame Button (Hot Leads)
+- Delete Button
+- Massive Action Targets (persists across sessions)
+- Progress Bars
+- All core MAT functionality
+
+---
+
 ## v1.0-stable (2026-01-02) - GOLDEN MASTER 🔒
 
 **Commit:** 17c0b10e  
@@ -53,7 +89,7 @@
 - Deployment: Netlify
 - Repository: https://github.com/truexpanse1/massive-action-tracker-stable
 
-### 🐛 Fixes in This Version
+### 🐛 Fixes in v1.0
 - Fixed: Lead Converter now works with localStorage data structure
 - Fixed: Flame button enabled for company-only prospects
 - Fixed: User prop passed to ProspectingPage
@@ -62,8 +98,15 @@
 
 ### 📦 Restore Instructions
 
-If anything breaks, restore this version:
+To restore v1.1:
+```bash
+git fetch --tags
+git checkout v1.1-stable
+npm install
+npm run build
+```
 
+To restore v1.0:
 ```bash
 git fetch --tags
 git checkout v1.0-stable
@@ -71,23 +114,24 @@ npm install
 npm run build
 ```
 
-Or rollback in Netlify to commit: 17c0b10e
+Or rollback in Netlify to specific commit.
 
 ---
 
 ## Future Development
 
-**v1.1 (In Development)**
-- Feature: "Move to Next Day" button for prospects
-- Feature: Auto-rollover uncontacted prospects at midnight
-- Feature: Hybrid manual + automatic prospect management
+**Potential v1.2 Features:**
+- Auto-rollover uncontacted prospects at midnight (optional)
+- Bulk select and move multiple prospects
+- Custom prospect priority levels
+- Follow-up reminders
 
 ---
 
-**⚠️ IMPORTANT:** This is the GOLDEN MASTER version. All future changes must be:
-1. Developed in a separate branch (e.g., feature/move-to-next-day)
+**⚠️ IMPORTANT:** These are GOLDEN MASTER versions. All future changes must be:
+1. Developed in a separate branch (e.g., feature/feature-name)
 2. Tested thoroughly
 3. Reviewed before merging to main
 4. Tagged with a new version number
 
-Never modify or delete the v1.0-stable tag.
+Never modify or delete stable tags.
