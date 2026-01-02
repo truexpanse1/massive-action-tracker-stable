@@ -41,6 +41,39 @@ const LeadConverterModal: React.FC<LeadConverterModalProps> = ({
     'industry:',
   ];
 
+  const parseTabSeparatedData = (text: string): ParsedLead[] => {
+    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    const leads: ParsedLead[] = [];
+
+    for (const line of lines) {
+      // Check if line contains tabs (TSV format from Excel)
+      if (line.includes('\t')) {
+        const parts = line.split('\t').map(p => p.trim());
+        if (parts.length >= 3) {
+          leads.push({
+            company: parts[0],
+            phone: parts[1],
+            email: parts[2],
+          });
+        } else if (parts.length === 2) {
+          leads.push({
+            company: parts[0],
+            phone: parts[1],
+            email: '',
+          });
+        } else if (parts.length === 1 && parts[0]) {
+          leads.push({
+            company: parts[0],
+            phone: '',
+            email: '',
+          });
+        }
+      }
+    }
+
+    return leads;
+  };
+
   const parseGoogleMapsData = (text: string): ParsedLead[] => {
     if (!text.trim()) return [];
 
@@ -114,12 +147,23 @@ const LeadConverterModal: React.FC<LeadConverterModalProps> = ({
     return leads;
   };
 
+  const parseData = (text: string): ParsedLead[] => {
+    // First, try tab-separated format (Excel/CSV)
+    const tabSeparated = parseTabSeparatedData(text);
+    if (tabSeparated.length > 0) {
+      return tabSeparated;
+    }
+
+    // Otherwise, try Google Maps format
+    return parseGoogleMapsData(text);
+  };
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     setPastedText(text);
     
     // Generate preview
-    const parsed = parseGoogleMapsData(text);
+    const parsed = parseData(text);
     setPreview(parsed);
   };
 
@@ -155,12 +199,12 @@ const LeadConverterModal: React.FC<LeadConverterModalProps> = ({
         <div className="p-6 overflow-y-auto flex-1">
           <div className="mb-4">
             <p className="text-gray-300 text-sm mb-2">
-              Paste your Google Maps search results below. The tool will automatically extract company names, phone numbers, and emails.
+              Paste data from Excel, CSV, or Google Maps. The tool will automatically detect the format and extract company names, phone numbers, and emails.
             </p>
             <textarea
               value={pastedText}
               onChange={handleTextChange}
-              placeholder="Paste Google Maps data here..."
+              placeholder="Paste your data here..."
               className="w-full h-40 bg-[#0f0f1e] text-white border border-gray-600 rounded p-3 text-sm font-mono resize-none focus:outline-none focus:border-[#00d4ff]"
             />
           </div>
