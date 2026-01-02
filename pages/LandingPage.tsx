@@ -933,14 +933,14 @@ export default function LandingPage() {
             Ready to Take Massive Action?
           </h2>
           <p className="text-xl md:text-2xl mb-10 text-blue-100">
-            Join thousands of sales professionals who are crushing their goals with MAT. Start your free trial today—no credit card required.
+            Join thousands of sales professionals who are crushing their goals with MAT. Get started today and transform your sales process.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
               onClick={() => handleGetStarted('solo')}
               className="px-10 py-5 rounded-full bg-white text-blue-600 hover:bg-gray-100 font-black text-xl shadow-2xl transform hover:scale-105 transition-all duration-200"
             >
-              Start Free Trial →
+              Get Started Now →
             </button>
             <button
               onClick={() => setIsLoginModalOpen(true)}
@@ -950,7 +950,7 @@ export default function LandingPage() {
             </button>
           </div>
           <p className="text-sm text-blue-200 mt-6">
-            ✓ No credit card required  ✓ Setup in 2 minutes  ✓ Cancel anytime
+            ✓ Instant Access  ✓ Setup in 2 minutes  ✓ Cancel anytime
           </p>
         </div>
       </section>
