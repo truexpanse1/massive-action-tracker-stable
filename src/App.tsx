@@ -1007,6 +1007,7 @@ const App: React.FC = () => {
             onAddWin={handleAddWin}
             handleSetAppointment={handleSetAppointment}
             hotLeads={hotLeads}
+            user={user!}
           />
         );
       case 'hot-leads':
