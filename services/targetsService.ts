@@ -1,7 +1,9 @@
 /**
- * Targets Service - localStorage First
- * Simple, reliable storage for user's massive action targets
+ * Targets Service - Supabase Storage
+ * Persistent storage for user's massive action targets across sessions
  */
+
+import { supabase } from '../src/services/supabaseClient';
 
 const STORAGE_KEY = 'mat_user_targets';
 
@@ -26,22 +28,36 @@ export interface UserTargets {
 }
 
 /**
- * Fetch user's current targets from localStorage
+ * Fetch user's current targets from Supabase
  */
 export async function fetchUserTargets(userId: string): Promise<UserTargets | null> {
   try {
     console.log('[Targets] Fetching targets for user:', userId);
-    const key = `${STORAGE_KEY}_${userId}`;
-    const stored = localStorage.getItem(key);
     
-    if (!stored) {
-      console.log('[Targets] No targets found in localStorage');
+    // Try Supabase first
+    const { data, error } = await supabase
+      .from('user_targets')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No targets found
+        console.log('[Targets] No targets found in Supabase');
+        return null;
+      }
+      console.error('[Targets] Supabase error:', error);
       return null;
     }
-    
-    const targets = JSON.parse(stored);
-    console.log('[Targets] Loaded targets from localStorage:', targets);
-    return targets;
+
+    if (data) {
+      console.log('[Targets] Loaded targets from Supabase:', data);
+      return data;
+    }
+
+    console.log('[Targets] No targets found');
+    return null;
   } catch (error) {
     console.error('[Targets] Error fetching targets:', error);
     return null;
@@ -49,7 +65,7 @@ export async function fetchUserTargets(userId: string): Promise<UserTargets | nu
 }
 
 /**
- * Save user's targets to localStorage
+ * Save user's targets to Supabase
  */
 export async function saveUserTargets(targets: UserTargets): Promise<UserTargets> {
   try {
@@ -60,12 +76,23 @@ export async function saveUserTargets(targets: UserTargets): Promise<UserTargets
       created_at: targets.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    
-    const key = `${STORAGE_KEY}_${targets.user_id}`;
-    localStorage.setItem(key, JSON.stringify(targetsWithTimestamp));
-    
-    console.log('[Targets] ✅ Successfully saved targets to localStorage');
-    return targetsWithTimestamp;
+
+    // Save to Supabase
+    const { data, error } = await supabase
+      .from('user_targets')
+      .upsert(targetsWithTimestamp, {
+        onConflict: 'user_id',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[Targets] Supabase error:', error);
+      throw new Error('Failed to save targets: ' + error.message);
+    }
+
+    console.log('[Targets] ✅ Successfully saved targets to Supabase');
+    return data;
   } catch (error) {
     console.error('[Targets] ❌ Error saving targets:', error);
     throw new Error('Failed to save targets: ' + (error as Error).message);
@@ -73,13 +100,22 @@ export async function saveUserTargets(targets: UserTargets): Promise<UserTargets
 }
 
 /**
- * Delete user's targets from localStorage
+ * Delete user's targets from Supabase
  */
 export async function deleteUserTargets(userId: string): Promise<void> {
   try {
     console.log('[Targets] Deleting targets for user:', userId);
-    const key = `${STORAGE_KEY}_${userId}`;
-    localStorage.removeItem(key);
+    
+    const { error } = await supabase
+      .from('user_targets')
+      .delete()
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('[Targets] Error deleting:', error);
+      throw error;
+    }
+
     console.log('[Targets] ✅ Successfully deleted targets');
   } catch (error) {
     console.error('[Targets] ❌ Error deleting targets:', error);
