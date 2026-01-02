@@ -15,6 +15,7 @@ import Calendar from '../components/Calendar';
 import ProspectingKPIs from '../components/ProspectingKPIs';
 import TargetsModal, { CalculatedTargets } from '../components/TargetsModal';
 import { fetchUserTargets, saveUserTargets, UserTargets } from '../services/targetsService';
+import LeadConverterModal from '../components/LeadConverterModal';
 
 interface ProspectingPageProps {
   allData: { [key: string]: DayData };
@@ -51,6 +52,9 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
   const [userTargets, setUserTargets] = useState<UserTargets | null>(null);
   const [isTargetsModalOpen, setIsTargetsModalOpen] = useState(false);
   const [targetsLoading, setTargetsLoading] = useState(true);
+
+  // Lead Converter state
+  const [isLeadConverterOpen, setIsLeadConverterOpen] = useState(false);
 
   // Load user targets on mount
   useEffect(() => {
@@ -169,6 +173,32 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
     const newContacts = [...currentData.prospectingContacts];
     const formattedValue = field === 'phone' ? formatPhoneNumber(value) : value;
     newContacts[index] = { ...newContacts[index], [field]: formattedValue };
+    updateCurrentData({ prospectingContacts: newContacts });
+  };
+
+  const handleDeleteContact = (index: number) => {
+    const contact = currentData.prospectingContacts[index];
+    const hasData = contact.name || contact.phone || contact.email || contact.company;
+    
+    if (hasData) {
+      const confirmDelete = window.confirm(
+        `Are you sure you want to delete ${contact.name || 'this prospect'}?`
+      );
+      if (!confirmDelete) return;
+    }
+
+    const newContacts = [...currentData.prospectingContacts];
+    // Reset the contact to empty state
+    newContacts[index] = {
+      id: contact.id,
+      name: '',
+      company: '',
+      phone: '',
+      email: '',
+      date: '',
+      prospecting: {},
+      interestLevel: 0,
+    };
     updateCurrentData({ prospectingContacts: newContacts });
   };
 
@@ -328,7 +358,15 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
             <h2 className="text-xl font-bold text-brand-light-text dark:text-white">
               Prospecting List - {selectedDate.toLocaleDateString()}
             </h2>
-            <CSVImporter onImport={handleCSVImport} />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsLeadConverterOpen(true)}
+                className="bg-[#00d4ff] text-[#0a0e27] px-4 py-2 rounded-lg font-bold text-sm hover:bg-[#00b8e6] transition-colors flex items-center gap-2"
+              >
+                🔗 Lead Converter
+              </button>
+              <CSVImporter onImport={handleCSVImport} />
+            </div>
           </div>
 
           <div className="overflow-x-auto max-h-[28rem] overflow-y-auto">
@@ -342,6 +380,7 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                   <th className="p-2 w-1/4 hidden md:table-cell">Email</th>
                   <th className="p-2 w-10 text-center">Hot</th>
                   <th className="p-2 w-[220px] text-center hidden md:table-cell">Codes</th>
+                  <th className="p-2 w-10 text-center">Del</th>
                 </tr>
               </thead>
               <tbody>
@@ -457,6 +496,17 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                           </button>
                         ))}
                       </div>
+                    </td>
+
+                    {/* Delete button */}
+                    <td className="p-2 text-center">
+                      <button
+                        onClick={() => handleDeleteContact(index)}
+                        className="text-red-500 hover:text-red-700 hover:scale-110 transition-transform text-lg"
+                        title="Delete prospect"
+                      >
+                        ✕
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -628,6 +678,17 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
               }
             : undefined
         }
+      />
+
+      {/* Lead Converter Modal */}
+      <LeadConverterModal
+        isOpen={isLeadConverterOpen}
+        onClose={() => setIsLeadConverterOpen(false)}
+        onLeadsAdded={() => {
+          // Refresh the page data after leads are added
+          window.location.reload();
+        }}
+        userId={user?.id || 'user-1'}
       />
     </div>
   );
