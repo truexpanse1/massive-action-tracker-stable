@@ -88,16 +88,16 @@ export interface Goal {
   rolledOver?: boolean; // Indicates if this goal was rolled over from a previous day
 }
 
-export type ProspectingCode = 'SW' | 'NA' | 'LM' | 'ST' | 'EP' | 'SA';
+export type ProspectingCode = 'SW' | 'NA' | 'LM' | 'ST' | 'EP' | 'MV';
 
-export const prospectingCodes: ProspectingCode[] = ['SW', 'NA', 'LM', 'ST', 'EP', 'SA'];
+export const prospectingCodes: ProspectingCode[] = ['SW', 'NA', 'LM', 'ST', 'EP', 'MV'];
 export const prospectingCodeDescriptions: Record<ProspectingCode, string> = {
     SW: "Spoke With",
     NA: "No Answer",
     LM: "Left Message",
     ST: "Sent Text",
     EP: "Emailed Proposal",
-    SA: "Set Appointment",
+    MV: "Move to Next Day",
 };
 
 export interface Contact {
