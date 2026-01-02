@@ -327,13 +327,23 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
   };
 
   const handleMarkAsHotLead = async (contact: Contact) => {
-    if (!contact.name) return;
+    // Use company name if contact name is missing
+    const displayName = contact.name || contact.company;
+    if (!displayName) {
+      alert('Please add a name or company before marking as hot lead.');
+      return;
+    }
+    
     const newHotLead = await onAddHotLead({
       ...contact,
+      name: displayName, // Use company name if no contact name
       dateAdded: new Date().toISOString(),
       completedFollowUps: {},
     });
-    if (newHotLead) alert(`${contact.name} marked as a hot lead!`);
+    if (newHotLead) {
+      alert(`${displayName} marked as a hot lead!`);
+      onAddWin(currentDateKey, `Added ${displayName} to Hot Leads.`);
+    }
   };
 
   return (
