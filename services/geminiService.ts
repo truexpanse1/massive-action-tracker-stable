@@ -192,7 +192,48 @@ export const getEditSuggestion = async (base64ImageData: string, mimeType: strin
 
 export const generateBusinessContent = async (template: string, details: Record<string, string>): Promise<string> => {
     try {
-        const prompt = `Generate a "${template}" based on these details: ${JSON.stringify(details, null, 2)}. The tone should be professional, clear, and persuasive. Format as clean text.`;
+        let prompt: string;
+        
+        if (template === 'Prospect Research Assistant') {
+            // Custom prompt for prospect research
+            prompt = `You are a prospect research assistant helping a sales professional find leads.
+
+Target Details:
+- Industry: ${details.industry || 'Not specified'}
+- Geographic Area: ${details.location || 'Not specified'}
+- Company Size: ${details.size || 'Not specified'}
+- Additional Criteria: ${details.description || 'None'}
+
+Generate a comprehensive prospect research guide with:
+
+1. GOOGLE MAPS SEARCH QUERIES (5-7 specific search strings)
+   - Format: "[industry] in [location]"
+   - Include variations and niche terms
+
+2. CHAMBER OF COMMERCE RESOURCES
+   - Direct URLs to relevant chambers in the target area
+   - How to navigate their member directories
+
+3. OTHER CREATIVE SOURCES
+   - Industry associations
+   - LinkedIn search strategies
+   - Business directories (Yelp, Yellow Pages, industry-specific)
+   - Local business journals/publications
+
+4. DATA EXTRACTION INSTRUCTIONS
+   - What information to collect (company name, phone, email, contact name)
+   - How to format it for the Lead Converter
+
+5. LEAD CONVERTER FORMAT EXAMPLE
+   Show a sample of 3 prospects in tab-separated format:
+   Company Name[TAB]Phone[TAB]Email[TAB]Contact Name
+   
+Format the output as clean, actionable text with clear sections and bullet points.`;
+        } else {
+            // Default prompt for other templates
+            prompt = `Generate a "${template}" based on these details: ${JSON.stringify(details, null, 2)}. The tone should be professional, clear, and persuasive. Format as clean text.`;
+        }
+        
         const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: prompt });
         return response.text;
     } catch (error) {

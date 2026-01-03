@@ -9,6 +9,11 @@ interface SavedContentDisplay extends SavedAIContent {
 }
 
 const templateFields: Record<string, { label: string; name: string; placeholder: string }[]> = {
+    'Prospect Research Assistant': [
+        { label: 'Target Industry', name: 'industry', placeholder: 'Insurance agencies, Real estate brokers, etc.' },
+        { label: 'Geographic Area', name: 'location', placeholder: 'Phoenix AZ, Dallas TX metro, etc.' },
+        { label: 'Company Size (optional)', name: 'size', placeholder: '5-20 employees, $1M-$5M revenue, etc.' },
+    ],
     'Welcome Email': [
         { label: 'Client Name', name: 'clientName', placeholder: 'Jane Doe' },
         { label: 'Your Company Name', name: 'companyName', placeholder: 'Acme Inc.' },
@@ -54,6 +59,7 @@ const templateFields: Record<string, { label: string; name: string; placeholder:
 };
 
 const templatesRequiringDescription = [
+    'Prospect Research Assistant',
     'Mastermind Group Invitation',
     'Company Newsletter',
     'Lesson Outline',
@@ -62,6 +68,8 @@ const templatesRequiringDescription = [
 
 const getDescriptionHelperText = (template: string): string => {
     switch (template) {
+        case 'Prospect Research Assistant':
+            return 'Describe any additional criteria (e.g., specific niches, company characteristics, decision-maker titles). The AI will generate search strategies for Google Maps, Chamber of Commerce sites, and other sources, plus output format instructions for your Lead Converter.';
         case 'Mastermind Group Invitation':
             return 'Describe who the mastermind is for, the main promise, how often you meet, what topics you cover, and the tone you want (casual, elite, faith-based, etc.).';
         case 'Company Newsletter':
@@ -76,7 +84,7 @@ const getDescriptionHelperText = (template: string): string => {
 };
 
 const AIContentPage: React.FC = () => {
-    const [selectedTemplate, setSelectedTemplate] = useState('Welcome Email');
+    const [selectedTemplate, setSelectedTemplate] = useState('Prospect Research Assistant');
     const [formDetails, setFormDetails] = useState<Record<string, string>>({});
     const [description, setDescription] = useState('');
     const [generatedContent, setGeneratedContent] = useState('');

@@ -6,6 +6,7 @@ interface ContentTemplatesCardProps {
 }
 
 const templates = [
+    'Prospect Research Assistant',
     'Welcome Email',
     'Business Proposal',
     'Service Contract',
