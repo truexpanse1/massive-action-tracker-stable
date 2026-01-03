@@ -156,9 +156,78 @@ export default function MassiveActionTargetsPage() {
             {hasInputs && showResults && (
               <div className="space-y-6">
                 
+                {/* Daily & Weekly Action Plan Dashboard */}
+                <div className="bg-gradient-to-br from-blue-900 to-purple-900 rounded-lg p-6 border-2 border-brand-lime shadow-2xl">
+                  <h2 className="text-2xl font-black text-brand-lime mb-6 text-center">📊 YOUR ACTION PLAN</h2>
+                  
+                  {/* Daily Targets */}
+                  <div className="bg-gray-900/80 rounded-lg p-6 mb-6 border border-brand-lime/50">
+                    <h3 className="text-xl font-bold text-brand-lime mb-4 flex items-center gap-2">
+                      <span className="bg-brand-lime text-gray-900 rounded-full w-8 h-8 flex items-center justify-center text-sm">D</span>
+                      DAILY TARGETS (What to do TODAY)
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-green-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">${parseInt(targets.dailyRevenue).toLocaleString()}</div>
+                        <div className="text-xs text-gray-400 uppercase">💰 Revenue to Generate</div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-blue-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">{targets.dailyCalls}</div>
+                        <div className="text-xs text-gray-400 uppercase">📞 Calls to Make</div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-purple-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">{targets.dailyContacts}</div>
+                        <div className="text-xs text-gray-400 uppercase">🤝 Conversations</div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-yellow-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">{targets.dailyAppts}</div>
+                        <div className="text-xs text-gray-400 uppercase">📅 Meetings to Book</div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-red-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">{targets.dailyDemos}</div>
+                        <div className="text-xs text-gray-400 uppercase">🎯 Demos to Run</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Weekly Targets */}
+                  <div className="bg-gray-900/80 rounded-lg p-6 border border-brand-lime/50">
+                    <h3 className="text-xl font-bold text-brand-lime mb-4 flex items-center gap-2">
+                      <span className="bg-brand-lime text-gray-900 rounded-full w-8 h-8 flex items-center justify-center text-sm">W</span>
+                      WEEKLY TARGETS (This Week's Mission)
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-green-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">${parseInt(targets.weeklyRevenue).toLocaleString()}</div>
+                        <div className="text-xs text-gray-400 uppercase">💰 Weekly Revenue</div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-blue-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">{targets.dailyCalls * 5}</div>
+                        <div className="text-xs text-gray-400 uppercase">📞 Total Calls</div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-purple-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">{targets.dailyContacts * 5}</div>
+                        <div className="text-xs text-gray-400 uppercase">🤝 Conversations</div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-yellow-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">{targets.dailyAppts * 5}</div>
+                        <div className="text-xs text-gray-400 uppercase">📅 Appointments</div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-red-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">{targets.dailyDemos * 5}</div>
+                        <div className="text-xs text-gray-400 uppercase">🎯 Demos</div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-pink-500">
+                        <div className="text-4xl font-black text-brand-lime mb-1">{targets.dailyDeals * 5}</div>
+                        <div className="text-xs text-gray-400 uppercase">💼 Deals to Close</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Your Numbers Summary */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-brand-lime">
-                  <h2 className="text-xl font-bold text-brand-lime mb-4">📊 Your Targets at a Glance</h2>
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h2 className="text-xl font-bold text-white mb-4">📊 Your Targets at a Glance</h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
                       <div className="text-xs text-gray-400 mb-1">CALLS</div>
