@@ -25,7 +25,10 @@ const ProspectingKPIs: React.FC<ProspectingKPIsProps> = ({ contacts, events }) =
       (e) => e.type === 'Appointment' && e.conducted
     ).length;
 
-    const prospectsCollected = contacts.filter((c) => c.name).length;
+    // Count any contact with at least one piece of information (name, company, phone, or email)
+    const prospectsCollected = contacts.filter(
+      (c) => c.name || c.company || c.phone || c.email
+    ).length;
 
     return { callsMade, textsSent, emailsSent, apptsSet, demosHeld, prospectsCollected };
   }, [contacts, events]);
