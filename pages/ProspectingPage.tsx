@@ -16,6 +16,7 @@ import ProspectingKPIs from '../components/ProspectingKPIs';
 import TargetsModal, { CalculatedTargets } from '../components/TargetsModal';
 import { fetchUserTargets, saveUserTargets, UserTargets } from '../services/targetsService';
 import LeadConverterModal from '../components/LeadConverterModal';
+import ProspectFinderModal from '../components/ProspectFinderModal';
 
 interface ProspectingPageProps {
   allData: { [key: string]: DayData };
@@ -55,6 +56,9 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
 
   // Lead Converter state
   const [isLeadConverterOpen, setIsLeadConverterOpen] = useState(false);
+  
+  // Prospect Finder state
+  const [isProspectFinderOpen, setIsProspectFinderOpen] = useState(false);
 
   // Load user targets on mount
   useEffect(() => {
@@ -409,6 +413,12 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
             </h2>
             <div className="flex gap-2">
               <button
+                onClick={() => setIsProspectFinderOpen(true)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                🔍 Find Prospects
+              </button>
+              <button
                 onClick={() => setIsLeadConverterOpen(true)}
                 className="bg-[#00d4ff] text-[#0a0e27] px-4 py-2 rounded-lg font-bold text-sm hover:bg-[#00b8e6] transition-colors flex items-center gap-2"
               >
@@ -751,6 +761,41 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
                 phone: lead.phone,
                 email: lead.email,
                 name: '', // Leave name blank for user to fill
+                date: new Date().toISOString().split('T')[0],
+              };
+              addedCount++;
+            } else {
+              break; // No more empty slots
+            }
+          }
+
+          updateCurrentData({ prospectingContacts: newContacts });
+          alert(`Successfully added ${addedCount} prospects to the list!`);
+        }}
+      />
+
+      {/* Prospect Finder Modal */}
+      <ProspectFinderModal
+        isOpen={isProspectFinderOpen}
+        onClose={() => setIsProspectFinderOpen(false)}
+        onImport={(prospects: Array<{company: string; phone: string; email: string; contactName: string}>) => {
+          // Add prospects to prospecting contacts
+          const newContacts = [...currentData.prospectingContacts];
+          let addedCount = 0;
+
+          for (const prospect of prospects) {
+            // Find first empty slot
+            const emptyIndex = newContacts.findIndex(
+              (c) => !c.name && !c.phone && !c.email && !c.company
+            );
+            
+            if (emptyIndex !== -1) {
+              newContacts[emptyIndex] = {
+                ...newContacts[emptyIndex],
+                company: prospect.company,
+                phone: prospect.phone,
+                email: prospect.email,
+                name: prospect.contactName || '',
                 date: new Date().toISOString().split('T')[0],
               };
               addedCount++;
