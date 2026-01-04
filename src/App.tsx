@@ -1063,6 +1063,8 @@ const App: React.FC = () => {
           <CoachingPage
             userId={user.id}
             companyId={user.company_id}
+            userRole={user.role}
+            clients={users.filter(u => u.role === 'Sales Rep')}
             savedQuotes={savedQuotes}
             onSaveQuote={handleSaveQuote}
             onRemoveQuote={handleRemoveQuote}
