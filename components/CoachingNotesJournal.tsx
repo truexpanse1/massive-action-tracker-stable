@@ -197,8 +197,8 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
         <div className="w-80 flex-shrink-0">
           <Calendar
             selectedDate={selectedDate}
-            onDateSelect={setSelectedDate}
-            datesWithNotes={datesWithNotes}
+            onDateChange={setSelectedDate}
+            datesWithActivity={datesWithNotes}
           />
 
           {/* Search Notes */}
