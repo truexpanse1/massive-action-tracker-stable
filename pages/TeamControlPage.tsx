@@ -116,7 +116,7 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
     <>
       <div className="p-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-black">Team Control Panel</h1>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white">Team Control Panel</h1>
           <button
             onClick={handleAddUser}
             className="bg-brand-ink hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition"
@@ -131,19 +131,19 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-brand-gray/30">
                 <tr>
-                  <th className="px-6 py-4 text-left">Name</th>
-                  <th className="px-6 py-4 text-left">Email</th>
-                  <th className="px-6 py-4 text-left">Role</th>
-                  <th className="px-6 py-4 text-center">Status</th>
-                  <th className="px-6 py-4 text-center">Actions</th>
+                  <th className="px-6 py-4 text-left text-gray-900 dark:text-gray-200 font-semibold">Name</th>
+                  <th className="px-6 py-4 text-left text-gray-900 dark:text-gray-200 font-semibold">Email</th>
+                  <th className="px-6 py-4 text-left text-gray-900 dark:text-gray-200 font-semibold">Role</th>
+                  <th className="px-6 py-4 text-center text-gray-900 dark:text-gray-200 font-semibold">Status</th>
+                  <th className="px-6 py-4 text-center text-gray-900 dark:text-gray-200 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {users.map((user) => (
                   <tr key={user.id}>
-                    <td className="px-6 py-4 font-medium">{user.name}</td>
-                    <td className="px-6 py-4">{user.email}</td>
-                    <td className="px-6 py-4">{user.role}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">{user.name}</td>
+                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{user.email}</td>
+                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{user.role}</td>
                     <td className="px-6 py-4 text-center">
                       <span
                         className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full \${

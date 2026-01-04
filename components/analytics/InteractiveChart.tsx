@@ -58,8 +58,8 @@ const METRIC_CONFIG = {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow-lg border-2 border-gray-200">
-        <p className="font-semibold text-gray-800 mb-2">{label}</p>
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-600">
+        <p className="font-semibold text-gray-800 dark:text-gray-100 mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
             {entry.name}: {entry.name === 'Revenue ($)' 
@@ -81,8 +81,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
   
   if (!hasActiveMetrics) {
     return (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-md">
-        <p className="text-gray-500 text-lg">
+      <div className="flex items-center justify-center h-96 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <p className="text-gray-500 dark:text-gray-400 text-lg">
           Select at least one metric to display the chart
         </p>
       </div>
@@ -91,8 +91,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-md">
-        <p className="text-gray-500 text-lg">No data available for the selected period</p>
+      <div className="flex items-center justify-center h-96 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <p className="text-gray-500 dark:text-gray-400 text-lg">No data available for the selected period</p>
       </div>
     );
   }
@@ -105,7 +105,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     : '#3B82F6';
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <ResponsiveContainer width="100%" height={500}>
         <ComposedChart 
           data={data} 
