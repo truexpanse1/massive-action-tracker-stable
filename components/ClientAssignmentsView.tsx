@@ -31,6 +31,7 @@ const ClientAssignmentsView: React.FC<ClientAssignmentsViewProps> = ({
   const [sharedNotes, setSharedNotes] = useState<CoachingSharedNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedAssignment, setSelectedAssignment] = useState<CoachingAssignment | null>(null);
+  const [selectedCompletedAssignment, setSelectedCompletedAssignment] = useState<CoachingAssignment | null>(null);
   const [completionNote, setCompletionNote] = useState('');
   const [reflection, setReflection] = useState('');
   const [saveToJournal, setSaveToJournal] = useState(true);
@@ -164,6 +165,26 @@ const ClientAssignmentsView: React.FC<ClientAssignmentsViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Completed Assignments Dropdown */}
+      <CompletedAssignmentsDropdown
+        assignments={assignments}
+        onSelectAssignment={setSelectedCompletedAssignment}
+      />
+
+      {/* Completed Assignment Detail Popup */}
+      {selectedCompletedAssignment && (
+        <AssignmentDetailPopup
+          assignment={selectedCompletedAssignment}
+          onClose={() => setSelectedCompletedAssignment(null)}
+          onSaveAsNote={async (noteData) => {
+            // TODO: Implement save to journal
+            console.log('Save as note:', noteData);
+          }}
+          onAddToTargets={async (assignment) => {
+            await handleAddToTargets(assignment, false);
+          }}
+        />
+      )}
       {/* Shared Notes from Coach */}
       {sharedNotes.length > 0 && (
         <div className="bg-white dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
