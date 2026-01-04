@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Calendar from './Calendar';
 import AddToTargetsModal from './AddToTargetsModal';
 import { CoachingNote, ActionItem } from '../src/services/coachingNotesService';
@@ -26,6 +26,7 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [expandedNotes, setExpandedNotes] = useState<string[]>([]);
   
   // Modal state for Add to Targets
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,11 +100,10 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
       company_id: companyId,
       session_date: selectedDate.toISOString().split('T')[0],
       title,
-      topic_focus: source,
+      topic_focus: topicFocus,
       key_takeaways: keyTakeaways,
       action_items: actionItems,
       tags,
-      resources: [],
     };
 
     try {
@@ -121,9 +121,10 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
 
   // Add action item
   const handleAddActionItem = () => {
-    if (!newActionItem.trim()) return;
-    setActionItems([...actionItems, { text: newActionItem, completed: false, added_to_targets: false }]);
-    setNewActionItem('');
+    if (newActionItem.trim()) {
+      setActionItems([...actionItems, { text: newActionItem, completed: false }]);
+      setNewActionItem('');
+    }
   };
 
   // Remove action item
@@ -140,9 +141,10 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
 
   // Add tag
   const handleAddTag = () => {
-    if (!newTag.trim() || tags.includes(newTag.trim())) return;
-    setTags([...tags, newTag.trim()]);
-    setNewTag('');
+    if (newTag.trim() && !tags.includes(newTag)) {
+      setTags([...tags, newTag]);
+      setNewTag('');
+    }
   };
 
   // Remove tag
@@ -150,420 +152,375 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
     setTags(tags.filter(t => t !== tag));
   };
 
-  // Open modal to select days for single item
-  const handleAddToTargetsClick = (actionItem: ActionItem, noteDate: string, noteSource?: string) => {
-    setSelectedActionItem({ text: actionItem.text, noteDate, source: noteSource });
-    setBulkActionItems(null);
+  // Handle Add to Targets click
+  const handleAddToTargetsClick = (item: ActionItem, noteDate: string, source?: string) => {
+    setSelectedActionItem({ text: item.text, noteDate, source });
     setIsModalOpen(true);
   };
 
-  // Open modal to select days for all items
-  const handleAddAllToTargetsClick = (items: ActionItem[], noteDate: string, noteSource?: string) => {
-    const unadded = items.filter(item => !item.added_to_targets);
-    if (unadded.length === 0) {
-      alert('All action items have already been added to targets!');
-      return;
-    }
-    setBulkActionItems({ items: unadded, noteDate, source: noteSource });
+  // Handle Add All to Targets click
+  const handleAddAllToTargetsClick = (items: ActionItem[], noteDate: string, source?: string) => {
+    setBulkActionItems({ items, noteDate, source });
+    setIsModalOpen(true);
+  };
+
+  // Handle modal close
+  const handleModalClose = () => {
+    setIsModalOpen(false);
     setSelectedActionItem(null);
-    setIsModalOpen(true);
+    setBulkActionItems(null);
   };
 
-  // Confirm and add to targets for selected days
-  const handleConfirmAddToTargets = async (days: number) => {
-    if (bulkActionItems) {
-      // Bulk add all items
-      try {
-        let successCount = 0;
-        for (const item of bulkActionItems.items) {
-          await onAddToTargets(item.text, bulkActionItems.noteDate, days, bulkActionItems.source);
-          successCount++;
-        }
-        alert(`✅ ${successCount} action ${successCount === 1 ? 'item' : 'items'} added to Implement Now for the next ${days} ${days === 1 ? 'day' : 'days'}!`);
-        setBulkActionItems(null);
-      } catch (error) {
-        console.error('Error adding to targets:', error);
-        alert('Failed to add some items to targets');
-      }
-    } else if (selectedActionItem) {
-      // Single item add
-      try {
+  // Handle modal submit
+  const handleModalSubmit = async (days: number) => {
+    try {
+      if (selectedActionItem) {
         await onAddToTargets(selectedActionItem.text, selectedActionItem.noteDate, days, selectedActionItem.source);
-        // Success - alert is handled by parent component
-        setSelectedActionItem(null);
-      } catch (error) {
-        console.error('Error adding to targets:', error);
-        alert('Failed to add to targets');
+      } else if (bulkActionItems) {
+        for (const item of bulkActionItems.items) {
+          if (!item.added_to_targets) {
+            await onAddToTargets(item.text, bulkActionItems.noteDate, days, bulkActionItems.source);
+          }
+        }
       }
+      handleModalClose();
+    } catch (error) {
+      console.error('Error adding to targets:', error);
+      alert('Failed to add to targets');
     }
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      {/* Left Sidebar - Calendar & Search */}
-      <div className="lg:col-span-3 space-y-6">
-        <Calendar
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          datesWithActivity={datesWithNotes}
-        />
-
-        {/* Search Bar */}
-        <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
-          <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Search Notes</h3>
-          <input
-            type="text"
-            placeholder="Search by keyword..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 bg-white dark:bg-brand-ink border border-gray-300 dark:border-brand-gray rounded-lg text-brand-light-text dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-blue"
+    <div className="space-y-6">
+      <div className="flex gap-6">
+        {/* Left Sidebar - Calendar */}
+        <div className="w-80 flex-shrink-0">
+          <Calendar
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            datesWithNotes={datesWithNotes}
           />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="mt-2 text-sm text-brand-blue hover:underline"
-            >
-              Clear search
-            </button>
-          )}
-        </div>
 
-        {/* New Note Button */}
-        {!isEditing && (
+          {/* Search Notes */}
+          <div className="mt-6">
+            <input
+              type="text"
+              placeholder="Search by keyword..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border-2 border-brand-light-border dark:border-brand-gray bg-white dark:bg-brand-navy text-brand-light-text dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+            />
+          </div>
+
+          {/* New Coaching Note Button */}
           <button
             onClick={() => setIsEditing(true)}
-            className="w-full bg-brand-lime text-brand-ink font-bold py-3 px-4 rounded-lg hover:bg-green-400 transition"
+            className="w-full mt-6 bg-brand-lime text-brand-ink font-bold py-3 px-4 rounded-lg hover:bg-green-400 transition"
           >
             + New Coaching Note
           </button>
-        )}
-      </div>
+        </div>
 
-      {/* Main Content Area */}
-      <div className="lg:col-span-9">
-        {isEditing ? (
-          /* Note Editor */
-          <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-brand-light-text dark:text-white">
-                {editingNoteId ? 'Edit Coaching Note' : 'New Coaching Note'}
+        {/* Right Content - Notes or Form */}
+        <div className="flex-1">
+          {isEditing ? (
+            /* Form */
+            <div className="bg-brand-light-card dark:bg-brand-navy p-8 rounded-lg border-2 border-brand-light-border dark:border-brand-gray">
+              <h2 className="text-2xl font-bold text-brand-light-text dark:text-white mb-6">
+                {editingNoteId ? 'Edit Coaching Note' : 'Create New Coaching Note'}
               </h2>
-              <button
-                onClick={resetForm}
-                className="text-gray-500 dark:text-gray-400 hover:text-brand-red dark:hover:text-brand-red"
-              >
-                ✕ Cancel
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Source */}
-              <div>
-                <label className="block text-sm font-bold text-brand-light-text dark:text-white mb-2">
-                  Source
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., Coaching Call with John, Book: 10X Rule, Podcast: Grant Cardone"
-                  value={source}
-                  onChange={(e) => setSource(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-brand-ink border border-gray-300 dark:border-brand-gray rounded-lg text-brand-light-text dark:text-white"
-                />
-              </div>
 
               {/* Title */}
-              <div>
+              <div className="mb-6">
                 <label className="block text-sm font-bold text-brand-light-text dark:text-white mb-2">
-                  Session Title *
+                  Title *
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., Cold Calling Mastery Session"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-brand-ink border border-gray-300 dark:border-brand-gray rounded-lg text-brand-light-text dark:text-white"
+                  placeholder="e.g., Sales Pitch Workshop"
+                  className="w-full px-4 py-2 rounded-lg border-2 border-brand-light-border dark:border-brand-gray bg-white dark:bg-gray-800 text-brand-light-text dark:text-white placeholder-gray-500"
                 />
               </div>
 
-              {/* Topic/Focus */}
-              <div>
+              {/* Topic Focus */}
+              <div className="mb-6">
                 <label className="block text-sm font-bold text-brand-light-text dark:text-white mb-2">
-                  Topic / Focus
+                  Topic Focus
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., Objection Handling, Follow-up Strategies"
                   value={topicFocus}
                   onChange={(e) => setTopicFocus(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-brand-ink border border-gray-300 dark:border-brand-gray rounded-lg text-brand-light-text dark:text-white"
+                  placeholder="e.g., Sales Techniques"
+                  className="w-full px-4 py-2 rounded-lg border-2 border-brand-light-border dark:border-brand-gray bg-white dark:bg-gray-800 text-brand-light-text dark:text-white placeholder-gray-500"
                 />
               </div>
 
               {/* Key Takeaways */}
-              <div>
+              <div className="mb-6">
                 <label className="block text-sm font-bold text-brand-light-text dark:text-white mb-2">
-                  Key Insights & Takeaways *
+                  Key Takeaways *
                 </label>
                 <textarea
-                  placeholder="What did you learn? What insights stood out? What strategies will you implement?"
                   value={keyTakeaways}
                   onChange={(e) => setKeyTakeaways(e.target.value)}
-                  rows={8}
-                  className="w-full px-3 py-2 bg-white dark:bg-brand-ink border border-gray-300 dark:border-brand-gray rounded-lg text-brand-light-text dark:text-white resize-none"
+                  placeholder="Document the main insights from this coaching session..."
+                  rows={6}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-brand-light-border dark:border-brand-gray bg-white dark:bg-gray-800 text-brand-light-text dark:text-white placeholder-gray-500 resize-none"
                 />
               </div>
 
               {/* Action Items */}
-              <div>
+              <div className="mb-6">
                 <label className="block text-sm font-bold text-brand-light-text dark:text-white mb-2">
-                  Action Items (Speed of Implementation!)
+                  Action Items
                 </label>
                 <div className="flex gap-2 mb-3">
                   <input
                     type="text"
-                    placeholder="Add an action item..."
                     value={newActionItem}
                     onChange={(e) => setNewActionItem(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAddActionItem()}
-                    className="flex-1 px-3 py-2 bg-white dark:bg-brand-ink border border-gray-300 dark:border-brand-gray rounded-lg text-brand-light-text dark:text-white"
+                    placeholder="Add an action item..."
+                    className="flex-1 px-4 py-2 rounded-lg border-2 border-brand-light-border dark:border-brand-gray bg-white dark:bg-gray-800 text-brand-light-text dark:text-white placeholder-gray-500"
                   />
                   <button
                     onClick={handleAddActionItem}
-                    className="bg-brand-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                    className="bg-brand-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                   >
                     Add
                   </button>
                 </div>
-                {actionItems.length > 0 && (
-                  <ul className="space-y-2">
-                    {actionItems.map((item, index) => (
-                      <li key={index} className="flex items-center gap-2 bg-gray-50 dark:bg-brand-ink p-2 rounded">
-                        <input
-                          type="checkbox"
-                          checked={item.completed}
-                          onChange={() => handleToggleActionItem(index)}
-                          className="w-4 h-4"
-                        />
-                        <span className={`flex-1 text-sm ${item.completed ? 'line-through text-gray-500' : 'text-brand-light-text dark:text-white'}`}>
-                          {item.text}
-                        </span>
-                        <button
-                          onClick={() => handleRemoveActionItem(index)}
-                          className="text-brand-red hover:text-red-700 text-sm"
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <ul className="space-y-2">
+                  {actionItems.map((item, index) => (
+                    <li key={index} className="flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                      <input
+                        type="checkbox"
+                        checked={item.completed}
+                        onChange={() => handleToggleActionItem(index)}
+                        className="w-4 h-4"
+                      />
+                      <span className={item.completed ? 'line-through text-gray-500' : 'text-brand-light-text dark:text-white'}>
+                        {item.text}
+                      </span>
+                      <button
+                        onClick={() => handleRemoveActionItem(index)}
+                        className="ml-auto text-brand-red hover:text-red-700 text-sm font-bold"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               {/* Tags */}
-              <div>
+              <div className="mb-6">
                 <label className="block text-sm font-bold text-brand-light-text dark:text-white mb-2">
                   Tags
                 </label>
                 <div className="flex gap-2 mb-3">
                   <input
                     type="text"
-                    placeholder="Add a tag (e.g., Sales, Mindset)"
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-                    className="flex-1 px-3 py-2 bg-white dark:bg-brand-ink border border-gray-300 dark:border-brand-gray rounded-lg text-brand-light-text dark:text-white"
+                    placeholder="Add a tag..."
+                    className="flex-1 px-4 py-2 rounded-lg border-2 border-brand-light-border dark:border-brand-gray bg-white dark:bg-gray-800 text-brand-light-text dark:text-white placeholder-gray-500"
                   />
                   <button
                     onClick={handleAddTag}
-                    className="bg-brand-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                    className="bg-brand-blue text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                   >
                     Add
                   </button>
                 </div>
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="bg-brand-blue text-white px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="bg-brand-blue text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-2"
+                    >
+                      {tag}
+                      <button
+                        onClick={() => handleRemoveTag(tag)}
+                        className="hover:text-red-200 font-bold"
                       >
-                        {tag}
-                        <button
-                          onClick={() => handleRemoveTag(tag)}
-                          className="hover:text-brand-red"
-                        >
-                          ✕
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
 
-              {/* Save Button */}
-              <div className="flex gap-3 pt-4">
+              {/* Buttons */}
+              <div className="flex gap-3">
                 <button
                   onClick={handleSaveNote}
-                  className="flex-1 bg-brand-lime text-brand-ink font-bold py-3 px-6 rounded-lg hover:bg-green-400 transition"
+                  className="flex-1 bg-brand-lime text-brand-ink font-bold py-3 px-4 rounded-lg hover:bg-green-400 transition"
                 >
                   {editingNoteId ? 'Update Note' : 'Save Note'}
                 </button>
                 <button
                   onClick={resetForm}
-                  className="px-6 py-3 border border-gray-300 dark:border-brand-gray rounded-lg text-brand-light-text dark:text-white hover:bg-gray-100 dark:hover:bg-brand-gray transition"
+                  className="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-500 transition"
                 >
                   Cancel
                 </button>
               </div>
             </div>
-          </div>
-        ) : (
-          /* Notes List */
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-brand-light-text dark:text-white">
-                {searchTerm ? `Search Results (${filteredNotes.length})` : `Notes for ${selectedDate.toLocaleDateString()}`}
-              </h2>
-            </div>
-
-            {filteredNotes.length === 0 ? (
-              <div className="bg-brand-light-card dark:bg-brand-navy p-12 rounded-lg border border-brand-light-border dark:border-brand-gray text-center">
-                <p className="text-gray-500 dark:text-gray-400 text-lg">
-                  {searchTerm ? 'No notes found matching your search.' : 'No coaching notes for this date.'}
-                </p>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="mt-4 bg-brand-lime text-brand-ink font-bold py-2 px-6 rounded-lg hover:bg-green-400 transition"
-                >
-                  + Create First Note
-                </button>
+          ) : (
+            /* Notes List */
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-brand-light-text dark:text-white">
+                  {searchTerm ? `Search Results (${filteredNotes.length})` : `Notes for ${selectedDate.toLocaleDateString()}`}
+                </h2>
               </div>
-            ) : (
-              filteredNotes.map((note) => (
-                <div
-                  key={note.id}
-                  className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-brand-light-text dark:text-white mb-1">
-                        {note.title}
-                      </h3>
-                      {note.topic_focus && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Source: {note.topic_focus}
+
+              {filteredNotes.length === 0 ? (
+                <div className="bg-brand-light-card dark:bg-brand-navy p-12 rounded-lg border border-brand-light-border dark:border-brand-gray text-center">
+                  <p className="text-gray-500 dark:text-gray-400 text-lg">
+                    {searchTerm ? 'No notes found matching your search.' : 'No coaching notes for this date.'}
+                  </p>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="mt-4 bg-brand-lime text-brand-ink font-bold py-2 px-6 rounded-lg hover:bg-green-400 transition"
+                  >
+                    + Create First Note
+                  </button>
+                </div>
+              ) : (
+                filteredNotes.map((note) => (
+                  <div
+                    key={note.id}
+                    className="bg-brand-light-card dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray overflow-hidden"
+                  >
+                    {/* Header */}
+                    <div className="flex justify-between items-start p-6">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-brand-light-text dark:text-white mb-1">
+                          {note.title}
+                        </h3>
+                        {note.topic_focus && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {note.topic_focus.includes('Coach') ? '📌 From Coach' : `Source: ${note.topic_focus}`}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                          {new Date(note.session_date).toLocaleDateString()}
                         </p>
-                      )}
-                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                        {new Date(note.session_date).toLocaleDateString()}
-                      </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setExpandedNotes(prev => prev.includes(note.id) ? prev.filter(id => id !== note.id) : [...prev, note.id])}
+                          className="text-brand-blue hover:text-blue-700 text-sm font-bold"
+                          title={expandedNotes.includes(note.id) ? 'Shrink' : 'Expand'}
+                        >
+                          {expandedNotes.includes(note.id) ? '🔽 Shrink' : '▶️ Expand'}
+                        </button>
+                        <button
+                          onClick={() => handleEditNote(note)}
+                          className="text-brand-blue hover:text-blue-700 text-sm font-bold"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm('Delete this note?')) {
+                              onDeleteNote(note.id);
+                            }
+                          }}
+                          className="text-brand-red hover:text-red-700 text-sm font-bold"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditNote(note)}
-                        className="text-brand-blue hover:text-blue-700 text-sm font-bold"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm('Delete this note?')) {
-                            onDeleteNote(note.id);
-                          }
-                        }}
-                        className="text-brand-red hover:text-red-700 text-sm font-bold"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
 
-                  {/* Key Takeaways */}
-                  <div className="mb-4">
-                    <h4 className="text-sm font-bold text-brand-light-text dark:text-white mb-2">
-                      Key Takeaways:
-                    </h4>
-                    <p className="text-brand-light-text dark:text-gray-300 whitespace-pre-wrap">
-                      {note.key_takeaways}
-                    </p>
-                  </div>
+                    {/* Expanded Content */}
+                    {expandedNotes.includes(note.id) && (
+                      <div className="max-h-96 overflow-y-auto bg-gray-50 dark:bg-gray-800/50 border-t border-brand-light-border dark:border-brand-gray p-6 space-y-4">
+                        {/* Key Takeaways */}
+                        <div>
+                          <h4 className="text-sm font-bold text-brand-light-text dark:text-white mb-2">
+                            Key Takeaways:
+                          </h4>
+                          <p className="text-brand-light-text dark:text-gray-300 whitespace-pre-wrap text-sm">
+                            {note.key_takeaways}
+                          </p>
+                        </div>
 
-                  {/* Action Items */}
-                  {note.action_items && note.action_items.length > 0 && (
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-bold text-brand-light-text dark:text-white">
-                          Action Items:
-                        </h4>
-                        {note.action_items.some(item => !item.added_to_targets) && (
-                          <button
-                            onClick={() => handleAddAllToTargetsClick(note.action_items, note.session_date, note.topic_focus)}
-                            className="text-xs bg-purple-600 text-white px-4 py-1.5 rounded-lg hover:bg-purple-700 transition font-bold shadow-md"
-                          >
-                            Add All to Targets
-                          </button>
+                        {/* Action Items */}
+                        {note.action_items && note.action_items.length > 0 && (
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-bold text-brand-light-text dark:text-white">
+                                Action Items:
+                              </h4>
+                              {note.action_items.some(item => !item.added_to_targets) && (
+                                <button
+                                  onClick={() => handleAddAllToTargetsClick(note.action_items, note.session_date, note.topic_focus)}
+                                  className="text-xs bg-purple-600 text-white px-4 py-1.5 rounded-lg hover:bg-purple-700 transition font-bold shadow-md"
+                                >
+                                  Add All to Targets
+                                </button>
+                              )}
+                            </div>
+                            <ul className="space-y-2">
+                              {note.action_items.map((item, index) => (
+                                <li key={index} className="flex items-center gap-3 text-sm">
+                                  <span className={item.completed ? 'text-gray-500 line-through' : 'text-brand-light-text dark:text-gray-300'}>
+                                    • {item.text}
+                                  </span>
+                                  {!item.added_to_targets && (
+                                    <button
+                                      onClick={() => handleAddToTargetsClick(item, note.session_date, note.topic_focus)}
+                                      className="text-xs bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 transition font-bold shadow-md"
+                                    >
+                                      Add to Targets
+                                    </button>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Tags */}
+                        {note.tags && note.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            {note.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="bg-brand-blue text-white px-3 py-1 rounded-full text-xs font-bold"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      <ul className="space-y-2">
-                        {note.action_items.map((item, index) => (
-                          <li key={index} className="flex items-center gap-3 text-sm">
-                            <span className={item.completed ? 'text-gray-500 line-through' : 'text-brand-light-text dark:text-gray-300'}>
-                              • {item.text}
-                            </span>
-                            {!item.added_to_targets && (
-                              <button
-                                onClick={() => handleAddToTargetsClick(item, note.session_date, note.topic_focus)}
-                                className="text-xs bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 transition font-bold shadow-md"
-                              >
-                                Add to Targets
-                              </button>
-                            )}
-                            {item.added_to_targets && (
-                              <span className="text-xs text-green-600 dark:text-green-400">
-                                ✓ Added
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Tags */}
-                  {note.tags && note.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {note.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="bg-gray-200 dark:bg-brand-gray text-brand-light-text dark:text-white px-2 py-1 rounded text-xs"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        )}
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add to Targets Modal */}
-      <AddToTargetsModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedActionItem(null);
-          setBulkActionItems(null);
-        }}
-        onConfirm={handleConfirmAddToTargets}
-        actionItemText={
-          bulkActionItems 
-            ? `${bulkActionItems.items.length} action ${bulkActionItems.items.length === 1 ? 'item' : 'items'}`
-            : selectedActionItem?.text || ''
-        }
-      />
+      {isModalOpen && (
+        <AddToTargetsModal
+          actionItem={selectedActionItem?.text || ''}
+          bulkActionItems={bulkActionItems?.items || []}
+          onClose={handleModalClose}
+          onSubmit={handleModalSubmit}
+        />
+      )}
     </div>
   );
 };

@@ -7,6 +7,8 @@ import {
   updateAssignmentStatus,
   markNoteAsRead,
 } from '../services/coachingAssignmentsService';
+import CompletedAssignmentsDropdown from './CompletedAssignmentsDropdown';
+import AssignmentDetailPopup from './AssignmentDetailPopup';
 
 interface ClientAssignmentsViewProps {
   clientId: string;
