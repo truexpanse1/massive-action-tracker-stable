@@ -149,7 +149,14 @@ const App: React.FC = () => {
           </>
         );
       case 'coaching':
-        return <CoachingPage />;
+        return (
+          <CoachingPage
+            userId={user?.id || ''}
+            companyId="demo-company" // TODO: Get from user data
+            userRole={user?.role || 'Sales Rep'}
+            clients={teamUsers.filter(u => u.role === 'Sales Rep')}
+          />
+        );
       case 'ai-images':
         return <AIImagesPageEnhanced />;
       case 'ai-content':

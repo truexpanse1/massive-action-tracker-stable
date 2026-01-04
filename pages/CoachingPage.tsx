@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Quote } from '../types';
+import { Quote, User } from '../types';
 import QuotesCard from '../components/QuotesCard';
 import SavedQuotesCard from '../components/SavedQuotesCard';
 import CoachingNotesJournal from '../components/CoachingNotesJournal';
+import ManagerCoachingAssignments from '../components/ManagerCoachingAssignments';
+import ClientAssignmentsView from '../components/ClientAssignmentsView';
+import CoachTrackingDashboard from '../components/CoachTrackingDashboard';
 import {
   CoachingNote,
   fetchCoachingNotes,
@@ -14,6 +17,8 @@ import {
 interface CoachingPageProps {
   userId: string;
   companyId: string;
+  userRole: string; // 'Sales Rep', 'Manager', 'Admin'
+  clients?: User[]; // For managers - list of their clients
   savedQuotes?: Quote[];
   onSaveQuote?: (quote: Omit<Quote, 'id'>) => Promise<void>;
   onRemoveQuote?: (quoteId: string) => Promise<void>;
@@ -23,6 +28,8 @@ interface CoachingPageProps {
 const CoachingPage: React.FC<CoachingPageProps> = ({
   userId,
   companyId,
+  userRole,
+  clients = [],
   savedQuotes = [],
   onSaveQuote,
   onRemoveQuote,
@@ -100,6 +107,8 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
   // GHL Community Link - Massive Action Nation (Public Invite)
   const communityLink = "https://truexpanse.app.clientclub.net/communities/groups/massive-action-nation/home?invite=6942bb7b7b52699851bdbb0f";
 
+  const isManager = userRole === 'Manager' || userRole === 'Admin';
+
   return (
     <div className="space-y-8">
       {/* Hero Section - More Concise */}
@@ -125,6 +134,30 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
           </a>
         </div>
       </div>
+
+      {/* Manager Coaching Assignments - Only for Managers/Admins */}
+      {isManager && clients.length > 0 && (
+        <>
+          <CoachTrackingDashboard
+            managerId={userId}
+            companyId={companyId}
+            clients={clients}
+          />
+          <ManagerCoachingAssignments
+            managerId={userId}
+            companyId={companyId}
+            clients={clients}
+          />
+        </>
+      )}
+
+      {/* Client Assignments View - Only for Sales Reps */}
+      {!isManager && (
+        <ClientAssignmentsView 
+          clientId={userId} 
+          onAddToTargets={onAddToTargets}
+        />
+      )}
 
       {/* Coaching Notes Journal - Main Feature */}
       <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
