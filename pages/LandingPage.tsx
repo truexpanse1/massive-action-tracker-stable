@@ -477,12 +477,6 @@ export default function LandingPage() {
             TRUE<span className="text-red-600">X</span>PANSE
           </div>
           <div className="flex items-center gap-3 md:gap-4">
-            <a
-              href="/learning"
-              className="px-4 md:px-6 py-2 md:py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm md:text-base transition whitespace-nowrap"
-            >
-              🎯 MAT Wisdom
-            </a>
             <button
               onClick={openLoginModal}
               className="px-6 md:px-8 py-2 md:py-3 rounded-full border-2 border-gray-400 hover:border-gray-600 font-semibold text-sm md:text-base transition text-gray-900 whitespace-nowrap"
@@ -499,13 +493,11 @@ export default function LandingPage() {
       <section className="pt-20 md:pt-32 pb-24 md:pb-40 text-center px-4 md:px-6">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-black leading-tight mb-8 text-gray-900">
-            The daily system<br />
-            that turns <span className="text-blue-600">Massive Action</span><br />
-            into real results.
+            MASSIVE ACTION TRACKER
           </h1>
-          <p className="text-lg md:text-xl lg:text-2xl text-gray-600 max-w-4xl mx-auto mb-12">
-            10 years in the making. Built by closers who know: action is everything.<br />
-            Massive Action Tracker helps you do the right things every day — so you win more.
+          <p className="text-lg md:text-xl lg:text-2xl text-blue-600 max-w-4xl mx-auto mb-12 font-semibold">
+            The All-in-One Platform That Transforms Sales<br />
+            Teams into Revenue-Generating Machines
           </p>
           <button
             onClick={() => openPurchaseModal(PLANS.team)}
@@ -960,6 +952,14 @@ export default function LandingPage() {
       {/* ============================================ */}
       <footer className="py-12 md:py-16 bg-gray-800 text-white">
         <div className="max-w-7xl mx-auto px-4 md:px-6 text-center">
+          <div className="mb-6">
+            <a
+              href="/learning"
+              className="inline-block px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition"
+            >
+              🎯 MAT Wisdom
+            </a>
+          </div>
           <p className="text-sm text-gray-400">
             &copy; {new Date().getFullYear()} TrueXpanse. All rights reserved.
           </p>
