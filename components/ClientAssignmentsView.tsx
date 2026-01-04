@@ -51,7 +51,7 @@ const ClientAssignmentsView: React.FC<ClientAssignmentsViewProps> = ({ clientId,
     }
   };
 
-  const handleAddToTargets = async (assignment: CoachingAssignment) => {
+  const handleAddToTargets = async (assignment: CoachingAssignment, saveToNotes: boolean = false) => {
     if (!onAddToTargets) {
       alert('Add to Targets feature not available');
       return;
@@ -75,7 +75,12 @@ const ClientAssignmentsView: React.FC<ClientAssignmentsViewProps> = ({ clientId,
       // Update status to in_progress
       await updateAssignmentStatus(assignment.id, 'in_progress');
       await loadData();
-      alert('✅ Added to your Implement Now targets!');
+      
+      let message = '✅ Added to your Implement Now targets!';
+      if (saveToNotes) {
+        message += ' Content saved to your coaching notes.';
+      }
+      alert(message);
     } catch (error) {
       console.error('Error adding to targets:', error);
       alert('Failed to add to targets');
@@ -214,14 +219,22 @@ const ClientAssignmentsView: React.FC<ClientAssignmentsViewProps> = ({ clientId,
                   </span>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="space-y-2">
                   {assignment.status === 'pending' && (
-                    <button
-                      onClick={() => handleAddToTargets(assignment)}
-                      className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition text-sm shadow-lg"
-                    >
-                      ➕ Add to Targets
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleAddToTargets(assignment, false)}
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition text-sm shadow-lg"
+                      >
+                        ➕ Add to Targets
+                      </button>
+                      <button
+                        onClick={() => handleAddToTargets(assignment, true)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+                      >
+                        ➕ Add to Targets + Save to Notes
+                      </button>
+                    </>
                   )}
                   {assignment.status === 'in_progress' && (
                     <button
