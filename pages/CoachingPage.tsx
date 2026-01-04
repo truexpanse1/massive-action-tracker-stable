@@ -37,12 +37,9 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
 }) => {
   const [coachingNotes, setCoachingNotes] = useState<CoachingNote[]>([]);
   const [isLoadingNotes, setIsLoadingNotes] = useState(true);
-  const [selectedTab, setSelectedTab] = useState<'notes' | 'assignments'>('notes');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [showAssignments, setShowAssignments] = useState(false);
 
   const isManager = userRole === 'Manager' || userRole === 'Admin';
-  const isTeamMember = clients && clients.length > 0;
 
   useEffect(() => {
     loadCoachingNotes();
@@ -151,138 +148,94 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
     );
   }
 
-  // Client View - Minimal Powerful Layout
+  // Client View - Simple & Powerful
   return (
-    <div className="min-h-screen bg-brand-light dark:bg-brand-dark">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Two Column Layout: Sidebar + Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Calendar */}
-            <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-4">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 uppercase tracking-wider">
-                Calendar
-              </h3>
-              <div className="space-y-2">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {new Date().getDate()}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                  </p>
-                </div>
+    <div className="space-y-8">
+      {/* Main Content Area */}
+      {!showAssignments ? (
+        // Coaching Notes View
+        <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-brand-light-text dark:text-white mb-2">
+              Coaching Notes & Journal
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Document your coaching sessions, capture key takeaways, and create action items for immediate implementation.
+            </p>
+          </div>
+
+          {isLoadingNotes ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400">Loading notes...</p>
+            </div>
+          ) : (
+            <>
+              <CoachingNotesJournal
+                userId={userId}
+                companyId={companyId}
+                notes={coachingNotes}
+                onCreateNote={handleCreateNote}
+                onUpdateNote={handleUpdateNote}
+                onDeleteNote={handleDeleteNote}
+                onAddToTargets={handleAddToTargets}
+              />
+              
+              {/* View Assignments Button */}
+              <div className="mt-6 pt-6 border-t border-brand-light-border dark:border-brand-gray">
                 <button
-                  onClick={() => setSelectedDate(null)}
-                  className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                  onClick={() => setShowAssignments(true)}
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg"
                 >
-                  All Dates
+                  📋 View Assignments
                 </button>
               </div>
-            </div>
-
-            {/* Search */}
-            <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-4">
-              <input
-                type="text"
-                placeholder="Search notes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-
-            {/* New Note Button */}
-            <button
-              onClick={() => setSelectedTab('notes')}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg"
-            >
-              + New Coaching Note
-            </button>
-
-            {/* Tab Selector */}
-            <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-2 flex gap-2">
-              <button
-                onClick={() => setSelectedTab('notes')}
-                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition ${
-                  selectedTab === 'notes'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-              >
-                Notes
-              </button>
-              <button
-                onClick={() => setSelectedTab('assignments')}
-                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition ${
-                  selectedTab === 'assignments'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-              >
-                Assignments
-              </button>
-            </div>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="lg:col-span-3">
-            {selectedTab === 'notes' ? (
-              // Coaching Notes View
-              <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                  {isTeamMember ? 'Coaching Notes & Assignments' : 'Coaching Notes & Journal'}
-                </h2>
-                {isLoadingNotes ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 dark:text-gray-400">Loading notes...</p>
-                  </div>
-                ) : (
-                  <CoachingNotesJournal
-                    userId={userId}
-                    companyId={companyId}
-                    notes={coachingNotes}
-                    onCreateNote={handleCreateNote}
-                    onUpdateNote={handleUpdateNote}
-                    onDeleteNote={handleDeleteNote}
-                    onAddToTargets={handleAddToTargets}
-                  />
-                )}
-              </div>
-            ) : (
-              // Assignments View
-              <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                  Assignments & Tracking
-                </h2>
-                <ClientAssignmentsView
-                  clientId={userId}
-                  companyId={companyId}
-                  onAddToTargets={onAddToTargets}
-                />
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
+      ) : (
+        // Assignments View
+        <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-brand-light-text dark:text-white mb-2">
+                Assignments & Tracking
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                View your pending, in-progress, and completed assignments.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAssignments(false)}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+            >
+              ← Back to Notes
+            </button>
+          </div>
 
-        {/* Resources Grid - Below Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-          <div>
-            <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Daily Inspiration</h3>
-            <QuotesCard
-              onSaveQuote={handleSaveQuote}
-              savedQuotes={savedQuotes}
-            />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Saved Quotes</h3>
-            <SavedQuotesCard
-              savedQuotes={savedQuotes}
-              onSaveQuote={handleSaveQuote}
-              onRemoveQuote={onRemoveQuote}
-            />
-          </div>
+          <ClientAssignmentsView
+            clientId={userId}
+            companyId={companyId}
+            onAddToTargets={onAddToTargets}
+          />
+        </div>
+      )}
+
+      {/* Resources Grid - Below Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+          <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Daily Inspiration</h3>
+          <QuotesCard
+            onSaveQuote={handleSaveQuote}
+            savedQuotes={savedQuotes}
+          />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Saved Quotes</h3>
+          <SavedQuotesCard
+            savedQuotes={savedQuotes}
+            onSaveQuote={handleSaveQuote}
+            onRemoveQuote={onRemoveQuote}
+          />
         </div>
       </div>
     </div>
