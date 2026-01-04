@@ -17,8 +17,8 @@ import {
 interface CoachingPageProps {
   userId: string;
   companyId: string;
-  userRole: string; // 'Sales Rep', 'Manager', 'Admin'
-  clients?: User[]; // For managers - list of their clients
+  userRole: string;
+  clients?: User[];
   savedQuotes?: Quote[];
   onSaveQuote?: (quote: Omit<Quote, 'id'>) => Promise<void>;
   onRemoveQuote?: (quoteId: string) => Promise<void>;
@@ -37,8 +37,13 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
 }) => {
   const [coachingNotes, setCoachingNotes] = useState<CoachingNote[]>([]);
   const [isLoadingNotes, setIsLoadingNotes] = useState(true);
+  const [selectedTab, setSelectedTab] = useState<'notes' | 'assignments'>('notes');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch coaching notes on mount
+  const isManager = userRole === 'Manager' || userRole === 'Admin';
+  const isTeamMember = clients && clients.length > 0;
+
   useEffect(() => {
     loadCoachingNotes();
   }, [userId]);
@@ -89,7 +94,6 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
     if (onAddToTargets) {
       await onAddToTargets(actionItem, startDate, days, source);
     } else {
-      // Fallback: just show a message
       alert(`Action item will be added to targets for ${days} ${days === 1 ? 'day' : 'days'} starting ${startDate}: ${actionItem}`);
     }
   };
@@ -104,108 +108,181 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
     }
   };
 
-  // GHL Community Link - Massive Action Nation (Public Invite)
-  const communityLink = "https://truexpanse.app.clientclub.net/communities/groups/massive-action-nation/home?invite=6942bb7b7b52699851bdbb0f";
-
-  const isManager = userRole === 'Manager' || userRole === 'Admin';
-
-  return (
-    <div className="space-y-8">
-      {/* Hero Section - More Concise */}
-      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 dark:from-purple-700 dark:via-purple-800 dark:to-purple-900 rounded-2xl p-6 md:p-8 text-white shadow-2xl">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-black mb-3">
-            Coaching & Learning Hub
-          </h1>
-          <p className="text-lg md:text-xl mb-2 text-purple-100">
-            Learn. Document. Implement. Repeat.
-          </p>
-          <p className="text-base mb-6 text-purple-200">
-            Track your coaching sessions, capture key insights, and convert learnings into action
-          </p>
-          
-          <a
-            href={communityLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-transparent border-2 border-white hover:bg-black text-white font-black text-lg px-8 py-3 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-200"
-          >
-            Join Community →
-          </a>
-        </div>
-      </div>
-
-      {/* Manager Coaching Assignments - Only for Managers/Admins */}
-      {isManager && (
-        <>
-          <CoachTrackingDashboard
-            managerId={userId}
-            companyId={companyId}
-            clients={clients}
-          />
-          <ManagerCoachingAssignments
-            managerId={userId}
-            companyId={companyId}
-            clients={clients}
-          />
-        </>
-      )}
-
-      {/* Client Assignments View - Only for Sales Reps (NOT for Managers/Admins) */}
-      {!isManager && (
-        <ClientAssignmentsView 
-          clientId={userId} 
-          onAddToTargets={onAddToTargets}
+  // Manager View
+  if (isManager) {
+    return (
+      <div className="space-y-8">
+        <CoachTrackingDashboard
+          managerId={userId}
+          companyId={companyId}
+          clients={clients}
         />
-      )}
-
-      {/* Coaching Notes Journal - Main Feature */}
-      <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-brand-light-text dark:text-white mb-2">
-            Coaching Notes & Journal
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Document your coaching sessions, capture key takeaways, and create action items for immediate implementation.
-          </p>
-        </div>
-
-        {isLoadingNotes ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Loading notes...</p>
+        <ManagerCoachingAssignments
+          managerId={userId}
+          companyId={companyId}
+          clients={clients}
+        />
+        <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-brand-light-text dark:text-white mb-2">
+              Coaching Notes & Journal
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Document your coaching sessions and capture key takeaways.
+            </p>
           </div>
-        ) : (
-          <CoachingNotesJournal
-            userId={userId}
-            companyId={companyId}
-            notes={coachingNotes}
-            onCreateNote={handleCreateNote}
-            onUpdateNote={handleUpdateNote}
-            onDeleteNote={handleDeleteNote}
-            onAddToTargets={handleAddToTargets}
-          />
-        )}
-      </div>
-
-      {/* Resources Grid - Quotes Only */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Column - Daily Inspiration */}
-        <div>
-          <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Daily Inspiration</h3>
-          <QuotesCard 
-            onSaveQuote={handleSaveQuote}
-            savedQuotes={savedQuotes}
-          />
+          {isLoadingNotes ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400">Loading notes...</p>
+            </div>
+          ) : (
+            <CoachingNotesJournal
+              userId={userId}
+              companyId={companyId}
+              notes={coachingNotes}
+              onCreateNote={handleCreateNote}
+              onUpdateNote={handleUpdateNote}
+              onDeleteNote={handleDeleteNote}
+              onAddToTargets={handleAddToTargets}
+            />
+          )}
         </div>
-        
-        {/* Right Column - Saved Quotes */}
-        <div>
-          <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Saved Quotes</h3>
-          <SavedQuotesCard 
-            savedQuotes={savedQuotes}
-            onSaveQuote={handleSaveQuote}
-            onRemoveQuote={onRemoveQuote}
-          />
+      </div>
+    );
+  }
+
+  // Client View - Minimal Powerful Layout
+  return (
+    <div className="min-h-screen bg-brand-light dark:bg-brand-dark">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Two Column Layout: Sidebar + Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Sidebar */}
+          <div className="lg:col-span-1 space-y-4">
+            {/* Calendar */}
+            <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-4">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 uppercase tracking-wider">
+                Calendar
+              </h3>
+              <div className="space-y-2">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {new Date().getDate()}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedDate(null)}
+                  className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                >
+                  All Dates
+                </button>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-4">
+              <input
+                type="text"
+                placeholder="Search notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            {/* New Note Button */}
+            <button
+              onClick={() => setSelectedTab('notes')}
+              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg"
+            >
+              + New Coaching Note
+            </button>
+
+            {/* Tab Selector */}
+            <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-2 flex gap-2">
+              <button
+                onClick={() => setSelectedTab('notes')}
+                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition ${
+                  selectedTab === 'notes'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                Notes
+              </button>
+              <button
+                onClick={() => setSelectedTab('assignments')}
+                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition ${
+                  selectedTab === 'assignments'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                Assignments
+              </button>
+            </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="lg:col-span-3">
+            {selectedTab === 'notes' ? (
+              // Coaching Notes View
+              <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  {isTeamMember ? 'Coaching Notes & Assignments' : 'Coaching Notes & Journal'}
+                </h2>
+                {isLoadingNotes ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 dark:text-gray-400">Loading notes...</p>
+                  </div>
+                ) : (
+                  <CoachingNotesJournal
+                    userId={userId}
+                    companyId={companyId}
+                    notes={coachingNotes}
+                    onCreateNote={handleCreateNote}
+                    onUpdateNote={handleUpdateNote}
+                    onDeleteNote={handleDeleteNote}
+                    onAddToTargets={handleAddToTargets}
+                  />
+                )}
+              </div>
+            ) : (
+              // Assignments View
+              <div className="bg-white dark:bg-brand-navy rounded-lg border border-brand-light-border dark:border-brand-gray p-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  Assignments & Tracking
+                </h2>
+                <ClientAssignmentsView
+                  clientId={userId}
+                  companyId={companyId}
+                  onAddToTargets={onAddToTargets}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Resources Grid - Below Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <div>
+            <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Daily Inspiration</h3>
+            <QuotesCard
+              onSaveQuote={handleSaveQuote}
+              savedQuotes={savedQuotes}
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-brand-light-text dark:text-white mb-3">Saved Quotes</h3>
+            <SavedQuotesCard
+              savedQuotes={savedQuotes}
+              onSaveQuote={handleSaveQuote}
+              onRemoveQuote={onRemoveQuote}
+            />
+          </div>
         </div>
       </div>
     </div>

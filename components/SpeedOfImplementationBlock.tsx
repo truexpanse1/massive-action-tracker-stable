@@ -13,14 +13,7 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
   onMoveToTomorrow,
 }) => {
   const [localTargets, setLocalTargets] = useState<SpeedOfImplementationTarget[]>(
-    targets && targets.length > 0 ? targets : Array.from({ length: 3 }, (_, i) => ({
-      id: `soi-${i + 1}`,
-      text: '',
-      completed: false,
-      currentDay: 0,
-      totalDays: 0,
-      startDate: '',
-    }))
+    targets && targets.length > 0 ? targets : []
   );
   const [contextMenu, setContextMenu] = useState<{
     visible: boolean;
@@ -126,8 +119,8 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
         </p>
       </div>
 
-      {/* Targets */}
-      <div className="space-y-3 mb-4">
+      {/* Targets - Scrollable Container */}
+      <div className="space-y-3 mb-4 max-h-96 overflow-y-auto pr-2">
         {localTargets.map((target) => (
           <div
             key={target.id}
