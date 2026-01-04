@@ -136,7 +136,7 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
       </div>
 
       {/* Manager Coaching Assignments - Only for Managers/Admins */}
-      {isManager && clients.length > 0 && (
+      {isManager && (
         <>
           <CoachTrackingDashboard
             managerId={userId}
@@ -151,7 +151,7 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
         </>
       )}
 
-      {/* Client Assignments View - Only for Sales Reps */}
+      {/* Client Assignments View - Only for Sales Reps (NOT for Managers/Admins) */}
       {!isManager && (
         <ClientAssignmentsView 
           clientId={userId} 
