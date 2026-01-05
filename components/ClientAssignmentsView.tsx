@@ -26,6 +26,7 @@ const ClientAssignmentsView: React.FC<ClientAssignmentsViewProps> = ({
   clientId,
   companyId,
   onAddToTargets,
+  onSaveToJournal,
 }) => {
   const [assignments, setAssignments] = useState<CoachingAssignment[]>([]);
   const [sharedNotes, setSharedNotes] = useState<CoachingSharedNote[]>([]);
@@ -130,8 +131,10 @@ const ClientAssignmentsView: React.FC<ClientAssignmentsViewProps> = ({
         };
         
         console.log('Saving to journal:', noteData);
-        // TODO: Call onSaveToJournal callback if provided
-        // This will be passed from CoachingPage
+        // Call onSaveToJournal callback if provided
+        if (onSaveToJournal) {
+          await onSaveToJournal(noteData);
+        }
       }
       
       await loadData();
@@ -177,8 +180,25 @@ const ClientAssignmentsView: React.FC<ClientAssignmentsViewProps> = ({
           assignment={selectedCompletedAssignment}
           onClose={() => setSelectedCompletedAssignment(null)}
           onSaveAsNote={async (noteData) => {
-            // TODO: Implement save to journal
-            console.log('Save as note:', noteData);
+            if (onSaveToJournal) {
+              try {
+                await onSaveToJournal({
+                  session_date: new Date().toISOString().split('T')[0],
+                  title: noteData.title,
+                  topic_focus: noteData.source,
+                  key_takeaways: noteData.keyTakeaways,
+                  action_items: noteData.actionItems.map((item: string) => ({
+                    text: item,
+                    completed: true,
+                    added_to_targets: false
+                  })),
+                  tags: ['completed-assignment', 'from-coach']
+                });
+              } catch (error) {
+                console.error('Error saving to journal:', error);
+                throw error;
+              }
+            }
           }}
           onAddToTargets={async (assignment) => {
             await handleAddToTargets(assignment, false);

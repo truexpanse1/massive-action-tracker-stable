@@ -95,6 +95,25 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
     }
   };
 
+  const handleSaveToJournal = async (noteData: any) => {
+    try {
+      // Create a new coaching note from the completed assignment
+      await handleCreateNote({
+        user_id: userId,
+        company_id: companyId,
+        session_date: noteData.session_date,
+        title: noteData.title,
+        topic_focus: noteData.topic_focus || 'From Coach Assignment',
+        key_takeaways: noteData.key_takeaways,
+        action_items: noteData.action_items || [],
+        tags: noteData.tags || [],
+      });
+    } catch (error) {
+      console.error('Error saving to journal:', error);
+      throw error;
+    }
+  };
+
   const handleSaveQuote = (quoteToSave: Omit<Quote, 'id'>) => {
     if (!savedQuotes.some(q => q.text === quoteToSave.text && q.author === quoteToSave.author)) {
       if (onSaveQuote) {
@@ -216,6 +235,7 @@ const CoachingPage: React.FC<CoachingPageProps> = ({
             clientId={userId}
             companyId={companyId}
             onAddToTargets={onAddToTargets}
+            onSaveToJournal={handleSaveToJournal}
           />
         </div>
       )}
