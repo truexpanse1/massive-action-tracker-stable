@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ContentTemplatesCard from '../components/ContentTemplatesCard';
+import SavedContentCalendar from '../components/SavedContentCalendar';
 import { generateBusinessContent } from '../services/geminiService';
 import { supabase } from '../services/supabaseClient';
 import { SavedAIContent } from '../types';
@@ -229,104 +229,37 @@ const AIContentPage: React.FC = () => {
         return matchesSearch && matchesDate;
     });
 
-    // Calendar rendering
-    const renderCalendar = () => {
-        const year = selectedDate.getFullYear();
-        const month = selectedDate.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startingDayOfWeek = firstDay.getDay();
 
-        const days = [];
-        for (let i = 0; i < startingDayOfWeek; i++) {
-            days.push(<div key={`empty-${i}`} className="h-8"></div>);
-        }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const hasContent = datesWithContent.has(dateStr);
-            const isSelected = selectedDate.getDate() === day;
-
-            days.push(
-                <button
-                    key={day}
-                    onClick={() => setSelectedDate(new Date(year, month, day))}
-                    className={`h-8 w-8 rounded-full flex items-center justify-center text-sm relative
-                        ${isSelected ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}
-                        ${hasContent ? 'font-bold' : ''}`}
-                >
-                    {day}
-                    {hasContent && (
-                        <span className="absolute bottom-0 w-1 h-1 bg-blue-500 rounded-full"></span>
-                    )}
-                </button>
-            );
-        }
-
-        return (
-            <div className="bg-white p-4 rounded-lg shadow">
-                <div className="flex justify-between items-center mb-4">
-                    <button
-                        onClick={() => setSelectedDate(new Date(year, month - 1, 1))}
-                        className="text-gray-600 hover:text-gray-900"
-                    >
-                        ←
-                    </button>
-                    <div className="font-semibold">
-                        {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                    </div>
-                    <button
-                        onClick={() => setSelectedDate(new Date(year, month + 1, 1))}
-                        className="text-gray-600 hover:text-gray-900"
-                    >
-                        →
-                    </button>
-                </div>
-                <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 mb-2">
-                    <div>S</div>
-                    <div>M</div>
-                    <div>T</div>
-                    <div>W</div>
-                    <div>T</div>
-                    <div>F</div>
-                    <div>S</div>
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                    {days}
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex gap-6">
                 {/* Left Sidebar */}
                 <div className="w-64 flex-shrink-0 space-y-4">
-                    <ContentTemplatesCard
-                        selectedTemplate={selectedTemplate}
-                        onSelectTemplate={setSelectedTemplate}
+                    <SavedContentCalendar
+                        datesWithContent={datesWithContent}
+                        selectedDate={selectedDate}
+                        onSelectDate={setSelectedDate}
+                        onViewSavedContent={() => setShowSavedContent(true)}
+                        savedContentCount={savedContent.length}
                     />
                     
-                    <button
-                        onClick={() => setShowSavedContent(!showSavedContent)}
-                        className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
-                    >
-                        {showSavedContent ? 'Generate New' : `Saved Content (${savedContent.length})`}
-                    </button>
-
                     {showSavedContent && (
                         <>
-                            {renderCalendar()}
+                            <button
+                                onClick={() => setShowSavedContent(false)}
+                                className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
+                            >
+                                ← Generate New Content
+                            </button>
                             
-                            <div className="bg-white p-4 rounded-lg shadow">
+                            <div className="bg-white dark:bg-brand-navy p-4 rounded-lg shadow border border-brand-light-border dark:border-brand-gray">
                                 <input
                                     type="text"
                                     placeholder="Search content..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-brand-gray text-gray-900 dark:text-white"
                                 />
                             </div>
                         </>
