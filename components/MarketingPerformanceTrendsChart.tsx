@@ -50,7 +50,7 @@ const METRIC_CONFIG = {
     color: '#F59E0B',
     yAxisId: 'right',
     strokeWidth: 3,
-    label: 'Avatars Created',
+    label: 'Dream Clients Created',
   },
 };
 
@@ -168,7 +168,7 @@ export const MarketingPerformanceTrendsChart: React.FC<MarketingPerformanceTrend
         return createdDate === dateKey && c.used === true;
       }).length;
 
-      // Avatars created on this day
+      // Dream Clients created on this day
       avatars = avatarsData.filter(a => {
         const createdDate = new Date(a.created_at).toISOString().split('T')[0];
         return createdDate === dateKey;
@@ -417,7 +417,7 @@ export const MarketingPerformanceTrendsChart: React.FC<MarketingPerformanceTrend
                   strokeWidth={METRIC_CONFIG.avatars.strokeWidth}
                   dot={{ r: 5, fill: METRIC_CONFIG.avatars.color, strokeWidth: 2, stroke: '#fff' }}
                   activeDot={{ r: 7 }}
-                  name="Avatars Created"
+                  name="Dream Clients Created"
                 />
               )}
             </ComposedChart>

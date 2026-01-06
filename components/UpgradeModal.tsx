@@ -20,7 +20,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, currentPla
       price: PLAN_LIMITS.starter.price,
       description: 'Perfect for solo entrepreneurs',
       features: [
-        `${PLAN_LIMITS.starter.max_avatars} Buyer Avatars`,
+        `${PLAN_LIMITS.starter.max_avatars} Dream Clients`,
         `${PLAN_LIMITS.starter.max_posts_per_month} Posts/Month`,
         `${PLAN_LIMITS.starter.max_users} User Seat`,
         'Basic Analytics',
@@ -36,7 +36,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, currentPla
       price: PLAN_LIMITS.pro.price,
       description: 'Best for agencies & teams',
       features: [
-        `${PLAN_LIMITS.pro.max_avatars} Buyer Avatars`,
+        `${PLAN_LIMITS.pro.max_avatars} Dream Clients`,
         `${PLAN_LIMITS.pro.max_posts_per_month} Posts/Month`,
         `${PLAN_LIMITS.pro.max_users} User Seats`,
         'Advanced Analytics',
@@ -54,7 +54,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, currentPla
       price: PLAN_LIMITS.agency.price,
       description: 'For power users & enterprises',
       features: [
-        'UNLIMITED Avatars',
+        'UNLIMITED Dream Clients',
         'UNLIMITED Posts',
         `${PLAN_LIMITS.agency.max_users} User Seats`,
         'Full Analytics Suite',

@@ -146,16 +146,16 @@ const DreamClientStudioStats: React.FC<DreamClientStudioStatsProps> = ({ userId,
             </p>
           </div>
 
-          {/* Avatars Created */}
+          {/* Dream Clients Created */}
           <div className="bg-brand-light-bg dark:bg-brand-gray/20 p-4 rounded-lg">
             <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">
-              Avatars Created
+              Dream Clients Created
             </p>
             <p className="text-3xl font-black text-purple-600 dark:text-purple-400">
               {stats.avatarsCreated}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {stats.avatarsCreated === 1 ? 'avatar' : 'avatars'}
+              {stats.avatarsCreated === 1 ? 'profile' : 'profiles'}
             </p>
           </div>
 

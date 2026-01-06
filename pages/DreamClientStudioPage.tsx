@@ -72,7 +72,7 @@ const DreamClientStudioPage: React.FC<DreamClientStudioPageProps> = ({ user }) =
               Dream Client Studio
             </h1>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-              Create detailed buyer avatars and generate high-converting content that attracts your ideal clients.
+              Create detailed dream client profiles and generate high-converting content that attracts your ideal clients.
             </p>
           </div>
           <button
@@ -82,7 +82,7 @@ const DreamClientStudioPage: React.FC<DreamClientStudioPageProps> = ({ user }) =
                 setShowCreateModal(true);
                 setLimitMessage(null);
               } else {
-                setLimitMessage(check.reason || 'Cannot create avatar');
+                setLimitMessage(check.reason || 'Cannot create dream client');
               }
             }}
             className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-lg text-sm sm:text-base w-full sm:w-auto justify-center"
@@ -219,7 +219,7 @@ const AvatarCard: React.FC<AvatarCardProps> = ({ avatar, user, onRefresh }) => {
       onRefresh();
     } catch (error) {
       console.error('Error deleting avatar:', error);
-      alert('Failed to delete avatar. Please try again.');
+      alert('Failed to delete dream client. Please try again.');
     } finally {
       setIsDeleting(false);
     }

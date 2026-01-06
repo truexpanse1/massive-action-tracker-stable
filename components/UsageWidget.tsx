@@ -88,11 +88,11 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({ user, onUpgradeClick }) => {
             </div>
           </div>
 
-          {/* Avatars Usage */}
+          {/* Dream Clients Usage */}
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Buyer Avatars
+                Dream Clients
               </span>
               <span className="text-sm font-bold text-brand-light-text dark:text-white">
                 {usage.avatars.current} / {usage.avatars.max}

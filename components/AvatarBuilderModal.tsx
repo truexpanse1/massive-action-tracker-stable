@@ -66,7 +66,7 @@ const AvatarBuilderModal: React.FC<AvatarBuilderModalProps> = ({ isOpen, onClose
         company_id: user.company_id,
         user_id: user.id,
         assigned_to: user.id,
-        avatar_name: formData.avatar_name || 'Unnamed Avatar',
+        avatar_name: formData.avatar_name || 'Unnamed Dream Client',
         industry: formData.industry || null,
         age_range: formData.age_range || null,
         gender: formData.gender || null,
@@ -153,7 +153,7 @@ const AvatarBuilderModal: React.FC<AvatarBuilderModalProps> = ({ isOpen, onClose
         <div className="border-b border-brand-light-border dark:border-brand-gray p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-brand-light-text dark:text-white">
-              Create Dream Client Avatar
+              Create Dream Client Profile
             </h2>
             <button
               onClick={onClose}
@@ -221,7 +221,7 @@ const AvatarBuilderModal: React.FC<AvatarBuilderModalProps> = ({ isOpen, onClose
                 disabled={isSubmitting}
                 className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Creating...' : 'Create Avatar'}
+                {isSubmitting ? 'Creating...' : 'Create Dream Client'}
               </button>
             )}
           </div>
@@ -241,7 +241,7 @@ const Step1BasicInfo: React.FC<{ formData: Partial<AvatarFormData>; setFormData:
 
     <div>
       <label className="block text-sm font-semibold text-brand-light-text dark:text-white mb-2">
-        Avatar Name <span className="text-red-500">*</span>
+        Dream Client Name <span className="text-red-500">*</span>
       </label>
       <input
         type="text"
@@ -787,7 +787,7 @@ const Step7Review: React.FC<{ formData: Partial<AvatarFormData> }> = ({ formData
 
     <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6 space-y-4">
       <div>
-        <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">Avatar Name</p>
+        <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">Dream Client Name</p>
         <p className="text-lg font-bold text-brand-light-text dark:text-white">{formData.avatar_name || 'Not set'}</p>
       </div>
 
@@ -830,7 +830,7 @@ const Step7Review: React.FC<{ formData: Partial<AvatarFormData> }> = ({ formData
 
     <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
       <p className="text-sm text-yellow-800 dark:text-yellow-200">
-        <strong>Ready to dominate?</strong> Once created, you can generate high-converting content tailored specifically to this avatar!
+        <strong>Ready to dominate?</strong> Once created, you can generate high-converting content tailored specifically to this dream client!
       </p>
     </div>
   </div>

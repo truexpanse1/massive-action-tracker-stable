@@ -155,9 +155,9 @@ Use your expertise to structure the content in the most effective way for this t
 
       const prompt = `You are an expert copywriter specializing in high-converting ${platform} content${framework !== 'Custom' ? ` using the ${frameworks[framework].name} framework` : ''}.${styleInstructions[writingStyle]}
 
-Create a ${platform} ${framework === 'Custom' ? 'post' : 'ad'} for a ${avatar.industry || 'business'} targeting this avatar:
+Create a ${platform} ${framework === 'Custom' ? 'post' : 'ad'} for a ${avatar.industry || 'business'} targeting this dream client:
 
-Avatar: ${avatar.avatar_name}
+Dream Client: ${avatar.avatar_name}
 Demographics: ${avatar.age_range || 'N/A'} | ${avatar.gender || 'N/A'} | ${avatar.income_range || 'N/A'}
 Goals: ${(avatar.goals || []).slice(0, 3).join(', ')}
 Fears: ${(avatar.fears || []).slice(0, 3).join(', ')}
