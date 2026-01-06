@@ -9,6 +9,7 @@ import {
   type CalculatedTargets,
 } from '../services/salesTargetCalculatorService';
 import { saveUserTargets, type UserTargets } from '../services/targetsService';
+import { supabase } from '../src/services/supabaseClient';
 
 export default function MassiveActionTargetsPage() {
   // Start with good default numbers
@@ -45,18 +46,30 @@ export default function MassiveActionTargetsPage() {
     setAdoptionLoading(true);
     
     try {
+      // Get user info from Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      
+      // Get company_id from user metadata
+      const companyId = user.user_metadata?.company_id || '';
+      
       // Convert calculated targets to UserTargets format
       const userTargets: UserTargets = {
-        calls: targets.daily.calls,
-        contacts: targets.daily.leads, // New leads = contacts
-        appointments: Math.ceil(targets.daily.opportunities), // Opportunities = appointments
-        demos: Math.ceil(targets.daily.deals), // Deals = demos
-        deals: Math.ceil(targets.daily.deals),
-        revenue: Math.round(targets.daily.revenue),
-        emails: targets.daily.emails,
-        texts: targets.daily.texts,
-        leads: targets.daily.leads,
-        opportunities: Math.ceil(targets.daily.opportunities),
+        user_id: user.id,
+        company_id: companyId,
+        annual_revenue: Math.round(inputs.annualRevenue),
+        avg_sale_amount: Math.round(inputs.avgDealSize),
+        close_rate: inputs.opportunityToCloseRate,
+        show_rate: inputs.leadToOpportunityRate,
+        contact_to_appt_rate: inputs.leadToOpportunityRate,
+        call_to_contact_rate: inputs.leadToOpportunityRate,
+        daily_calls: Math.ceil(targets.daily.calls),
+        daily_contacts: Math.ceil(targets.daily.leads),
+        daily_appts: Math.ceil(targets.daily.opportunities),
+        daily_demos: Math.ceil(targets.daily.deals),
+        daily_deals: Math.ceil(targets.daily.deals),
+        daily_revenue: Math.round(targets.daily.revenue),
+        weekly_revenue: Math.round(targets.weekly.revenue),
       };
       
       await saveUserTargets(userTargets);
