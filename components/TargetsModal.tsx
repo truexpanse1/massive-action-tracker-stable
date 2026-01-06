@@ -107,27 +107,28 @@ export default function TargetsModal({ isOpen, onClose, onSave, initialValues }:
     const enhanced = calculateTargets(inputs);
 
     // Convert to old format for backward compatibility
+    // IMPORTANT: Round all values to integers for database storage
     const targets: CalculatedTargets = {
-      annualRevenue: inputs.annualRevenueGoal,
-      avgSaleAmount: inputs.averageDealSize,
-      closeRate: inputs.oppToCloseRate,
+      annualRevenue: Math.round(inputs.annualRevenueGoal),
+      avgSaleAmount: Math.round(inputs.averageDealSize),
+      closeRate: Math.round(inputs.oppToCloseRate),
       showRate: 70, // Default show rate (not used in new calculator)
       contactToApptRate: 10, // Default contact to appt rate (not used in new calculator)
       callToContactRate: 14, // Default call to contact rate (not used in new calculator)
-      dailyCalls: enhanced.daily.calls,
-      dailyContacts: enhanced.daily.leads, // Map leads to contacts for compatibility
-      dailyAppts: enhanced.daily.opportunities, // Map opportunities to appts for compatibility
-      dailyDemos: enhanced.daily.opportunities,
-      dailyDeals: enhanced.daily.deals,
-      dailyRevenue: enhanced.daily.revenue,
-      weeklyRevenue: enhanced.weekly.revenue,
+      dailyCalls: Math.ceil(enhanced.daily.calls),
+      dailyContacts: Math.ceil(enhanced.daily.leads), // Map leads to contacts for compatibility
+      dailyAppts: Math.ceil(enhanced.daily.opportunities), // Map opportunities to appts for compatibility
+      dailyDemos: Math.ceil(enhanced.daily.opportunities),
+      dailyDeals: Math.ceil(enhanced.daily.deals),
+      dailyRevenue: Math.round(enhanced.daily.revenue),
+      weeklyRevenue: Math.round(enhanced.weekly.revenue),
       // New enhanced fields
-      dailyLeads: enhanced.daily.leads,
-      dailyOpportunities: enhanced.daily.opportunities,
-      dailyEmails: enhanced.daily.emails,
-      dailyTexts: enhanced.daily.texts,
-      monthlyRevenue: enhanced.monthly.revenue,
-      monthlyDeals: enhanced.monthly.deals,
+      dailyLeads: Math.ceil(enhanced.daily.leads),
+      dailyOpportunities: Math.ceil(enhanced.daily.opportunities),
+      dailyEmails: Math.ceil(enhanced.daily.emails),
+      dailyTexts: Math.ceil(enhanced.daily.texts),
+      monthlyRevenue: Math.round(enhanced.monthly.revenue),
+      monthlyDeals: Math.ceil(enhanced.monthly.deals),
     };
 
     setErrors([]);
