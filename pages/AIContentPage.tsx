@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SavedContentCalendar from '../components/SavedContentCalendar';
+import DreamClientContentGenerator from '../components/DreamClientContentGenerator';
 import { generateBusinessContent } from '../services/geminiService';
 import { supabase } from '../services/supabaseClient';
 import { SavedAIContent } from '../types';
@@ -84,6 +85,7 @@ const getDescriptionHelperText = (template: string): string => {
 };
 
 const AIContentPage: React.FC = () => {
+    const [contentMode, setContentMode] = useState<'templates' | 'dream-client'>('dream-client');
     const [selectedTemplate, setSelectedTemplate] = useState('Prospect Research Assistant');
     const [formDetails, setFormDetails] = useState<Record<string, string>>({});
     const [description, setDescription] = useState('');
@@ -269,6 +271,34 @@ const AIContentPage: React.FC = () => {
                 {/* Main Content Area */}
                 <div className="flex-1">
                     {!showSavedContent ? (
+                        <>
+                            {/* Mode Toggle */}
+                            <div className="mb-6 flex gap-3">
+                                <button
+                                    onClick={() => setContentMode('dream-client')}
+                                    className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${
+                                        contentMode === 'dream-client'
+                                            ? 'bg-blue-500 text-white'
+                                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    🎯 Dream Client Content
+                                </button>
+                                <button
+                                    onClick={() => setContentMode('templates')}
+                                    className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${
+                                        contentMode === 'templates'
+                                            ? 'bg-blue-500 text-white'
+                                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    📄 Business Templates
+                                </button>
+                            </div>
+
+                            {contentMode === 'dream-client' ? (
+                                <DreamClientContentGenerator />
+                            ) : (
                         <div className="bg-white p-6 rounded-lg shadow">
                             <h2 className="text-2xl font-bold mb-4">CONTENT TEMPLATES</h2>
                             
@@ -348,6 +378,8 @@ const AIContentPage: React.FC = () => {
                                 </div>
                             )}
                         </div>
+                            )}
+                        </>
                     ) : (
                         <div className="bg-white p-6 rounded-lg shadow">
                             <h2 className="text-2xl font-bold mb-4">
