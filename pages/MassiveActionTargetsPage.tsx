@@ -8,12 +8,15 @@ import {
   type CalculatorInputs,
   type CalculatedTargets,
 } from '../services/salesTargetCalculatorService';
+import { saveUserTargets, type UserTargets } from '../services/targetsService';
 
 export default function MassiveActionTargetsPage() {
   // Start with good default numbers
   const [inputs, setInputs] = useState<CalculatorInputs>(getDefaultInputs());
   const [showResults, setShowResults] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [planAdopted, setPlanAdopted] = useState(false);
+  const [adoptionLoading, setAdoptionLoading] = useState(false);
 
   // Update a single input field
   const updateInput = (field: keyof CalculatorInputs, value: string) => {
@@ -31,6 +34,43 @@ export default function MassiveActionTargetsPage() {
     } else {
       setErrors([]);
       setShowResults(true);
+      setPlanAdopted(false); // Reset adoption status when recalculating
+    }
+  };
+
+  // Adopt the plan and save to database
+  const handleAdoptPlan = async () => {
+    if (!targets) return;
+    
+    setAdoptionLoading(true);
+    
+    try {
+      // Convert calculated targets to UserTargets format
+      const userTargets: UserTargets = {
+        calls: targets.daily.calls,
+        contacts: targets.daily.leads, // New leads = contacts
+        appointments: Math.ceil(targets.daily.opportunities), // Opportunities = appointments
+        demos: Math.ceil(targets.daily.deals), // Deals = demos
+        deals: Math.ceil(targets.daily.deals),
+        revenue: Math.round(targets.daily.revenue),
+        emails: targets.daily.emails,
+        texts: targets.daily.texts,
+        leads: targets.daily.leads,
+        opportunities: Math.ceil(targets.daily.opportunities),
+      };
+      
+      await saveUserTargets(userTargets);
+      setPlanAdopted(true);
+      
+      // Show success message
+      setTimeout(() => {
+        alert('✅ Success! Your daily plan is now active.\n\nYou can see it on your Prospecting Page.');
+      }, 300);
+    } catch (error) {
+      console.error('Error adopting plan:', error);
+      alert('❌ Failed to save your plan. Please try again.');
+    } finally {
+      setAdoptionLoading(false);
     }
   };
 
@@ -484,6 +524,38 @@ export default function MassiveActionTargetsPage() {
                   <p className="text-gray-300">
                     Are you doing that now? If not, you won't hit your goal. It's that simple.
                   </p>
+                </div>
+
+                {/* Adopt Plan Button */}
+                <div className="bg-gradient-to-r from-brand-lime/10 to-green-500/10 border-2 border-brand-lime rounded-lg p-8 text-center">
+                  <h3 className="text-2xl font-bold text-white mb-3">🎯 Ready to Commit?</h3>
+                  <p className="text-gray-300 mb-6">
+                    Click below to adopt this plan. It will show up on your Prospecting Page every day as your committed daily targets.
+                  </p>
+                  <button
+                    onClick={handleAdoptPlan}
+                    disabled={adoptionLoading || planAdopted}
+                    className={`px-8 py-4 rounded-lg font-bold text-xl transition-all ${
+                      planAdopted
+                        ? 'bg-green-600 text-white cursor-default'
+                        : adoptionLoading
+                        ? 'bg-gray-700 text-gray-400 cursor-wait'
+                        : 'bg-brand-lime text-gray-900 hover:bg-green-400 cursor-pointer shadow-lg hover:shadow-xl'
+                    }`}
+                  >
+                    {adoptionLoading ? (
+                      '⏳ Saving Your Plan...'
+                    ) : planAdopted ? (
+                      '✅ Plan Adopted!'
+                    ) : (
+                      '🚀 Adopt This Plan'
+                    )}
+                  </button>
+                  {planAdopted && (
+                    <p className="text-green-400 mt-4 text-sm">
+                      ✓ Success! Your plan is now active on the Prospecting Page.
+                    </p>
+                  )}
                 </div>
 
               </div>

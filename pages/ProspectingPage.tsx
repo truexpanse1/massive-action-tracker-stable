@@ -579,12 +579,19 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
               {userTargets ? (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-bold text-brand-lime">📊 Your Targets at a Glance</h4>
+                    <div>
+                      <h4 className="text-sm font-bold text-brand-lime">📋 YOUR DAILY PLAN</h4>
+                      {userTargets.adopted_date && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          Adopted {new Date(userTargets.adopted_date).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
                     <button
                       onClick={() => setIsTargetsModalOpen(true)}
                       className="text-xs text-gray-400 hover:text-brand-lime transition-colors"
                     >
-                      ⚙️ Change Targets
+                      ⚙️ Change Plan
                     </button>
                   </div>
 
