@@ -57,8 +57,8 @@ export default function MassiveActionTargetsPage() {
       const userTargets: UserTargets = {
         user_id: user.id,
         company_id: companyId,
-        annual_revenue: Math.round(inputs.annualRevenue),
-        avg_sale_amount: Math.round(inputs.avgDealSize),
+        annual_revenue: Math.round(inputs.annualRevenueGoal),
+        avg_sale_amount: Math.round(inputs.averageDealSize),
         close_rate: inputs.oppToCloseRate,
         show_rate: inputs.leadToOppRate,
         contact_to_appt_rate: inputs.leadToOppRate,
