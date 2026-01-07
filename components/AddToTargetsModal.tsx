@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
+import { ActionItem } from '../src/services/coachingNotesService';
 
 interface AddToTargetsModalProps {
-  isOpen: boolean;
+  actionItem?: string;
+  bulkActionItems?: ActionItem[];
   onClose: () => void;
-  onConfirm: (days: number) => void;
-  actionItemText: string;
+  onSubmit: (days: number) => void;
 }
 
 const AddToTargetsModal: React.FC<AddToTargetsModalProps> = ({
-  isOpen,
+  actionItem,
+  bulkActionItems,
   onClose,
-  onConfirm,
-  actionItemText,
+  onSubmit,
 }) => {
   const [selectedDays, setSelectedDays] = useState(30);
 
@@ -24,11 +25,14 @@ const AddToTargetsModal: React.FC<AddToTargetsModalProps> = ({
   ];
 
   const handleConfirm = () => {
-    onConfirm(selectedDays);
-    onClose();
+    onSubmit(selectedDays);
   };
 
-  if (!isOpen) return null;
+  // Determine if we're in bulk mode
+  const isBulkMode = bulkActionItems && bulkActionItems.length > 0;
+  const itemsToAdd = isBulkMode 
+    ? bulkActionItems.filter(item => !item.added_to_targets)
+    : [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -37,10 +41,13 @@ const AddToTargetsModal: React.FC<AddToTargetsModalProps> = ({
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-2xl font-bold text-brand-light-text dark:text-white mb-2">
-              Add to Daily Targets
+              {isBulkMode ? 'Add Multiple Items to Daily Targets' : 'Add to Daily Targets'}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              How many days should this action item appear in your targets?
+              {isBulkMode 
+                ? `How many days should these ${itemsToAdd.length} action items appear in your targets?`
+                : 'How many days should this action item appear in your targets?'
+              }
             </p>
           </div>
           <button
@@ -52,13 +59,24 @@ const AddToTargetsModal: React.FC<AddToTargetsModalProps> = ({
         </div>
 
         {/* Action Item Preview */}
-        <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-6">
-          <p className="text-sm font-bold text-purple-900 dark:text-purple-300 mb-1">
-            Action Item:
+        <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-6 max-h-48 overflow-y-auto">
+          <p className="text-sm font-bold text-purple-900 dark:text-purple-300 mb-2">
+            {isBulkMode ? `Action Items (${itemsToAdd.length}):` : 'Action Item:'}
           </p>
-          <p className="text-brand-light-text dark:text-white">
-            {actionItemText}
-          </p>
+          {isBulkMode ? (
+            <ul className="space-y-2">
+              {itemsToAdd.map((item, index) => (
+                <li key={index} className="text-sm text-brand-light-text dark:text-white flex items-start gap-2">
+                  <span className="text-purple-600 dark:text-purple-400">•</span>
+                  <span>{item.text}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-brand-light-text dark:text-white">
+              {actionItem}
+            </p>
+          )}
         </div>
 
         {/* Day Selection */}
@@ -132,13 +150,19 @@ const AddToTargetsModal: React.FC<AddToTargetsModalProps> = ({
             onClick={handleConfirm}
             className="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition font-bold shadow-lg"
           >
-            Add to Next {selectedDays} {selectedDays === 1 ? 'Day' : 'Days'}
+            {isBulkMode 
+              ? `Add All (${itemsToAdd.length}) to Next ${selectedDays} ${selectedDays === 1 ? 'Day' : 'Days'}`
+              : `Add to Next ${selectedDays} ${selectedDays === 1 ? 'Day' : 'Days'}`
+            }
           </button>
         </div>
 
         {/* Info Note */}
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-          This will add the action item to your Top 6 Daily Targets for the next {selectedDays} {selectedDays === 1 ? 'day' : 'days'}
+          {isBulkMode
+            ? `This will add all ${itemsToAdd.length} action items to your Top 6 Daily Targets for the next ${selectedDays} ${selectedDays === 1 ? 'day' : 'days'}`
+            : `This will add the action item to your Top 6 Daily Targets for the next ${selectedDays} ${selectedDays === 1 ? 'day' : 'days'}`
+          }
         </p>
       </div>
     </div>
