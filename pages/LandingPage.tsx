@@ -963,7 +963,9 @@ export default function LandingPage() {
             ✓ Instant Access  ✓ Setup in 2 minutes  ✓ Cancel anytime
           </p>
         </div>
-      </secti      {/* Feature Demo Modal */}
+      </section>
+
+      {/* Feature Demo Modal */}
       <FeatureDemoModal
         isOpen={isDayViewDemoOpen}
         onClose={() => setIsDayViewDemoOpen(false)}
