@@ -259,8 +259,12 @@ export const normalizeDayData = (data: Partial<DayData>): DayData => {
   
   // Ensure speedOfImplementation has exactly 12 slots
   let speedOfImplementation = data.speedOfImplementation || [];
-  if (speedOfImplementation.length === 0) {
-    speedOfImplementation = initial.speedOfImplementation;
+  if (speedOfImplementation.length < 12) {
+    // Expand to 12 slots while preserving existing data
+    const existingSlots = [...speedOfImplementation];
+    speedOfImplementation = initial.speedOfImplementation.map((slot, index) => 
+      existingSlots[index] || slot
+    );
   }
   
   return {
