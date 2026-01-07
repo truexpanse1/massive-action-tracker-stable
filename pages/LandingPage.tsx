@@ -1,7 +1,7 @@
 import React, { useState, FormEvent, useEffect } from 'react';
 import { supabase } from '../src/supabaseClient';
 import FeatureDemoModal from '../components/FeatureDemoModal';
-import DayViewDemo from '../components/DayViewDemo';ent';
+import DayViewDemo from '../components/DayViewDemo';
 import { startStripeCheckout } from '../services/billingService';
 
 // Stripe Price IDs - Update these with your actual price IDs
