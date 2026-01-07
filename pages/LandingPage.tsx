@@ -1,5 +1,5 @@
 import React, { useState, FormEvent, useEffect } from 'react';
-import { supabase } from '../src/supabaseClient';
+import { supabase } from '../src/services/supabaseClient';
 import FeatureDemoModal from '../components/FeatureDemoModal';
 import DayViewDemo from '../components/DayViewDemo';
 import { startStripeCheckout } from '../services/billingService';
