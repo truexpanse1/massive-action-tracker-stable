@@ -119,8 +119,8 @@ const SpeedOfImplementationBlock: React.FC<SpeedOfImplementationBlockProps> = ({
         </p>
       </div>
 
-      {/* Targets - Scrollable Container */}
-      <div className="space-y-3 mb-4 max-h-96 overflow-y-auto pr-2">
+      {/* Targets - Scrollable Container (shows ~3 items, scrolls for more) */}
+      <div className="space-y-3 mb-4 max-h-[280px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-400 scrollbar-track-gray-200 dark:scrollbar-track-gray-700">
         {localTargets.map((target) => (
           <div
             key={target.id}
