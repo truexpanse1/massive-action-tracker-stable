@@ -150,7 +150,7 @@ Return ONLY the headlines, one per line, no numbering, no explanations.`;
         model: 'gemini-2.0-flash-exp',
         contents: prompt,
       });
-      const text = result.response.text();
+      const text = result.text;
       
       const headlines = text
         .split('\n')
@@ -206,7 +206,7 @@ Return ONLY the keywords, one per line, no numbering, no explanations, no quotes
         model: 'gemini-2.0-flash-exp',
         contents: prompt,
       });
-      const text = result.response.text();
+      const text = result.text;
       
       const keywords = text
         .split('\n')
@@ -267,7 +267,7 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
         model: 'gemini-2.0-flash-exp',
         contents: prompt,
       });
-      const text = result.response.text();
+      const text = result.text;
       
       const offers = text
         .split('\n')
@@ -328,7 +328,7 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
         model: 'gemini-2.0-flash-exp',
         contents: prompt,
       });
-      const text = result.response.text();
+      const text = result.text;
       
       const hvcos = text
         .split('\n')
