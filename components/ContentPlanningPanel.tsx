@@ -409,25 +409,27 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
       <div className="overflow-y-auto max-h-[calc(100vh-280px)] p-4 space-y-6">
         {/* Powerful Headlines */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-brand-light-text dark:text-white text-sm">💡 Powerful Headlines: ({data.headlines.length})</h4>
-            <button
-              onClick={generateHeadlines}
-              disabled={isGenerating.headlines}
-              className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1"
-            >
-              {isGenerating.headlines ? (
-                <>
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <span>🤖</span>
-                  Generate
-                </>
-              )}
-            </button>
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="font-semibold text-brand-light-text dark:text-white text-sm">💡 Powerful Headlines: ({data.headlines.length})</h4>
+              <button
+                onClick={generateHeadlines}
+                disabled={isGenerating.headlines}
+                className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
+              >
+                {isGenerating.headlines ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="whitespace-nowrap">Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🤖</span>
+                    <span className="whitespace-nowrap">Generate</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
           <div className="space-y-2 mb-2 max-h-40 overflow-y-auto">
             {data.headlines.map((headline, idx) => (
@@ -465,28 +467,30 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
 
         {/* Keywords */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h4 className="font-semibold text-brand-light-text dark:text-white text-sm">🎯 Keywords: ({data.keywords.length})</h4>
-              <p className="text-xs text-gray-500 dark:text-gray-400">For ad targeting & CPC tracking</p>
+          <div className="mb-2">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-brand-light-text dark:text-white text-sm">🎯 Keywords: ({data.keywords.length})</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">For ad targeting & CPC tracking</p>
+              </div>
+              <button
+                onClick={generateKeywords}
+                disabled={isGenerating.keywords}
+                className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
+              >
+                {isGenerating.keywords ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="whitespace-nowrap">Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🤖</span>
+                    <span className="whitespace-nowrap">Generate</span>
+                  </>
+                )}
+              </button>
             </div>
-            <button
-              onClick={generateKeywords}
-              disabled={isGenerating.keywords}
-              className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1"
-            >
-              {isGenerating.keywords ? (
-                <>
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <span>🤖</span>
-                  Generate
-                </>
-              )}
-            </button>
           </div>
           <div className="space-y-2 mb-2 max-h-40 overflow-y-auto">
             {data.keywords.map((keyword, idx) => (
@@ -534,25 +538,27 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
 
         {/* Offers */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-brand-light-text dark:text-white text-sm">🎁 Offers: ({data.offers.length})</h4>
-            <button
-              onClick={generateOffers}
-              disabled={isGenerating.offers}
-              className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1"
-            >
-              {isGenerating.offers ? (
-                <>
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <span>🤖</span>
-                  Generate
-                </>
-              )}
-            </button>
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="font-semibold text-brand-light-text dark:text-white text-sm">🎁 Offers: ({data.offers.length})</h4>
+              <button
+                onClick={generateOffers}
+                disabled={isGenerating.offers}
+                className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
+              >
+                {isGenerating.offers ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="whitespace-nowrap">Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🤖</span>
+                    <span className="whitespace-nowrap">Generate</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
           <div className="space-y-2 mb-2 max-h-40 overflow-y-auto">
             {data.offers.map((offer, idx) => (
@@ -590,25 +596,27 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
 
         {/* High Value Content Offers */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-brand-light-text dark:text-white text-sm">💎 High Value Content Offers: ({data.high_value_offers.length})</h4>
-            <button
-              onClick={generateHVCOs}
-              disabled={isGenerating.hvcos}
-              className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1"
-            >
-              {isGenerating.hvcos ? (
-                <>
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <span>🤖</span>
-                  Generate
-                </>
-              )}
-            </button>
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="font-semibold text-brand-light-text dark:text-white text-sm">💎 High Value Content Offers: ({data.high_value_offers.length})</h4>
+              <button
+                onClick={generateHVCOs}
+                disabled={isGenerating.hvcos}
+                className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
+              >
+                {isGenerating.hvcos ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="whitespace-nowrap">Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🤖</span>
+                    <span className="whitespace-nowrap">Generate</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
           <div className="space-y-2 mb-2 max-h-40 overflow-y-auto">
             {data.high_value_offers.map((hvco, idx) => (
