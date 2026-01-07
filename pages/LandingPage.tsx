@@ -104,6 +104,13 @@ export default function LandingPage() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showPurchasePassword, setShowPurchasePassword] = useState(false);
 
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => {
     setIsLoginModalOpen(false);
@@ -574,7 +581,7 @@ export default function LandingPage() {
                 Daily accountability that drives results. Track 6 critical KPIs, real-time revenue intelligence, focus on top 6 targets, automated roll-forward, and daily reflection. Everything you need to stay on track and hit your goals.
               </p>
               <button
-                onClick={() => handleGetStarted('solo')}
+                onClick={scrollToPricing}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Start Tracking Now →
@@ -609,7 +616,7 @@ export default function LandingPage() {
                 See your money grow in real-time! Find out which products sell the best and when. You can change the dates to see trends and know what to sell next. This helps you sell smarter, not just harder.
               </p>
               <button
-                onClick={() => handleGetStarted('solo')}
+                onClick={scrollToPricing}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Track Your Revenue →
@@ -637,7 +644,7 @@ export default function LandingPage() {
                 See all your new clients on one simple page. This is a list of every client your team has closed. You can see the exact day they became a paying client. It's the perfect way to celebrate and keep track of your wins!
               </p>
               <button
-                onClick={() => handleGetStarted('solo')}
+                onClick={scrollToPricing}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Celebrate Your Wins →
@@ -677,7 +684,7 @@ export default function LandingPage() {
                 This is where you build your future money. Every time you click a button here, it saves the data forever. This helps you build a strong list of future customers that will bring in steady money. It's simple: track your work, and the money will follow.
               </p>
               <button
-                onClick={() => handleGetStarted('solo')}
+                onClick={scrollToPricing}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Build Your Pipeline →
@@ -695,7 +702,7 @@ export default function LandingPage() {
                 Professional business content 10X faster. 12+ professional templates, one-click PDF export, clean plain-text output, and save 20+ hours per week. Create emails, LinkedIn posts, and proposals in minutes.
               </p>
               <button
-                onClick={() => handleGetStarted('solo')}
+                onClick={scrollToPricing}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Generate Content Now →
@@ -723,7 +730,7 @@ export default function LandingPage() {
                 Create detailed buyer avatars and generate high-converting content that attracts your ideal clients. Build multiple client profiles, save generated content, and never run out of marketing ideas. Turn your dream clients into reality.
               </p>
               <button
-                onClick={() => handleGetStarted('solo')}
+                onClick={scrollToPricing}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Create Your Avatar →
@@ -783,7 +790,7 @@ export default function LandingPage() {
       {/* ============================================ */}
       {/* PRICING SECTION */}
       {/* ============================================ */}
-      <section className="py-16 md:py-24 px-4 md:px-6 bg-gray-50">
+      <section id="pricing" className="py-16 md:py-24 px-4 md:px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-center mb-16 text-gray-900">
             Choose Your Plan
