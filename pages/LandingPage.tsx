@@ -1,5 +1,7 @@
 import React, { useState, FormEvent, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../src/supabaseClient';
+import FeatureDemoModal from '../components/FeatureDemoModal';
+import DayViewDemo from '../components/DayViewDemo';ent';
 import { startStripeCheckout } from '../services/billingService';
 
 // Stripe Price IDs - Update these with your actual price IDs
@@ -103,6 +105,7 @@ export default function LandingPage() {
   const [resetMessage, setResetMessage] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showPurchasePassword, setShowPurchasePassword] = useState(false);
+  const [isDayViewDemoOpen, setIsDayViewDemoOpen] = useState(false);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing');
@@ -580,12 +583,20 @@ export default function LandingPage() {
               <p className="text-lg md:text-xl text-gray-600 mb-6">
                 Daily accountability that drives results. Track 6 critical KPIs, real-time revenue intelligence, focus on top 6 targets, automated roll-forward, and daily reflection. Everything you need to stay on track and hit your goals.
               </p>
-              <button
-                onClick={scrollToPricing}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Start Tracking Now →
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsDayViewDemoOpen(true)}
+                  className="bg-transparent border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                >
+                  ▶ View Demo
+                </button>
+                <button
+                  onClick={scrollToPricing}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Start Tracking Now →
+                </button>
+              </div>
             </div>
           </div>
 
@@ -952,13 +963,30 @@ export default function LandingPage() {
             ✓ Instant Access  ✓ Setup in 2 minutes  ✓ Cancel anytime
           </p>
         </div>
-      </section>
+      </secti      {/* Feature Demo Modal */}
+      <FeatureDemoModal
+        isOpen={isDayViewDemoOpen}
+        onClose={() => setIsDayViewDemoOpen(false)}
+        feature={{
+          title: "Activity Dashboard (Day View)",
+          subtitle: "Your complete daily command center for massive action",
+          benefits: [
+            "Track 6 critical KPIs that drive revenue",
+            "Never miss a follow-up with auto roll-forward",
+            "Focus on Top 6 Daily Targets that move the needle",
+            "Real-time revenue intelligence at a glance",
+            "Daily reflection builds accountability",
+            "See exactly where you stand every single day"
+          ],
+          demoContent: <DayViewDemo />
+        }}
+        onGetStarted={scrollToPricing}
+      />
 
       {/* ============================================ */}
       {/* FOOTER */}
       {/* ============================================ */}
-      <footer className="py-12 md:py-16 bg-gray-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 text-center">
+      <footer className="py-12 px-4 md:px-6 bg-gray-900 text-gray-400">       <div className="max-w-7xl mx-auto px-4 md:px-6 text-center">
           <div className="mb-6">
             <a
               href="/learning"
