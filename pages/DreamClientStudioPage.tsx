@@ -9,6 +9,7 @@ import SavedContentList from '../components/SavedContentList';
 import AvatarViewModal from '../components/AvatarViewModal';
 import { canCreateAvatar, getUserSubscription } from '../src/services/subscriptionService';
 import UpgradeModal from '../components/UpgradeModal';
+import ContentPlanningPanel from '../components/ContentPlanningPanel';
 
 interface DreamClientStudioPageProps {
   user: User;
