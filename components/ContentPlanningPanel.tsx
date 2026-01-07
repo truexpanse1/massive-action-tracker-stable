@@ -146,8 +146,10 @@ Generate 10 headlines that:
 
 Return ONLY the headlines, one per line, no numbering, no explanations.`;
 
-      const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-      const result = await model.generateContent(prompt);
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.0-flash-exp',
+        contents: prompt,
+      });
       const text = result.response.text();
       
       const headlines = text
@@ -200,8 +202,10 @@ Generate 25 keywords that:
 
 Return ONLY the keywords, one per line, no numbering, no explanations, no quotes.`;
 
-      const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-      const result = await model.generateContent(prompt);
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.0-flash-exp',
+        contents: prompt,
+      });
       const text = result.response.text();
       
       const keywords = text
@@ -259,8 +263,10 @@ Examples:
 
 Return ONLY the offers, one per line, no numbering, no explanations.`;
 
-      const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-      const result = await model.generateContent(prompt);
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.0-flash-exp',
+        contents: prompt,
+      });
       const text = result.response.text();
       
       const offers = text
@@ -318,8 +324,10 @@ Examples:
 
 Return ONLY the offers, one per line, no numbering, no explanations.`;
 
-      const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-      const result = await model.generateContent(prompt);
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.0-flash-exp',
+        contents: prompt,
+      });
       const text = result.response.text();
       
       const hvcos = text
@@ -415,11 +423,11 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
               <button
                 onClick={generateHeadlines}
                 disabled={isGenerating.headlines}
-                className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
+                className="text-xs bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 disabled:bg-gray-100 dark:disabled:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
               >
                 {isGenerating.headlines ? (
                   <>
-                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-3 h-3 border-2 border-gray-700 dark:border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                     <span className="whitespace-nowrap">Generating...</span>
                   </>
                 ) : (
@@ -476,11 +484,11 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
               <button
                 onClick={generateKeywords}
                 disabled={isGenerating.keywords}
-                className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
+                className="text-xs bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 disabled:bg-gray-100 dark:disabled:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
               >
                 {isGenerating.keywords ? (
                   <>
-                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-3 h-3 border-2 border-gray-700 dark:border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                     <span className="whitespace-nowrap">Generating...</span>
                   </>
                 ) : (
@@ -544,11 +552,11 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
               <button
                 onClick={generateOffers}
                 disabled={isGenerating.offers}
-                className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
+                className="text-xs bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 disabled:bg-gray-100 dark:disabled:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
               >
                 {isGenerating.offers ? (
                   <>
-                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-3 h-3 border-2 border-gray-700 dark:border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                     <span className="whitespace-nowrap">Generating...</span>
                   </>
                 ) : (
@@ -602,11 +610,11 @@ Return ONLY the offers, one per line, no numbering, no explanations.`;
               <button
                 onClick={generateHVCOs}
                 disabled={isGenerating.hvcos}
-                className="text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
+                className="text-xs bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 disabled:bg-gray-100 dark:disabled:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1 rounded transition flex items-center gap-1 flex-shrink-0"
               >
                 {isGenerating.hvcos ? (
                   <>
-                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-3 h-3 border-2 border-gray-700 dark:border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                     <span className="whitespace-nowrap">Generating...</span>
                   </>
                 ) : (
