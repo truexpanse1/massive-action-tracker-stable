@@ -415,9 +415,9 @@ const App: React.FC = () => {
     if (successCount > 0 && skippedCount === 0) {
       alert(`✅ Action item added to Implement Now for the next ${successCount} ${successCount === 1 ? 'day' : 'days'}!`);
     } else if (successCount > 0 && skippedCount > 0) {
-      alert(`⚠️ Added to ${successCount} ${successCount === 1 ? 'day' : 'days'}. Skipped ${skippedCount} ${skippedCount === 1 ? 'day' : 'days'} because all 3 Implement Now slots were full.\n\nTip: Complete or remove existing targets to make room for new ones.`);
+      alert(`⚠️ Added to ${successCount} ${successCount === 1 ? 'day' : 'days'}. Skipped ${skippedCount} ${skippedCount === 1 ? 'day' : 'days'} because all 12 Implement Now slots were full.\n\nTip: Complete or remove existing targets to make room for new ones.`);
     } else if (successCount === 0) {
-      alert(`❌ Cannot add target. All 3 Implement Now slots are full for the selected dates.\n\nPlease complete or remove existing targets first, then try again.`);
+      alert(`❌ Cannot add target. All 12 Implement Now slots are full for the selected dates.\n\nPlease complete or remove existing targets first, then try again.`);
     }
   };
 

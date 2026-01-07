@@ -216,8 +216,8 @@ export const getInitialDayData = (): DayData => ({
     completed: false,
   })),
 
-  // Speed of Implementation - 3 slots
-  speedOfImplementation: Array.from({ length: 3 }, (_, i) => ({
+  // Speed of Implementation - 12 slots
+  speedOfImplementation: Array.from({ length: 12 }, (_, i) => ({
     id: `soi-${i + 1}`,
     text: '',
     completed: false,
@@ -257,7 +257,7 @@ export const getInitialDayData = (): DayData => ({
 export const normalizeDayData = (data: Partial<DayData>): DayData => {
   const initial = getInitialDayData();
   
-  // Ensure speedOfImplementation has exactly 3 slots
+  // Ensure speedOfImplementation has exactly 12 slots
   let speedOfImplementation = data.speedOfImplementation || [];
   if (speedOfImplementation.length === 0) {
     speedOfImplementation = initial.speedOfImplementation;
