@@ -368,13 +368,13 @@ const App: React.FC = () => {
       
       const dayData = allData[dateKey] || getInitialDayData();
       
-      // Find the first empty Implement Now slot (3 slots)
-      // Ensure speedOfImplementation is properly initialized with 3 slots
+      // Find the first empty Implement Now slot (12 slots)
+      // Ensure speedOfImplementation is properly initialized with 12 slots
       let soiTargets = dayData.speedOfImplementation || [];
       
-      // If array is empty or has fewer than 3 slots, initialize it properly
+      // If array is empty or has fewer than 12 slots, initialize it properly
       if (soiTargets.length === 0) {
-        soiTargets = Array.from({ length: 3 }, (_, i) => ({
+        soiTargets = Array.from({ length: 12 }, (_, i) => ({
           id: `soi-${i + 1}`,
           text: '',
           completed: false,
@@ -406,7 +406,7 @@ const App: React.FC = () => {
         await handleUpsertDayData(dateKey, updatedDayData);
         successCount++;
       } else {
-        // All 3 slots full for this date, skip it
+        // All 12 slots full for this date, skip it
         skippedCount++;
       }
     }
