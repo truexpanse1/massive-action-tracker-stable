@@ -934,7 +934,16 @@ export default function LandingPage() {
             "Daily reflection builds accountability",
             "See exactly where you stand every single day"
           ],
-          demoContent: <DayViewDemo />
+          demoContent: (
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                src="https://www.loom.com/embed/aa602dd2b7a746bbba0bca2215fcc68e?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
+                frameBorder="0"
+                allowFullScreen
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+              />
+            </div>
+          )
         }}
         onGetStarted={scrollToPricing}
       />
