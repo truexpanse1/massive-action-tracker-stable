@@ -267,10 +267,16 @@ export const normalizeDayData = (data: Partial<DayData>): DayData => {
     );
   }
   
+  // Preserve prospectingContacts from database if they exist
+  const prospectingContacts = data.prospectingContacts && data.prospectingContacts.length > 0
+    ? data.prospectingContacts
+    : initial.prospectingContacts;
+  
   return {
     ...initial,
     ...data,
     speedOfImplementation,
+    prospectingContacts,  // Explicitly set to ensure database data is preserved
   };
 };
 
