@@ -176,11 +176,40 @@ const CoachingNotesJournal: React.FC<CoachingNotesJournalProps> = ({
     try {
       if (selectedActionItem) {
         await onAddToTargets(selectedActionItem.text, selectedActionItem.noteDate, days, selectedActionItem.source);
-      } else if (bulkActionItems) {
-        for (const item of bulkActionItems.items) {
-          if (!item.added_to_targets) {
-            await onAddToTargets(item.text, bulkActionItems.noteDate, days, bulkActionItems.source);
+        // Mark as added in the database
+        const note = notes.find(n => n.session_date === selectedActionItem.noteDate);
+        if (note) {
+          const itemIndex = note.action_items.findIndex(item => item.text === selectedActionItem.text);
+          if (itemIndex !== -1) {
+            const { markActionItemAddedToTargets } = await import('../src/services/coachingNotesService');
+            await markActionItemAddedToTargets(note.id, itemIndex);
+            // Update local state
+            const updatedActionItems = [...note.action_items];
+            updatedActionItems[itemIndex] = { ...updatedActionItems[itemIndex], added_to_targets: true };
+            await onUpdateNote(note.id, { action_items: updatedActionItems });
           }
+        }
+      } else if (bulkActionItems) {
+        const note = notes.find(n => n.session_date === bulkActionItems.noteDate);
+        if (note) {
+          const { markActionItemAddedToTargets } = await import('../src/services/coachingNotesService');
+          for (let i = 0; i < bulkActionItems.items.length; i++) {
+            const item = bulkActionItems.items[i];
+            if (!item.added_to_targets) {
+              await onAddToTargets(item.text, bulkActionItems.noteDate, days, bulkActionItems.source);
+              // Mark as added in the database
+              const itemIndex = note.action_items.findIndex(ai => ai.text === item.text);
+              if (itemIndex !== -1) {
+                await markActionItemAddedToTargets(note.id, itemIndex);
+              }
+            }
+          }
+          // Reload the note to get updated flags
+          const updatedActionItems = note.action_items.map(item => {
+            const wasAdded = bulkActionItems.items.find(bi => bi.text === item.text && !bi.added_to_targets);
+            return wasAdded ? { ...item, added_to_targets: true } : item;
+          });
+          await onUpdateNote(note.id, { action_items: updatedActionItems });
         }
       }
       handleModalClose();
