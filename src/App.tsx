@@ -278,10 +278,44 @@ const App: React.FC = () => {
         if (dayDataRes.data)
           setAllData(
             dayDataRes.data.reduce(
-              (acc, row) => ({
-                ...acc,
-                [row.date]: normalizeDayData({ ...row.data, userId: row.user_id }),
-              }),
+              (acc, row) => {
+                const dateKey = row.date;
+                const userData = normalizeDayData({ ...row.data, userId: row.user_id });
+                
+                // If this date already exists, merge the prospectingContacts
+                if (acc[dateKey]) {
+                  // Add userId to each contact from this user
+                  const contactsWithUserId = (userData.prospectingContacts || []).map(contact => ({
+                    ...contact,
+                    userId: row.user_id,
+                  }));
+                  
+                  return {
+                    ...acc,
+                    [dateKey]: {
+                      ...acc[dateKey],
+                      prospectingContacts: [
+                        ...(acc[dateKey].prospectingContacts || []),
+                        ...contactsWithUserId,
+                      ],
+                    },
+                  };
+                }
+                
+                // First user for this date - add userId to contacts
+                const contactsWithUserId = (userData.prospectingContacts || []).map(contact => ({
+                  ...contact,
+                  userId: row.user_id,
+                }));
+                
+                return {
+                  ...acc,
+                  [dateKey]: {
+                    ...userData,
+                    prospectingContacts: contactsWithUserId,
+                  },
+                };
+              },
               {}
             )
           );
