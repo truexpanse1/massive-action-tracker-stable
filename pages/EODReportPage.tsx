@@ -96,7 +96,13 @@ const EODReportPage: React.FC<EODReportPageProps> = ({ allData, hotLeads, transa
     const dailyKpis = useMemo(() => {
         // Activity
         const callsMade = (currentData.prospectingContacts || []).filter(c => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM).length;
-        const prospectsCollected = (currentData.prospectingContacts || []).filter(c => c.name).length; // All imported prospects
+        // Count any contact with at least one non-empty piece of information (matches Day View logic)
+        const prospectsCollected = (currentData.prospectingContacts || []).filter(
+            (c) => (c.name && c.name.trim()) || 
+                   (c.company && c.company.trim()) || 
+                   (c.phone && c.phone.trim()) || 
+                   (c.email && c.email.trim())
+        ).length;
         const texts = (currentData.prospectingContacts || []).filter(c => c.prospecting.ST).length;
         const socialMediaTouches = contentPostedCount; // Synced with Scorecard Content Posted metric
 
