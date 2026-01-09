@@ -108,6 +108,7 @@ export default function LandingPage() {
   const [isDayViewDemoOpen, setIsDayViewDemoOpen] = useState(false);
   const [isEODDemoOpen, setIsEODDemoOpen] = useState(false);
   const [isProspectingDemoOpen, setIsProspectingDemoOpen] = useState(false);
+  const [isDreamClientDemoOpen, setIsDreamClientDemoOpen] = useState(false);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing');
@@ -764,12 +765,20 @@ export default function LandingPage() {
               <p className="text-lg md:text-xl text-gray-600 mb-6">
                 Create detailed buyer avatars and generate high-converting content that attracts your ideal clients. Build multiple client profiles, save generated content, and never run out of marketing ideas. Turn your dream clients into reality.
               </p>
-              <button
-                onClick={scrollToPricing}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Create Your Avatar →
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsDreamClientDemoOpen(true)}
+                  className="bg-transparent border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                >
+                  ▶ View Demo
+                </button>
+                <button
+                  onClick={scrollToPricing}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Create Your Avatar →
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1018,6 +1027,34 @@ export default function LandingPage() {
             <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
               <iframe
                 src="https://www.loom.com/embed/6afba5e81f8744068d92c24c52873738?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
+                frameBorder="0"
+                allowFullScreen
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+              />
+            </div>
+          )
+        }}
+        onGetStarted={scrollToPricing}
+      />
+
+      <FeatureDemoModal
+        isOpen={isDreamClientDemoOpen}
+        onClose={() => setIsDreamClientDemoOpen(false)}
+        feature={{
+          title: "Dream Client Studio",
+          subtitle: "Create buyer avatars and generate high-converting content",
+          benefits: [
+            "Create detailed buyer avatars in minutes",
+            "Generate high-converting content automatically",
+            "Build multiple client profiles for different niches",
+            "Save and reuse generated content",
+            "Never run out of marketing ideas",
+            "Turn your dream clients into reality"
+          ],
+          demoContent: (
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                src="https://www.loom.com/embed/2eb7c4214334450d8cfd168659ac03b5?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
                 frameBorder="0"
                 allowFullScreen
                 className="absolute top-0 left-0 w-full h-full rounded-lg"
