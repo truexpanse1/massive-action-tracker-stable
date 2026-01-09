@@ -107,6 +107,7 @@ export default function LandingPage() {
   const [showPurchasePassword, setShowPurchasePassword] = useState(false);
   const [isDayViewDemoOpen, setIsDayViewDemoOpen] = useState(false);
   const [isEODDemoOpen, setIsEODDemoOpen] = useState(false);
+  const [isProspectingDemoOpen, setIsProspectingDemoOpen] = useState(false);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing');
@@ -709,12 +710,20 @@ export default function LandingPage() {
               <p className="text-lg md:text-xl text-gray-600 mb-6">
                 This is where you build your future money. Every time you click a button here, it saves the data forever. This helps you build a strong list of future customers that will bring in steady money. It's simple: track your work, and the money will follow.
               </p>
-              <button
-                onClick={scrollToPricing}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Build Your Pipeline →
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsProspectingDemoOpen(true)}
+                  className="bg-transparent border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                >
+                  ▶ View Demo
+                </button>
+                <button
+                  onClick={scrollToPricing}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Build Your Pipeline →
+                </button>
+              </div>
             </div>
           </div>
 
@@ -981,6 +990,34 @@ export default function LandingPage() {
             <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
               <iframe
                 src="https://www.loom.com/embed/37138d9be5554c048f17eb1560832d66?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
+                frameBorder="0"
+                allowFullScreen
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+              />
+            </div>
+          )
+        }}
+        onGetStarted={scrollToPricing}
+      />
+
+      <FeatureDemoModal
+        isOpen={isProspectingDemoOpen}
+        onClose={() => setIsProspectingDemoOpen(false)}
+        feature={{
+          title: "Prospecting List",
+          subtitle: "Build your money pipeline with systematic prospecting",
+          benefits: [
+            "Track every prospect with 6 activity codes",
+            "Never lose a lead - data saves forever",
+            "Build a strong list of future customers",
+            "See your pipeline grow in real-time",
+            "Simple tracking that drives steady revenue",
+            "Track your work, and the money will follow"
+          ],
+          demoContent: (
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                src="https://www.loom.com/embed/6afba5e81f8744068d92c24c52873738?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
                 frameBorder="0"
                 allowFullScreen
                 className="absolute top-0 left-0 w-full h-full rounded-lg"
