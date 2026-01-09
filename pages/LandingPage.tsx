@@ -106,6 +106,7 @@ export default function LandingPage() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showPurchasePassword, setShowPurchasePassword] = useState(false);
   const [isDayViewDemoOpen, setIsDayViewDemoOpen] = useState(false);
+  const [isEODDemoOpen, setIsEODDemoOpen] = useState(false);
 
   const scrollToPricing = () => {
     const pricingSection = document.getElementById('pricing');
@@ -606,9 +607,23 @@ export default function LandingPage() {
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
                 End of Day Report
               </h3>
-              <p className="text-lg md:text-xl text-gray-600">
+              <p className="text-lg md:text-xl text-gray-600 mb-6">
                 Data-driven performance insights. Track input vs. output, visual performance trends, multi-metric comparison, and historical data access. See exactly what's working and what needs adjustment.
               </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setIsEODDemoOpen(true)}
+                  className="bg-transparent border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                >
+                  ▶ View Demo
+                </button>
+                <button
+                  onClick={scrollToPricing}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Start Tracking Now →
+                </button>
+              </div>
             </div>
             <img
               src="/eod-report2.jpg"
@@ -919,7 +934,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Feature Demo Modal */}
+      {/* Feature Demo Modals */}
       <FeatureDemoModal
         isOpen={isDayViewDemoOpen}
         onClose={() => setIsDayViewDemoOpen(false)}
@@ -938,6 +953,34 @@ export default function LandingPage() {
             <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
               <iframe
                 src="https://www.loom.com/embed/862c2b7b5c68424a93a28ff19cc8ccd2?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
+                frameBorder="0"
+                allowFullScreen
+                className="absolute top-0 left-0 w-full h-full rounded-lg"
+              />
+            </div>
+          )
+        }}
+        onGetStarted={scrollToPricing}
+      />
+
+      <FeatureDemoModal
+        isOpen={isEODDemoOpen}
+        onClose={() => setIsEODDemoOpen(false)}
+        feature={{
+          title: "End of Day Report",
+          subtitle: "Data-driven performance insights that show what's working",
+          benefits: [
+            "Track input vs. output to see what drives results",
+            "Visual performance trends show progress over time",
+            "Multi-metric comparison reveals patterns",
+            "Historical data access for strategic planning",
+            "See exactly what's working and what needs adjustment",
+            "Make data-driven decisions every single day"
+          ],
+          demoContent: (
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                src="https://www.loom.com/embed/37138d9be5554c048f17eb1560832d66?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
                 frameBorder="0"
                 allowFullScreen
                 className="absolute top-0 left-0 w-full h-full rounded-lg"
