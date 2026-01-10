@@ -42,6 +42,7 @@ import ScorecardDashboard from '../pages/ScorecardDashboard';
 import BillingPlansPage from '../pages/BillingPlansPage';
 import MassiveActionTargetsPage from '../pages/MassiveActionTargetsPage';
 import ServiceLibraryPage from '../pages/ServiceLibraryPage';
+import MyProposalsPage from '../pages/MyProposalsPage';
 
 // Components
 import ChatIcon from '../components/ChatIcon';
@@ -1096,6 +1097,8 @@ const App: React.FC = () => {
         return <MassiveActionTargetsPage />;
       case 'service-library':
         return <ServiceLibraryPage user={user!} />;
+      case 'my-proposals':
+        return <MyProposalsPage user={user!} />;
       case 'coaching':
         return (
           <CoachingPage

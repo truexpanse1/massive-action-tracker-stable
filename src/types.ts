@@ -22,7 +22,8 @@ export type View =
   | 'dream-avatars'
   | 'scorecard-dashboard'
   | 'massive-action-targets'
-  | 'service-library';
+  | 'service-library'
+  | 'my-proposals';
 
 export type Role = 'Sales Rep' | 'Manager';
 export type UserStatus = 'Active' | 'Inactive';
