@@ -204,18 +204,18 @@ const MyProposalsPage: React.FC<MyProposalsPageProps> = ({ user }) => {
                       {proposal.contact_email && ` • ${proposal.contact_email}`}
                     </p>
                     <p className="text-gray-500 dark:text-gray-500 text-xs">
-                      Created {new Date(proposal.created_at).toLocaleDateString('en-US', { 
+                      Created {proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('en-US', { 
                         month: 'short', 
                         day: 'numeric', 
                         year: 'numeric',
                         hour: 'numeric',
                         minute: '2-digit'
-                      })}
+                      }) : 'Unknown'}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-purple-600">
-                      ${proposal.total_price.toLocaleString()}
+                      ${proposal.total_price?.toLocaleString() || '0'}
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">
                       {proposal.pricing_model === 'one-time' ? 'one-time' : `/${proposal.pricing_model === 'annual' ? 'year' : 'month'}`}
