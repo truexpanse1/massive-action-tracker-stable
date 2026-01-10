@@ -5,6 +5,7 @@ import QuickActions from '../components/QuickActions';
 import SetAppointmentModal from '../components/SetAppointmentModal';
 import ConvertToClientModal from '../components/ConvertToClientModal';
 import DatePicker from '../components/DatePicker';
+import ProposalBuilderModal from '../components/ProposalBuilderModal';
 
 interface HotLeadsPageProps {
   hotLeads: Contact[];
@@ -20,6 +21,7 @@ interface HotLeadsPageProps {
 const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onUpdateHotLead, onDeleteHotLead, selectedDate, onDateChange, handleSetAppointment, onConvertToClient }) => {
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Contact | null>(null);
   const [expandedFollowUps, setExpandedFollowUps] = useState<string | null>(null);
   const [isCalendarFiltered, setIsCalendarFiltered] = useState(false);
@@ -79,6 +81,17 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
       setSelectedLead(lead);
       setIsConvertModalOpen(true);
   };
+
+  const handleOpenProposalModal = (lead: Contact) => {
+      setSelectedLead(lead);
+      setIsProposalModalOpen(true);
+  };
+
+  const handleProposalSuccess = () => {
+      setIsProposalModalOpen(false);
+      alert('Proposal generated successfully!');
+      // Optionally refresh hot leads to update proposal_count
+  };
   
   const handleSaveAppointment = ({ date, time, note }: { date: string, time: string, note: string }) => {
     if (!selectedLead) return;
@@ -121,6 +134,22 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
     <>
      <SetAppointmentModal isOpen={isAppointmentModalOpen} onClose={() => setIsAppointmentModalOpen(false)} onSave={handleSaveAppointment} contact={selectedLead} />
      <ConvertToClientModal isOpen={isConvertModalOpen} onClose={() => setIsConvertModalOpen(false)} onSave={handleConfirmConvertToClient} contact={selectedLead} />
+     {selectedLead && (
+       <ProposalBuilderModal 
+         isOpen={isProposalModalOpen} 
+         onClose={() => setIsProposalModalOpen(false)} 
+         onSuccess={handleProposalSuccess}
+         user={{ id: '', company_id: '', name: '', email: '', role: 'User' }}
+         hotLead={{
+           id: parseInt(selectedLead.id) || 0,
+           company_name: selectedLead.company || 'Unknown Company',
+           contact_name: selectedLead.name,
+           contact_email: selectedLead.email,
+           contact_phone: selectedLead.phone,
+           industry: undefined
+         }}
+       />
+     )}
      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-3 space-y-8">
             <Calendar 
@@ -208,7 +237,7 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
                         <td className="p-2" data-label="Phone"><input type="tel" value={lead.phone} onBlur={e => handleLeadChange(lead.id, 'phone', e.target.value)} onChange={e => handleLeadChange(lead.id, 'phone', e.target.value)} className="w-full bg-transparent p-1 text-sm focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white" /></td>
                         <td className="p-2 hidden md:table-cell" data-label="Email"><input type="email" value={lead.email} onBlur={e => handleLeadChange(lead.id, 'email', e.target.value)} onChange={e => handleLeadChange(lead.id, 'email', e.target.value)} className="w-full bg-transparent p-1 text-sm focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white" /></td>
                         <td className="p-2 text-center"><button onClick={() => setExpandedFollowUps(expandedFollowUps === lead.id ? null : lead.id)} className="font-bold text-brand-blue hover:underline" disabled={!lead.appointmentDate} title={!lead.appointmentDate ? "Set an appointment to start follow-ups" : "View Follow-up Plan"}>{lead.completedFollowUps ? Object.keys(lead.completedFollowUps).length : 0} / {Object.keys(followUpSchedule).length}</button></td>
-                        <td className="p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2"><button onClick={() => handleOpenAppointmentModal(lead)} className="bg-brand-blue text-white font-bold py-2 px-3 rounded-md hover:bg-blue-700 transition text-xs whitespace-nowrap">Set Appt</button><button onClick={() => handleOpenConvertToClientModal(lead)} className="bg-brand-lime text-brand-ink font-bold py-2 px-3 rounded-md hover:bg-green-400 transition text-xs whitespace-nowrap">Convert</button></td>
+                        <td className="p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2"><button onClick={() => handleOpenAppointmentModal(lead)} className="bg-brand-blue text-white font-bold py-2 px-3 rounded-md hover:bg-blue-700 transition text-xs whitespace-nowrap">Set Appt</button><button onClick={() => handleOpenProposalModal(lead)} className="bg-purple-600 text-white font-bold py-2 px-3 rounded-md hover:bg-purple-700 transition text-xs whitespace-nowrap">📄 Proposal</button><button onClick={() => handleOpenConvertToClientModal(lead)} className="bg-brand-lime text-brand-ink font-bold py-2 px-3 rounded-md hover:bg-green-400 transition text-xs whitespace-nowrap">Convert</button></td>
                         <td className="p-2 text-center"><button onClick={() => handleRemoveLead(lead.id)} className="text-red-500 hover:text-red-400 font-bold text-xl" title="Remove Lead">&times;</button></td>
                       </tr>
                       {expandedFollowUps === lead.id && (<tr><td colSpan={6} className="p-3 bg-brand-light-bg dark:bg-brand-gray/20"><h4 className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2">Follow-up Plan (Starts: {lead.appointmentDate})</h4><ul className="text-xs space-y-1">{Object.entries(followUpSchedule).map(([day, activity]) => { const isCompleted = lead.completedFollowUps && lead.completedFollowUps[parseInt(day,10)]; return (<li key={day} className={`flex items-center ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-700 dark:text-gray-300'}`}><span className="font-bold w-12">Day {day}:</span><span>{activity}</span></li>)})}</ul></td></tr>)}
