@@ -41,6 +41,7 @@ import DreamClientStudioPage from '../pages/DreamClientStudioPage';
 import ScorecardDashboard from '../pages/ScorecardDashboard';
 import BillingPlansPage from '../pages/BillingPlansPage';
 import MassiveActionTargetsPage from '../pages/MassiveActionTargetsPage';
+import ServiceLibraryPage from '../pages/ServiceLibraryPage';
 
 // Components
 import ChatIcon from '../components/ChatIcon';
@@ -1093,6 +1094,8 @@ const App: React.FC = () => {
         return <AIContentPage />;
       case 'massive-action-targets':
         return <MassiveActionTargetsPage />;
+      case 'service-library':
+        return <ServiceLibraryPage user={user!} />;
       case 'coaching':
         return (
           <CoachingPage

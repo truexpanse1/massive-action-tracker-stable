@@ -94,6 +94,7 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
                <Dropdown title="Resources" isOpen={openDropdown === 'resources'} onToggle={() => handleToggle('resources')}>
                   <NavItem onClick={() => handleSetView('massive-action-targets')} active={currentView === 'massive-action-targets'}>Massive Action Targets</NavItem>
                   <NavItem onClick={() => handleSetView('dream-avatars')} active={currentView === 'dream-avatars'}>Dream Client Studio</NavItem>
+                  <NavItem onClick={() => handleSetView('service-library')} active={currentView === 'service-library'}>Service Library</NavItem>
                   <NavItem onClick={() => handleSetView('scorecard-dashboard')} active={currentView === 'scorecard-dashboard'}>Scorecard Dashboard</NavItem>
                   <NavItem onClick={() => handleSetView('ai-images')} active={currentView === 'ai-images'}>AI Images</NavItem>
                   <NavItem onClick={() => handleSetView('ai-content')} active={currentView === 'ai-content'}>AI Content</NavItem>

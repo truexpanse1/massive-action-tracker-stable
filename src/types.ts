@@ -21,7 +21,8 @@ export type View =
   | 'ghl-integration'
   | 'dream-avatars'
   | 'scorecard-dashboard'
-  | 'massive-action-targets';
+  | 'massive-action-targets'
+  | 'service-library';
 
 export type Role = 'Sales Rep' | 'Manager';
 export type UserStatus = 'Active' | 'Inactive';
