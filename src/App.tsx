@@ -1055,6 +1055,7 @@ const App: React.FC = () => {
             onDateChange={setSelectedDate}
             handleSetAppointment={handleSetAppointment}
             onConvertToClient={handleConvertToClient}
+            user={user}
           />
         );
       case 'new-clients':

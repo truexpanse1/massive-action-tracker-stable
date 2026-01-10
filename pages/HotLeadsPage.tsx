@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Contact, CalendarEvent, formatPhoneNumber, followUpSchedule } from '../src/types';
+import { Contact, CalendarEvent, formatPhoneNumber, followUpSchedule, User } from '../src/types';
 import Calendar from '../components/Calendar';
 import QuickActions from '../components/QuickActions';
 import SetAppointmentModal from '../components/SetAppointmentModal';
@@ -16,9 +16,10 @@ interface HotLeadsPageProps {
   onDateChange: (date: Date) => void;
   handleSetAppointment: (appointment: { client: string, lead: string, time: string, details?: string }, date: Date) => void;
   onConvertToClient: (contact: Contact, initialAmountCollected: number) => void;
+  user: User | null;
 }
 
-const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onUpdateHotLead, onDeleteHotLead, selectedDate, onDateChange, handleSetAppointment, onConvertToClient }) => {
+const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onUpdateHotLead, onDeleteHotLead, selectedDate, onDateChange, handleSetAppointment, onConvertToClient, user }) => {
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
@@ -139,7 +140,7 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
          isOpen={isProposalModalOpen} 
          onClose={() => setIsProposalModalOpen(false)} 
          onSuccess={handleProposalSuccess}
-         user={{ id: '', company_id: '', name: '', email: '', role: 'User' }}
+         user={user || { id: '', company_id: '', name: '', email: '', role: 'Sales Rep' as any, status: 'Active' as any }}
          hotLead={{
            id: parseInt(selectedLead.id) || 0,
            company_name: selectedLead.company || 'Unknown Company',

@@ -210,10 +210,10 @@ const ProposalViewPage: React.FC<ProposalViewPageProps> = ({ slug }) => {
               </button>
               <a
                 href={`mailto:${proposal.contact_email || 'contact@example.com'}?subject=Question about Proposal for ${proposal.company_name}`}
-                className="px-8 py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-bold text-lg transition"
+                className="px-8 py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-bold text-lg transition inline-block text-center"
               >
                 Request More Info
-              </button>
+              </a>
             </div>
           </section>
         )}
